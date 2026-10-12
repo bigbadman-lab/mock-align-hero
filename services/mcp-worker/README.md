@@ -38,3 +38,8 @@ Redeploy: Render → existing service → Manual Deploy → Deploy latest commit
 Tool `supply_monitor` (catalogue id `supply-monitor`), schema `mcpx.tool-execution.supply-monitor.v1`, input `{"mint":"<base58>"}`.
 Exactly 3 parallel RPC reads at `confirmed`: getAccountInfo (mint check, shared parser with Token Scanner), getTokenSupply (mandatory — failure fails the run), getTokenLargestAccounts (optional — failure gives a labelled partial result). Amounts are integer strings/BigInt; percentages floored to 4 decimals; N/A when supply is 0. Slots reported separately.
 Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `supply_monitor`.
+
+## Whale Watch (Phase 02-E)
+Tool `whale_watch` (catalogue id `whale-watch`), schema `mcpx.tool-execution.whale-watch.v1`, input `{"address":"<base58>","minLamports":"100000000"|"1000000000"|"10000000000"|"100000000000"}`.
+RPC budget per run: 1 getSignaturesForAddress (limit 20, finalized) + at most 10 getTransaction (jsonParsed, v0), 2 at a time, 8 s per call, 16 s run budget (inside the 20 s request deadline), no pagination, no retries — max 11 reads. Counts only successful System Program transfer/transferWithSeed instructions (outer + inner) where the address is sender or recipient. Native SOL only.
+Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `whale_watch`.
