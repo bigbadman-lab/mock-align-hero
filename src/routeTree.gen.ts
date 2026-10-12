@@ -15,8 +15,10 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
 import { Route as ToolsTransactionVerifierRouteImport } from './routes/tools.transaction-verifier'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
+import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 
@@ -50,6 +52,11 @@ const PairedRoute = PairedRouteImport.update({
   path: '/paired',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsTokenScannerRoute = ToolsTokenScannerRouteImport.update({
+  id: '/tools/token-scanner',
+  path: '/tools/token-scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsTransactionVerifierRoute =
   ToolsTransactionVerifierRouteImport.update({
     id: '/tools/transaction-verifier',
@@ -59,6 +66,11 @@ const ToolsTransactionVerifierRoute =
 const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
   id: '/tools/wallet-inspector',
   path: '/tools/wallet-inspector',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiToolsTokenScannerRoute = ApiToolsTokenScannerRouteImport.update({
+  id: '/api/tools/token-scanner',
+  path: '/api/tools/token-scanner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiToolsTransactionVerifierRoute =
@@ -80,8 +92,10 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
@@ -92,8 +106,10 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
@@ -105,8 +121,10 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
@@ -119,8 +137,10 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   fileRoutesByTo: FileRoutesByTo
@@ -131,8 +151,10 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   id:
@@ -143,8 +165,10 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   fileRoutesById: FileRoutesById
@@ -156,8 +180,10 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
+  ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
+  ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
 }
@@ -206,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PairedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/token-scanner': {
+      id: '/tools/token-scanner'
+      path: '/tools/token-scanner'
+      fullPath: '/tools/token-scanner'
+      preLoaderRoute: typeof ToolsTokenScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/transaction-verifier': {
       id: '/tools/transaction-verifier'
       path: '/tools/transaction-verifier'
@@ -218,6 +251,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/wallet-inspector'
       fullPath: '/tools/wallet-inspector'
       preLoaderRoute: typeof ToolsWalletInspectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/token-scanner': {
+      id: '/api/tools/token-scanner'
+      path: '/api/tools/token-scanner'
+      fullPath: '/api/tools/token-scanner'
+      preLoaderRoute: typeof ApiToolsTokenScannerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tools/transaction-verifier': {
@@ -244,8 +284,10 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   McpRoute: McpRoute,
   PairedRoute: PairedRoute,
+  ToolsTokenScannerRoute: ToolsTokenScannerRoute,
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
+  ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
 }
