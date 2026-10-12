@@ -15,11 +15,13 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
 import { Route as ToolsTransactionVerifierRouteImport } from './routes/tools.transaction-verifier'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
 import { Route as ToolsWhaleWatchRouteImport } from './routes/tools.whale-watch'
+import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
@@ -56,6 +58,11 @@ const PairedRoute = PairedRouteImport.update({
   path: '/paired',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsAccountCheckerRoute = ToolsAccountCheckerRouteImport.update({
+  id: '/tools/account-checker',
+  path: '/tools/account-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsSupplyMonitorRoute = ToolsSupplyMonitorRouteImport.update({
   id: '/tools/supply-monitor',
   path: '/tools/supply-monitor',
@@ -80,6 +87,11 @@ const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
 const ToolsWhaleWatchRoute = ToolsWhaleWatchRouteImport.update({
   id: '/tools/whale-watch',
   path: '/tools/whale-watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiToolsAccountCheckerRoute = ApiToolsAccountCheckerRouteImport.update({
+  id: '/api/tools/account-checker',
+  path: '/api/tools/account-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiToolsSupplyMonitorRoute = ApiToolsSupplyMonitorRouteImport.update({
@@ -116,11 +128,13 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
@@ -134,11 +148,13 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
@@ -153,11 +169,13 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
@@ -173,11 +191,13 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
@@ -191,11 +211,13 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
@@ -209,11 +231,13 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
@@ -228,11 +252,13 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
+  ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
   ToolsWhaleWatchRoute: typeof ToolsWhaleWatchRoute
+  ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
@@ -284,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PairedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/account-checker': {
+      id: '/tools/account-checker'
+      path: '/tools/account-checker'
+      fullPath: '/tools/account-checker'
+      preLoaderRoute: typeof ToolsAccountCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/supply-monitor': {
       id: '/tools/supply-monitor'
       path: '/tools/supply-monitor'
@@ -317,6 +350,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/whale-watch'
       fullPath: '/tools/whale-watch'
       preLoaderRoute: typeof ToolsWhaleWatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/account-checker': {
+      id: '/api/tools/account-checker'
+      path: '/api/tools/account-checker'
+      fullPath: '/api/tools/account-checker'
+      preLoaderRoute: typeof ApiToolsAccountCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tools/supply-monitor': {
@@ -364,11 +404,13 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   McpRoute: McpRoute,
   PairedRoute: PairedRoute,
+  ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
   ToolsWhaleWatchRoute: ToolsWhaleWatchRoute,
+  ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
