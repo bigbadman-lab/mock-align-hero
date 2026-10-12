@@ -41,6 +41,11 @@ const MESSAGES: Record<RegistryFailure, string> = {
 };
 
 export async function fetchVerifiedCreations(page: number, signal?: AbortSignal): Promise<CreationListResult> {
+  const started = Date.now();
+  const diag = (outcome: string) => {
+    // Dev-only, sanitized: category + elapsed ms. No payloads, keys or addresses.
+    if (import.meta.env.DEV) console.debug(`[registry] page=${safePage} outcome=${outcome} ms=${Date.now() - started}`);
+  };
   const safePage = Math.max(0, Math.min(Math.floor(page) || 0, 400));
   try {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -55,11 +60,14 @@ export async function fetchVerifiedCreations(page: number, signal?: AbortSignal)
     const { data, error } = await q;
     if (error) {
       const kind = classifyRegistryError(error);
+      diag(kind);
       return { status: kind, message: MESSAGES[kind] };
     }
     const rows = (data ?? []) as VerifiedCreationSummary[];
+    diag(`ok:${Math.min(rows.length, REGISTRY_PAGE_SIZE)}`);
     return { status: "ok", items: rows.slice(0, REGISTRY_PAGE_SIZE), page: safePage, hasMore: rows.length > REGISTRY_PAGE_SIZE };
   } catch {
+    diag("unavailable");
     return { status: "unavailable", message: MESSAGES.unavailable };
   }
 }
