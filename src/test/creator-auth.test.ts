@@ -56,7 +56,7 @@ describe("creator wallet sign-in (TEST ONLY keys)", () => {
       async () => { const { c, sig } = await signedIn(kp); return verifySignIn(store, { nonce: c.nonce, address: kp.address, signature: sig, host: "www.mcpx.fun" }); },
       async () => { const { c } = await signedIn(kp); return verifySignIn(store, { nonce: c.nonce, address: kp.address, signature: b64(await kp.sign(c.message.replace("mainnet", "devnet"))), host: HOST }); },
       async () => verifySignIn(store, { nonce: "x", address: kp.address, signature: "zz", host: HOST }),
-      async () => verifySignIn(store, { nonce: "a".repeat(43), address: "not-an-address", signature: b64(new Uint8Array(64)), host: HOST }),
+      async () => verifySignIn(store, { nonce: "a".repeat(64), address: "not-an-address", signature: b64(new Uint8Array(64)), host: HOST }),
     ];
     for (const t of tries) expect((await t()).ok).toBe(false);
     expect(sessions.size).toBe(0);
@@ -130,3 +130,24 @@ describe("creator wallet sign-in (TEST ONLY keys)", () => {
     expect(await authorizeCreator(os, owner, "slug-a")).toBe(false);
   });
 });
+
+describe("SIWS message format (wallet compatibility)", () => {
+  it("nonce is alphanumeric and every field line matches the SIWS grammar", async () => {
+    const kp = await keypair();
+    const c = await createChallenge(store, kp.address, HOST);
+    if (!c.ok) throw new Error("challenge failed");
+    expect(c.nonce).toMatch(/^[A-Za-z0-9]{8,}$/);
+    const lines = c.message.split("\n");
+    expect(lines[0]).toBe(`${HOST} wants you to sign in with your Solana account:`);
+    expect(lines[1]).toBe(kp.address);
+    expect(lines.slice(5)).toEqual([
+      expect.stringMatching(/^URI: https?:\/\/\S+$/),
+      "Version: 1",
+      "Chain ID: mainnet",
+      `Nonce: ${c.nonce}`,
+      expect.stringMatching(/^Issued At: \d{4}-\d{2}-\d{2}T[\d:.]+Z$/),
+      expect.stringMatching(/^Expiration Time: \d{4}-\d{2}-\d{2}T[\d:.]+Z$/),
+    ]);
+  });
+});
+
