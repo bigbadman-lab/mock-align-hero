@@ -52,6 +52,11 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
     return () => clearTimeout(timer.current);
   }, [pending]);
 
+  // SDK hook functions are not referentially stable; keep them in a ref so the
+  // reported view only changes when real wallet state changes (no render loops).
+  const fns = useRef({ open, switchNetwork, disconnect });
+  fns.current = { open, switchNetwork, disconnect };
+
   const view = useMemo<WalletView>(() => {
     const s = deriveWalletStatus({ isConnected, address, providerStatus: status, caipNetworkId, timedOut });
     const connected = s === "connected_mainnet" || s === "connected_unsupported_network";
@@ -60,12 +65,12 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
       address: connected ? address : undefined,
       walletName: connected ? walletInfo?.name : undefined,
       message: s === "error" ? "The wallet didn't respond in time." : undefined,
-      open: () => { setTimedOut(false); void open({ view: "Connect", namespace: "solana" }); },
-      openAccount: () => void open({ view: "Account" }),
-      switchToMainnet: () => void switchNetwork(solana),
-      disconnect: () => void disconnect({ namespace: "solana" }),
+      open: () => { setTimedOut(false); void fns.current.open({ view: "Connect", namespace: "solana" }); },
+      openAccount: () => void fns.current.open({ view: "Account" }),
+      switchToMainnet: () => void fns.current.switchNetwork(solana),
+      disconnect: () => void fns.current.disconnect({ namespace: "solana" }),
     };
-  }, [isConnected, address, status, caipNetworkId, timedOut, walletInfo?.name, open, switchNetwork, disconnect]);
+  }, [isConnected, address, status, caipNetworkId, timedOut, walletInfo?.name]);
 
   useEffect(() => { onChange(view); }, [view, onChange]);
   return null;
