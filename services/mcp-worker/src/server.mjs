@@ -3,6 +3,7 @@
 import { createServer } from "node:http";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { inspectWallet, parseAddress, RpcError, TOOL_ID, SCHEMA } from "./inspect.mjs";
+import { verifyTransaction, parseSignature, TV_TOOL_ID, TV_SCHEMA } from "./verify.mjs";
 
 const PORT = Number(process.env.PORT ?? 10000);
 const RPC_URL = process.env.HELIUS_RPC_URL ?? "";
@@ -10,14 +11,20 @@ const SECRET = process.env.MCPX_WORKER_SECRET ?? "";
 const MAX_BODY = 2048;
 const SKEW_MS = 60_000;
 const MAX_CONCURRENT = 8;
-const PER_MINUTE = 60; // whole-worker cap; the website enforces per-visitor limits
+const PER_MINUTE = 60; // whole-worker cap shared by all tools; the website enforces per-visitor limits
 const REQUEST_TIMEOUT_MS = 20_000;
+
+// Strict allowlist: schema + exact input key + validator + runner + log summary.
+const TOOLS = {
+  [TOOL_ID]: { schema: SCHEMA, key: "address", valid: parseAddress, run: (v, o) => inspectWallet({ address: v, ...o }), summary: (out) => ({ status: out.partial ? "partial" : "ok", holdings: out.tokenHoldings.length }) },
+  [TV_TOOL_ID]: { schema: TV_SCHEMA, key: "signature", valid: parseSignature, run: (v, o) => verifyTransaction({ signature: v, ...o }), summary: (out) => ({ status: out.found ? "found" : "not_found", execution: out.execution }) },
+};
 
 const seenNonces = new Map();
 let inFlight = 0;
 let windowStart = Date.now(), windowHits = 0;
 
-const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), ...o })); // never logs bodies, headers or addresses
+const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), ...o })); // never logs bodies, headers, addresses or signatures
 const send = (res, status, body) => { res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" }); res.end(JSON.stringify(body)); };
 const ready = () => RPC_URL.startsWith("https://") && SECRET.length >= 32;
 
@@ -40,7 +47,7 @@ function verify(req, body) {
 createServer((req, res) => {
   const url = req.url ?? "";
   if (req.method === "GET" && url === "/health") return send(res, 200, { ok: true });
-  if (req.method === "GET" && url === "/ready") return send(res, ready() ? 200 : 503, { ready: ready(), tools: [TOOL_ID] });
+  if (req.method === "GET" && url === "/ready") return send(res, ready() ? 200 : 503, { ready: ready(), tools: ready() ? Object.keys(TOOLS) : [] });
   if (req.method !== "POST" || url !== "/internal/v1/tools/execute") return send(res, 404, { error: "not_found" });
   if (!ready()) return send(res, 503, { error: "not_configured" });
 
@@ -53,8 +60,9 @@ createServer((req, res) => {
     let input;
     try { input = JSON.parse(body); } catch { return send(res, 400, { error: "invalid_input" }); }
     const keys = input && typeof input === "object" ? Object.keys(input).sort().join(",") : "";
-    if (keys !== "input,schema,toolId" || input.toolId !== TOOL_ID || input.schema !== SCHEMA) return send(res, 400, { error: "unsupported_tool" });
-    if (!input.input || Object.keys(input.input).join(",") !== "address" || !parseAddress(input.input.address)) return send(res, 400, { error: "invalid_input" });
+    const tool = keys === "input,schema,toolId" && Object.hasOwn(TOOLS, input.toolId) ? TOOLS[input.toolId] : null;
+    if (!tool || input.schema !== tool.schema) return send(res, 400, { error: "unsupported_tool" });
+    if (!input.input || typeof input.input !== "object" || Object.keys(input.input).join(",") !== tool.key || !tool.valid(input.input[tool.key])) return send(res, 400, { error: "invalid_input" });
 
     if (Date.now() - windowStart > 60_000) { windowStart = Date.now(); windowHits = 0; }
     if (++windowHits > PER_MINUTE || inFlight >= MAX_CONCURRENT) return send(res, 429, { error: "busy" });
@@ -65,13 +73,13 @@ createServer((req, res) => {
     const kill = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
     res.on("close", () => ctrl.abort());
     try {
-      const out = await inspectWallet({ address: input.input.address, rpcUrl: RPC_URL, executionId, signal: ctrl.signal });
-      log({ executionId, tool: TOOL_ID, status: out.partial ? "partial" : "ok", ms: Date.now() - started, holdings: out.tokenHoldings.length });
+      const out = await tool.run(input.input[tool.key], { rpcUrl: RPC_URL, executionId, signal: ctrl.signal });
+      log({ executionId, tool: input.toolId, ms: Date.now() - started, ...tool.summary(out) });
       send(res, 200, out);
     } catch (e) {
       const kind = e instanceof RpcError ? e.kind : "internal";
-      log({ executionId, tool: TOOL_ID, status: "error", kind, ms: Date.now() - started });
+      log({ executionId, tool: input.toolId, status: "error", kind, ms: Date.now() - started });
       send(res, kind === "invalid_input" ? 400 : 502, { error: kind, executionId });
     } finally { clearTimeout(kill); inFlight--; }
   });
-}).listen(PORT, () => log({ msg: "mcpx worker listening", port: PORT, ready: ready() }));
+}).listen(PORT, () => log({ msg: "mcpx worker listening", port: PORT, ready: ready(), tools: Object.keys(TOOLS) }));
