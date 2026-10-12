@@ -74,6 +74,75 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_product_access_keys: {
+        Row: {
+          actor_kind: string
+          actor_ref: string
+          created_at: string
+          creation_id: string
+          display_prefix: string
+          expires_at: string | null
+          idempotency_key: string
+          key_id: string
+          label: string | null
+          last_used_at: string | null
+          revoked_at: string | null
+          rotated_from: string | null
+          scope: string
+          status: string
+          verifier: string
+        }
+        Insert: {
+          actor_kind: string
+          actor_ref: string
+          created_at?: string
+          creation_id: string
+          display_prefix: string
+          expires_at?: string | null
+          idempotency_key: string
+          key_id?: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          rotated_from?: string | null
+          scope?: string
+          status?: string
+          verifier: string
+        }
+        Update: {
+          actor_kind?: string
+          actor_ref?: string
+          created_at?: string
+          creation_id?: string
+          display_prefix?: string
+          expires_at?: string | null
+          idempotency_key?: string
+          key_id?: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          rotated_from?: string | null
+          scope?: string
+          status?: string
+          verifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_product_access_keys_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_product_configs"
+            referencedColumns: ["creation_id"]
+          },
+          {
+            foreignKeyName: "mcp_product_access_keys_rotated_from_fkey"
+            columns: ["rotated_from"]
+            isOneToOne: false
+            referencedRelation: "mcp_product_access_keys"
+            referencedColumns: ["key_id"]
+          },
+        ]
+      }
       mcp_product_configs: {
         Row: {
           access_mode: string
@@ -118,6 +187,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "mcp_creations"
             referencedColumns: ["id", "template_id"]
+          },
+        ]
+      }
+      mcp_product_key_events: {
+        Row: {
+          actor_kind: string
+          actor_ref: string
+          creation_id: string
+          event_type: string
+          id: string
+          key_id: string
+          occurred_at: string
+          reason: string | null
+        }
+        Insert: {
+          actor_kind: string
+          actor_ref: string
+          creation_id: string
+          event_type: string
+          id?: string
+          key_id: string
+          occurred_at?: string
+          reason?: string | null
+        }
+        Update: {
+          actor_kind?: string
+          actor_ref?: string
+          creation_id?: string
+          event_type?: string
+          id?: string
+          key_id?: string
+          occurred_at?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_product_key_events_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_product_access_keys"
+            referencedColumns: ["key_id"]
           },
         ]
       }
@@ -180,8 +290,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      mcpx_issue_product_key: {
+        Args: {
+          _actor_kind: string
+          _actor_ref: string
+          _creation_id: string
+          _display_prefix: string
+          _expires_at: string
+          _idempotency_key: string
+          _label: string
+          _rotate_key_id: string
+          _verifier: string
+        }
+        Returns: string
+      }
       mcpx_rate_limit_take: {
         Args: { _bucket: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
+      mcpx_revoke_product_key: {
+        Args: {
+          _actor_kind: string
+          _actor_ref: string
+          _creation_id: string
+          _key_id: string
+        }
         Returns: boolean
       }
     }
