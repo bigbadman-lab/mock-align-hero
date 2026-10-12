@@ -46,7 +46,7 @@ export async function verifyEd25519(address: string, message: string, signature:
   try {
     const pub = new Uint8Array(getAddressEncoder().encode(address as Parameters<ReturnType<typeof getAddressEncoder>["encode"]>[0]));
     const key = await crypto.subtle.importKey("raw", pub, { name: "Ed25519" }, false, ["verify"]);
-    return await crypto.subtle.verify({ name: "Ed25519" }, key, signature, new TextEncoder().encode(message));
+    return await crypto.subtle.verify({ name: "Ed25519" }, key, new Uint8Array(signature), new TextEncoder().encode(message));
   } catch {
     return false;
   }
