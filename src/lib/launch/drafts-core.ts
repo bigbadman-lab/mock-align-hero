@@ -1,4 +1,5 @@
 // Pure request parsing for creator launch drafts (Phase 04-E). The wallet never comes from the body.
+import type { DraftState } from "./lifecycle";
 import { validateDraft, type Draft, type DraftInput, type FieldErrors } from "./draft";
 
 export const DRAFT_BODY_MAX = 8192;
@@ -61,4 +62,12 @@ export function toInput(d: Draft): DraftInput {
     description: d.description, link: d.link ?? "", buyEnabled: !!d.initialBuy, buyAmount: d.initialBuy?.amountMcp ?? "",
     slippageBps: String(d.initialBuy?.slippageBps ?? 100),
   };
+}
+
+export interface DraftView {
+  id: string; revision: number; status: DraftState; chainStatus: "NOT_STARTED";
+  input: DraftInput;
+  artwork: { url: string; width: number; height: number; bytes: number; type: string; sha256: string } | null;
+  metadata: { url: string; sha256: string } | null;
+  updatedAt: string;
 }

@@ -2,8 +2,8 @@
 // Tables have RLS on with no browser policies; every query here is scoped by the session wallet.
 import { TEMPLATES } from "@/lib/templates";
 import { sha256 } from "@/lib/creator-auth/core";
-import type { Draft, DraftInput } from "./draft";
-import { toInput, MAX_ACTIVE_DRAFTS, MAX_ARTIFACTS_PER_WALLET } from "./drafts-core";
+import type { Draft } from "./draft";
+import { toInput, MAX_ACTIVE_DRAFTS, MAX_ARTIFACTS_PER_WALLET, type DraftView } from "./drafts-core";
 import { IMAGE_EXT, sha256Hex, type ImageType } from "./image";
 import { buildMetadata, checkUri } from "./metadata";
 import { statusAfterEdit, type DraftState } from "./lifecycle";
@@ -14,13 +14,6 @@ const fail = (e: unknown) => { if (e) throw new Error("launch_store_unavailable"
 
 export class Conflict extends Error { constructor(public code: string) { super(code); } }
 
-export interface DraftView {
-  id: string; revision: number; status: DraftState; chainStatus: "NOT_STARTED";
-  input: DraftInput;
-  artwork: { url: string; width: number; height: number; bytes: number; type: string; sha256: string } | null;
-  metadata: { url: string; sha256: string } | null;
-  updatedAt: string;
-}
 
 const COLS = "id, revision, status, chain_status, template_id, settings, product_name, token_name, symbol, description, link, buy_preference, artwork_id, metadata_id, updated_at";
 type Row = { id: string; revision: number; status: string; template_id: string; settings: unknown; product_name: string; token_name: string; symbol: string; description: string; link: string | null; buy_preference: unknown; artwork_id: string | null; metadata_id: string | null; updated_at: string };
