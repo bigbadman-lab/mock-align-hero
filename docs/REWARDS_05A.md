@@ -65,3 +65,35 @@ swap/payout intents (PLANNED/HELD/CANCELLED only — no approved/executed states
 | Payout signer | hot, budget-capped | yes |
 | Admin / config approver | cold | yes |
 Child-token 25% / 15% Phantom wallets stay child-only.
+
+# Phase 05-C — native fee sharing (Option B approved: 6000 rewards / 4000 operations on chain)
+
+## Source of truth for a sharing-config coin (src/lib/rewards/pump-sharing.ts)
+- Pump `DistributeCreatorFeesEvent` {timestamp, mint, bonding_curve, sharing_config, admin, shareholders[{address, share_bps}], distributed, quote_mint},
+  emitted via Pump's event authority. It carries the TOTAL only; per-shareholder amounts are the System transfers inside the
+  same instruction from creator vault PDA ["creator-vault", sharing_config] (Pump) to each listed shareholder.
+- Binding: sharing_config must equal PDA ["sharing-config", mint] under Pump Fees (pfeeUx…); vault derived from it; sum of
+  vault→shareholder transfers must equal `distributed`; any vault transfer to a non-shareholder → UNKNOWN.
+- PumpSwap `transfer_creator_fees_to_pump_v2` emits no event; it is a System transfer AMM vault authority → Pump creator vault,
+  recorded as a sweep (vault movement), never a receipt. Funds count once, when distributed.
+- Settlement asset for SOL pairs: lamports to shareholder wallets. No WSOL unwrap needed by shareholders.
+- Sharing coins never emit CollectCreatorFeeEvent (collect_* fail), so the 05-B decoder cannot double count them.
+- Fee classes: accrued = vault balances (curve vault above rent + AMM vault ATA) · swept = AMM→curve vault transfers ·
+  distributed = event total · treasury received = verified transfers to each approved shareholder.
+
+## Internal division
+Rewards treasury actual lamports L: SOL payouts = floor(L/2), buyback = L − floor(L/2) (odd lamport to buyback). Network fees,
+rent and dust are paid from operations/fee reserve, never from holder budgets, and are recorded as separate costs (05-D).
+
+## Native launch atomicity (from 04-B measurements)
+create_v2 + create_fee_sharing_config = 1,108 bytes (simulated PASS). Adding update_fee_shares_v2 (6000/4000) = ~1,406 bytes
+without a lookup table → too large; needs an ALT (~944–1,190 bytes). Until all three run in ONE transaction, a window exists
+where the coin trades with the creator as 100% shareholder → native launch BLOCKED.
+Checklist: regular SOL pair, holderReward=false, mayhem=false, two approved treasuries, ALT provisioned, full atomic simulation,
+fee decoder live against the real mint, snapshot index running, exclusion list approved, $MCP quote eligibility proven.
+
+## Treasury roles (no addresses chosen)
+MCPX_NATIVE_REWARDS_TREASURY (60%) and MCPX_NATIVE_OPERATIONS_TREASURY (40%) are receive-only shareholders (can be multisig vaults —
+transfers are plain lamport sends). Separate signers: creator/launch key (one-time, then retired), buyback signer, payout signer
+(hot, capped per window, funded from rewards treasury by multisig top-up), admin (cold / multisig). Two Phantom wallets plus one
+multisig suffice; child 25%/15% wallets are not reused.
