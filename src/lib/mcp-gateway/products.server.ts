@@ -1,6 +1,7 @@
 // Production wiring for product resolution: server-only reads, no fixtures.
-// Per-product credentials are not issued yet, so authorization fails closed for every product.
 import type { ProductConfig, ProductDeps } from "./products";
+import { authorizeProductKey, readPepper } from "./keys";
+import { productionKeyStore } from "./keys.server";
 
 export const productionProductDeps: ProductDeps = {
   async getVerifiedCreation(id) {
@@ -33,8 +34,10 @@ export const productionProductDeps: ProductDeps = {
         }
       : null;
   },
-  // Dependency: product credential issuance/revocation (security gate). Until then, deny.
-  async authorizeProduct() {
-    return false;
+  // Product key checked against the SAME creation id on every request; missing pepper = deny.
+  async authorizeProduct(product, bearer) {
+    const pepper = readPepper();
+    if (!pepper) return false;
+    return authorizeProductKey(productionKeyStore, pepper, product.creationId, bearer);
   },
 };
