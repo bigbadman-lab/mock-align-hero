@@ -8,6 +8,13 @@
       "when": 1791800924232,
       "tag": "0000_mcpx_01b_registry_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791808017222,
+      "tag": "0001_mcpx_02a_tool_rate_limits",
+      "breakpoints": true
     }
   ]
 }

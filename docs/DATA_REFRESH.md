@@ -29,3 +29,7 @@ Names are proposals only; no events are emitted, no consumer or bus exists.
 | `finance.settlement.confirmed.v1` | financial workers | earnings / rewards keys |
 
 The future verified-creation writer must insert the `mcp_creations` row and its `outbox_events` row in one transaction. No such writer exists in this phase.
+
+## Wallet Inspector (Phase 02-A)
+- Availability: one GET `/api/tools/wallet-inspector` per 5 min max, no focus/reconnect refetch, not wallet-keyed.
+- Execution: only on explicit Inspect/Retry click. No auto-run, no polling, no cache. Results are not stored anywhere.

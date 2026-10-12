@@ -15,6 +15,8 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
+import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,16 @@ const PairedRoute = PairedRouteImport.update({
   path: '/paired',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
+  id: '/tools/wallet-inspector',
+  path: '/tools/wallet-inspector',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiToolsWalletInspectorRoute = ApiToolsWalletInspectorRouteImport.update({
+  id: '/api/tools/wallet-inspector',
+  path: '/api/tools/wallet-inspector',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +87,40 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/docs' | '/launch' | '/mcp' | '/paired'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/docs'
+    | '/launch'
+    | '/mcp'
+    | '/paired'
+    | '/tools/wallet-inspector'
+    | '/api/tools/wallet-inspector'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/docs' | '/launch' | '/mcp' | '/paired'
-  id: '__root__' | '/' | '/dashboard' | '/docs' | '/launch' | '/mcp' | '/paired'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/docs'
+    | '/launch'
+    | '/mcp'
+    | '/paired'
+    | '/tools/wallet-inspector'
+    | '/api/tools/wallet-inspector'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/docs'
+    | '/launch'
+    | '/mcp'
+    | '/paired'
+    | '/tools/wallet-inspector'
+    | '/api/tools/wallet-inspector'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -87,6 +130,8 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
+  ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
+  ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -133,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PairedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/wallet-inspector': {
+      id: '/tools/wallet-inspector'
+      path: '/tools/wallet-inspector'
+      fullPath: '/tools/wallet-inspector'
+      preLoaderRoute: typeof ToolsWalletInspectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/wallet-inspector': {
+      id: '/api/tools/wallet-inspector'
+      path: '/api/tools/wallet-inspector'
+      fullPath: '/api/tools/wallet-inspector'
+      preLoaderRoute: typeof ApiToolsWalletInspectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -143,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   McpRoute: McpRoute,
   PairedRoute: PairedRoute,
+  ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
+  ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
