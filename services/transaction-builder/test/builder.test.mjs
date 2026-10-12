@@ -10,7 +10,7 @@ import { validatePrepare } from "../src/contract.mjs";
 import { assessParent } from "../src/parent.mjs";
 import { assemble, compile, feeFirst, launchIndependentAccounts, verifyAlt, shareholdersFor, BuildError, PACKET_LIMIT } from "../src/build.mjs";
 import { createApp, readyReport } from "../src/server.mjs";
-import { signRequest } from "../src/auth.mjs";
+import { signRequest, SCOPES } from "../src/auth.mjs";
 import { macBinding } from "../src/binding.mjs";
 
 const SECRET = "s".repeat(48);
@@ -44,8 +44,8 @@ async function fixtureDeps(over = {}) {
 // Minimal in-process HTTP harness (no sockets).
 async function call(app, { method = "POST", path, body = "", headers = {}, sign = true, scope, ts = Date.now(), nonce = randomUUID() }) {
   const h = { "content-type": "application/json", ...headers };
-  if (sign) Object.assign(h, { "x-mcpx-timestamp": String(ts), "x-mcpx-nonce": nonce, "x-mcpx-scope": scope ?? (path.endsWith("prepare") ? "launch.prepare" : "launch.inspect"),
-    "x-mcpx-signature": signRequest(SECRET, { ts: String(ts), nonce, scope: scope ?? (path.endsWith("prepare") ? "launch.prepare" : "launch.inspect"), method, path, body }) });
+  if (sign) Object.assign(h, { "x-mcpx-timestamp": String(ts), "x-mcpx-nonce": nonce, "x-mcpx-scope": scope ?? SCOPES[path],
+    "x-mcpx-signature": signRequest(SECRET, { ts: String(ts), nonce, scope: scope ?? SCOPES[path], method, path, body }) });
   const req = { method, url: path, headers: h, async *[Symbol.asyncIterator]() { if (body) yield Buffer.from(body); } };
   return new Promise((resolve) => {
     const res = { status: 0, headers: {}, writeHead(s, hd) { this.status = s; this.headers = hd; }, end(b) { resolve({ status: this.status, headers: this.headers, json: b ? JSON.parse(b) : null }); } };
