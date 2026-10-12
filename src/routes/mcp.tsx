@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { whaleWatchStatusQuery, supplyMonitorStatusQuery, tokenScannerStatusQuery, transactionVerifierStatusQuery, walletInspectorStatusQuery } from "@/lib/tools/status";
+import { accountCheckerStatusQuery, whaleWatchStatusQuery, supplyMonitorStatusQuery, tokenScannerStatusQuery, transactionVerifierStatusQuery, walletInspectorStatusQuery } from "@/lib/tools/status";
 import { PageContainer, PageHeader, TemplateCard, RouteError } from "@/components/mcpx/primitives";
 import { ENGINES, TEMPLATES } from "@/lib/templates";
 
@@ -29,7 +29,7 @@ function McpPage() {
               <p className="text-sm text-muted-foreground">{e.blurb}</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              {TEMPLATES.filter((t) => t.engine === e.id).map((t) => <TemplateCard key={t.id} t={t} action={t.id === "wallet-inspector" ? <WalletInspectorAction /> : t.id === "tx-verifier" ? <TxVerifierAction /> : t.id === "token-scanner" ? <TokenScannerAction /> : t.id === "supply-monitor" ? <SupplyMonitorAction /> : t.id === "whale-watch" ? <WhaleWatchAction /> : undefined} />)}
+              {TEMPLATES.filter((t) => t.engine === e.id).map((t) => <TemplateCard key={t.id} t={t} action={t.id === "wallet-inspector" ? <WalletInspectorAction /> : t.id === "tx-verifier" ? <TxVerifierAction /> : t.id === "token-scanner" ? <TokenScannerAction /> : t.id === "supply-monitor" ? <SupplyMonitorAction /> : t.id === "whale-watch" ? <WhaleWatchAction /> : t.id === "account-checker" ? <AccountCheckerAction /> : undefined} />)}
             </div>
           </section>
         ))}
@@ -67,4 +67,10 @@ function WhaleWatchAction() {
   const { data } = useQuery(whaleWatchStatusQuery);
   if (!data?.available) return <span className="font-mono text-xs text-subtle">Not deployed yet</span>;
   return <Link to="/tools/whale-watch" className="label-mono text-xs text-primary underline underline-offset-4">Whale Watch · live</Link>;
+}
+
+function AccountCheckerAction() {
+  const { data } = useQuery(accountCheckerStatusQuery);
+  if (!data?.available) return <span className="font-mono text-xs text-subtle">Not deployed yet</span>;
+  return <Link to="/tools/account-checker" className="label-mono text-xs text-primary underline underline-offset-4">Check account · live</Link>;
 }
