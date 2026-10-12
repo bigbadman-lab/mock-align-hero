@@ -16,6 +16,7 @@ import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
+import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,12 @@ const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
   path: '/tools/wallet-inspector',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiToolsTransactionVerifierRoute =
+  ApiToolsTransactionVerifierRouteImport.update({
+    id: '/api/tools/transaction-verifier',
+    path: '/api/tools/transaction-verifier',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiToolsWalletInspectorRoute = ApiToolsWalletInspectorRouteImport.update({
   id: '/api/tools/wallet-inspector',
   path: '/api/tools/wallet-inspector',
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRoutesById {
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/paired'
     | '/tools/wallet-inspector'
+    | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/paired'
     | '/tools/wallet-inspector'
+    | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   id:
     | '__root__'
@@ -120,6 +132,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/paired'
     | '/tools/wallet-inspector'
+    | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +144,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
+  ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
 }
 
@@ -185,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsWalletInspectorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools/transaction-verifier': {
+      id: '/api/tools/transaction-verifier'
+      path: '/api/tools/transaction-verifier'
+      fullPath: '/api/tools/transaction-verifier'
+      preLoaderRoute: typeof ApiToolsTransactionVerifierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/wallet-inspector': {
       id: '/api/tools/wallet-inspector'
       path: '/api/tools/wallet-inspector'
@@ -203,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PairedRoute: PairedRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
+  ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
 }
 export const routeTree = rootRouteImport
