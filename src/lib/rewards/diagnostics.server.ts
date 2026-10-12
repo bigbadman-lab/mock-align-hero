@@ -1,8 +1,8 @@
-// Server-only rewards diagnostics: readiness + ledger conservation counters. GET, no input, no addresses or secrets returned.
-import { createServerFn } from "@tanstack/react-start";
+// Operator-only rewards diagnostics (server module, not exposed over HTTP in 05-A).
+// Returns readiness blockers and ledger conservation totals; never addresses, secrets or balances that don't exist.
 import { rewardsReadiness } from "./readiness";
 
-export const getRewardsDiagnostics = createServerFn({ method: "GET" }).handler(async () => {
+export async function rewardsDiagnostics() {
   const readiness = rewardsReadiness({
     nativeMint: process.env["MCPX_NATIVE_MINT"] || null,
     feeReceiver: null, rewardsTreasury: null, operationsTreasury: null,
@@ -12,4 +12,4 @@ export const getRewardsDiagnostics = createServerFn({ method: "GET" }).handler(a
   const { data, error } = await (supabaseAdmin as any).rpc("mcpx_rw_conservation");
   const ledger = error ? { state: "UNKNOWN" as const } : { state: "OK" as const, ...(Array.isArray(data) ? data[0] : data) };
   return { checkedAt: new Date().toISOString(), readiness, ledger };
-});
+}
