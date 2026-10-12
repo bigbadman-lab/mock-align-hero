@@ -83,8 +83,8 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
             if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
             if (raw && typeof raw === "object" && "data" in raw && Array.isArray((raw as { data: unknown }).data)) return Uint8Array.from((raw as { data: number[] }).data);
             if (typeof raw === "string") {
-              const bs = await import("bs58").then((x) => x.default).catch(() => null);
-              if (bs) { try { return bs.decode(raw); } catch { /* fall through */ } }
+              const b58 = decodeBase58(raw);
+              if (b58 && b58.length === 64) return b58;
               try { return Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)); } catch { /* fall through */ }
             }
             throw new Error("unexpected_signature_format");
@@ -95,4 +95,14 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
 
   useEffect(() => { onChange(view); }, [view, onChange]);
   return null;
+}
+
+function decodeBase58(s: string): Uint8Array | null {
+  const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let n = 0n;
+  for (const ch of s) { const i = A.indexOf(ch); if (i < 0) return null; n = n * 58n + BigInt(i); }
+  const out: number[] = [];
+  while (n > 0n) { out.unshift(Number(n % 256n)); n /= 256n; }
+  for (const ch of s) { if (ch === "1") out.unshift(0); else break; }
+  return Uint8Array.from(out);
 }
