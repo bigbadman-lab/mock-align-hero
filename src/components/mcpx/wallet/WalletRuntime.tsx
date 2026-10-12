@@ -1,7 +1,7 @@
 // Browser-only. Loaded lazily behind <ClientOnly>; never imported during SSR.
 // Global Buffer is installed by WalletBoundary before this module is loaded.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect, useWalletInfo } from "@reown/appkit/react";
+import { createAppKit, useAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetwork, useDisconnect, useWalletInfo } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
 import { solana as solanaNetwork } from "@reown/appkit/networks";
 import type { AppKitNetwork } from "@reown/appkit/networks";
@@ -41,6 +41,7 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
   const { caipNetworkId, switchNetwork } = useAppKitNetwork();
   const { disconnect } = useDisconnect();
   const { walletInfo } = useWalletInfo();
+  const { walletProvider } = useAppKitProvider<{ signMessage?: (m: Uint8Array) => Promise<Uint8Array> }>("solana");
   const [timedOut, setTimedOut] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -54,8 +55,8 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
 
   // SDK hook functions are not referentially stable; keep them in a ref so the
   // reported view only changes when real wallet state changes (no render loops).
-  const fns = useRef({ open, switchNetwork, disconnect });
-  fns.current = { open, switchNetwork, disconnect };
+  const fns = useRef({ open, switchNetwork, disconnect, walletProvider });
+  fns.current = { open, switchNetwork, disconnect, walletProvider };
 
   const view = useMemo<WalletView>(() => {
     const s = deriveWalletStatus({ isConnected, address, providerStatus: status, caipNetworkId, timedOut });
@@ -69,6 +70,13 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
       openAccount: () => void fns.current.open({ view: "Account" }),
       switchToMainnet: () => void fns.current.switchNetwork(solana),
       disconnect: () => void fns.current.disconnect({ namespace: "solana" }),
+      signMessage: connected
+        ? async (m: Uint8Array) => {
+            const p = fns.current.walletProvider;
+            if (!p || typeof p.signMessage !== "function") throw new Error("unsupported_wallet");
+            return p.signMessage(m);
+          }
+        : undefined,
     };
   }, [isConnected, address, status, caipNetworkId, timedOut, walletInfo?.name]);
 
