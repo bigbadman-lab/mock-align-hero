@@ -51,7 +51,7 @@ describe("Whale Watch (mock RPC)", () => {
     expect(isWhaleWatchResult(r, ME, "1000000000")).toBe(true);
   });
   it("failed transactions never count as moved SOL; missing meta / null / unsupported version make the sample partial", async () => {
-    const { r } = await run(4, (i) => [res(tx([xfer(OTHER, ME, 50 * ONE)], { err: { InstructionError: [0, "X"] } })), res(tx([xfer(OTHER, ME, 50 * ONE)], null)), res(null), new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, error: { code: -32015 } }))][i]);
+    const { r } = await run(4, (i) => [res(tx([xfer(OTHER, ME, 50 * ONE)], { err: { InstructionError: [0, "X"] } })), res(tx([xfer(OTHER, ME, 50 * ONE)], null)), res(null), new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, error: { code: -32015 } }))][i]!);
     expect(r.transfers).toHaveLength(0);
     expect(r.coverage).toMatchObject({ failedTransactions: 1, unavailableTransactions: 2, unsupportedVersion: 1 });
     expect(r.complete).toBe(false);
