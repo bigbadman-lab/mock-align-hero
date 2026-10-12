@@ -2,7 +2,12 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Component, lazy, Suspense, type ReactNode } from "react";
 import { WalletContext } from "@/lib/wallet/context";
 
-const WalletRuntime = lazy(() => import("./WalletRuntime"));
+const WalletRuntime = lazy(async () => {
+  // Must run before any @reown/@solana module evaluates.
+  const { installBufferPolyfill } = await import("./bufferPolyfill");
+  installBufferPolyfill();
+  return import("./WalletRuntime");
+});
 
 const Unavailable = ({ children }: { children: ReactNode }) => (
   <WalletContext.Provider value={{ status: "unavailable", message: "Wallet connection couldn't load. The rest of the site works normally." }}>
