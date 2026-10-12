@@ -25,8 +25,8 @@ export type Reconstructed = { kind: "OK"; input: SnapshotInput } | { kind: "BLOC
 export function reconstructAt(anchor: Anchor | null, changes: readonly Change[], coverage: Coverage | null, slot: number): Reconstructed {
   if (!anchor) return { kind: "BLOCKED", reason: "no_anchor_snapshot" };
   if (slot < anchor.slot) return { kind: "BLOCKED", reason: "slot_before_anchor" };
-  if (!coverage || coverage.fromSlot !== anchor.slot + 1 && slot > anchor.slot) return { kind: "BLOCKED", reason: "coverage_not_contiguous_with_anchor" };
-  if (slot > anchor.slot && coverage.toSlot < slot) return { kind: "BLOCKED", reason: "coverage_gap_before_target_slot" };
+  if (slot > anchor.slot && (!coverage || coverage.fromSlot !== anchor.slot + 1)) return { kind: "BLOCKED", reason: "coverage_not_contiguous_with_anchor" };
+  if (slot > anchor.slot && coverage!.toSlot < slot) return { kind: "BLOCKED", reason: "coverage_gap_before_target_slot" };
   const sorted = [...changes].sort((a, b) => a.seq - b.seq);
   for (let i = 0; i < sorted.length; i++) {
     if (sorted[i]!.seq !== i + 1) return { kind: "BLOCKED", reason: "change_sequence_gap" };
