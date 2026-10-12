@@ -13,8 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
@@ -54,14 +54,14 @@ const LaunchRoute = LaunchRouteImport.update({
   path: '/launch',
   getParentRoute: () => rootRouteImport,
 } as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PairedRoute = PairedRouteImport.update({
   id: '/paired',
   path: '/paired',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpIndexRoute = McpIndexRouteImport.update({
+  id: '/mcp/',
+  path: '/mcp/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsAccountCheckerRoute = ToolsAccountCheckerRouteImport.update({
@@ -164,7 +164,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
-  '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
@@ -172,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/mcp/': typeof McpIndexRoute
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
@@ -190,7 +190,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
-  '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
@@ -198,6 +197,7 @@ export interface FileRoutesByTo {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/mcp': typeof McpIndexRoute
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
@@ -217,7 +217,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
-  '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
@@ -225,6 +224,7 @@ export interface FileRoutesById {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/mcp/': typeof McpIndexRoute
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
@@ -245,7 +245,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/launch'
-    | '/mcp'
     | '/paired'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
@@ -253,6 +252,7 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/mcp/'
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
@@ -271,7 +271,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/launch'
-    | '/mcp'
     | '/paired'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
@@ -279,6 +278,7 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/mcp'
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
@@ -297,7 +297,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/launch'
-    | '/mcp'
     | '/paired'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
@@ -305,6 +304,7 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/mcp/'
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
@@ -324,7 +324,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRoute
   LaunchRoute: typeof LaunchRoute
-  McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
@@ -332,6 +331,7 @@ export interface RootRouteChildren {
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
   ToolsWhaleWatchRoute: typeof ToolsWhaleWatchRoute
+  McpIndexRoute: typeof McpIndexRoute
   ApiAuthChallengeRoute: typeof ApiAuthChallengeRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
@@ -376,18 +376,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LaunchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/paired': {
       id: '/paired'
       path: '/paired'
       fullPath: '/paired'
       preLoaderRoute: typeof PairedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/': {
+      id: '/mcp/'
+      path: '/mcp'
+      fullPath: '/mcp/'
+      preLoaderRoute: typeof McpIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/account-checker': {
@@ -524,7 +524,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRoute,
   LaunchRoute: LaunchRoute,
-  McpRoute: McpRoute,
   PairedRoute: PairedRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
@@ -532,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
   ToolsWhaleWatchRoute: ToolsWhaleWatchRoute,
+  McpIndexRoute: McpIndexRoute,
   ApiAuthChallengeRoute: ApiAuthChallengeRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
