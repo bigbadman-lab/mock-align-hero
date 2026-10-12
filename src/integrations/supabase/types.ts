@@ -74,6 +74,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rate_limits: {
+        Row: {
+          bucket: string
+          hits: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       outbox_events: {
         Row: {
           aggregate_id: string
@@ -115,7 +133,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mcpx_rate_limit_take: {
+        Args: { _bucket: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
