@@ -7,7 +7,7 @@ import { reply } from "@/lib/creator-auth/http.server";
 import { UUID_RE } from "@/lib/launch/drafts-core";
 import { IMAGE_MAX_BYTES, checkImage } from "@/lib/launch/image";
 
-const TYPES = ["image/png", "image/jpeg", "image/webp"];
+const TYPES = ["image/png", "image/jpeg"];
 const STATUS: Record<string, number> = { method_not_allowed: 405, forbidden: 403, unsupported_media_type: 415, too_large: 413 };
 const CONFLICT: Record<string, number> = { not_found: 404, stale_revision: 409, storage_limit: 409, uri_too_long: 409 };
 

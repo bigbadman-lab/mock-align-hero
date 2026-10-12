@@ -5,15 +5,15 @@
 //  - PNG: every chunk CRC-checked, APNG rejected, image data fully inflated with a hard output cap and
 //    required to equal exactly the size implied by the header (decompression bombs and truncation fail).
 //    Every scanline's filter byte is validated while streaming.
-//  - JPEG / WebP: container and every segment/chunk walked, frame dimensions read, animation rejected,
-//    truncation and trailing data rejected. The server then fully decodes the pixels with libjpeg /
-//    libwebp (decode.server.ts) and requires the decoded size to match the header.
+//  - JPEG: every segment walked, frame dimensions read, truncation and trailing data rejected; the server
+//    then fully decodes the pixels (decode.server.ts). WebP is not accepted (no server decoder on this stack).
 
 export const IMAGE_MAX_BYTES = 5_000_000; // decimal 5 MB
 export const IMAGE_MIN_SIDE = 64;
-export const IMAGE_MAX_SIDE = 4096; // ≤ 16,777,216 pixels decoded
-export type ImageType = "image/png" | "image/jpeg" | "image/webp";
-export const IMAGE_EXT: Record<ImageType, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+export const IMAGE_MAX_SIDE = 4096; // PNG: ≤ 16,777,216 pixels, streamed (never held in memory)
+export const JPEG_MAX_SIDE = 2048; // JPEG is fully decoded in server memory; 2048² fits the worker budget
+export type ImageType = "image/png" | "image/jpeg";
+export const IMAGE_EXT: Record<ImageType, string> = { "image/png": "png", "image/jpeg": "jpg" };
 
 export type ImageCheck = { ok: true; type: ImageType; width: number; height: number } | { ok: false; error: string };
 const no = (error: string): ImageCheck => ({ ok: false, error });
@@ -32,7 +32,7 @@ function crc32(b: Uint8Array, s: number, e: number) {
   return (c ^ 0xffffffff) >>> 0;
 }
 
-export function sniff(b: Uint8Array): ImageType | null {
+export function sniff(b: Uint8Array): ImageType | "image/webp" | null {
   if (b.length >= 8 && u32(b, 0) === 0x89504e47 && u32(b, 4) === 0x0d0a1a0a) return "image/png";
   if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
   if (b.length >= 12 && ascii(b, 0, 4) === "RIFF" && ascii(b, 8, 4) === "WEBP") return "image/webp";
@@ -43,7 +43,8 @@ function dims(type: ImageType, width: number, height: number): ImageCheck {
   if (!width || !height) return no("The image has no size.");
   if (width !== height) return no(`Artwork must be exactly square (1:1). This image is ${width}×${height}.`);
   if (width < IMAGE_MIN_SIDE) return no(`Artwork must be at least ${IMAGE_MIN_SIDE}×${IMAGE_MIN_SIDE} pixels.`);
-  if (width > IMAGE_MAX_SIDE) return no(`Artwork can be at most ${IMAGE_MAX_SIDE}×${IMAGE_MAX_SIDE} pixels.`);
+  const max = type === "image/jpeg" ? JPEG_MAX_SIDE : IMAGE_MAX_SIDE;
+  if (width > max) return no(`${type === "image/jpeg" ? "JPEG artwork" : "Artwork"} can be at most ${max}×${max} pixels.`);
   return { ok: true, type, width, height };
 }
 
@@ -155,47 +156,16 @@ function checkJpeg(b: Uint8Array): ImageCheck {
   return dims("image/jpeg", w, h);
 }
 
-function checkWebp(b: Uint8Array): ImageCheck {
-  if (le32(b, 4) + 8 !== b.length) return no("The WebP file is cut off or has extra data.");
-  let o = 12, w = 0, h = 0, image = 0;
-  while (o < b.length) {
-    if (o + 8 > b.length) return no("The WebP file is cut off.");
-    const type = ascii(b, o, 4), len = le32(b, o + 4), d = o + 8;
-    if (d + len > b.length) return no("The WebP file is cut off.");
-    if (type === "ANIM" || type === "ANMF") return no("Animated images aren't allowed.");
-    if (type === "VP8X") {
-      if (o !== 12 || len < 10) return no("The WebP file is damaged.");
-      if (b[d]! & 0x02) return no("Animated images aren't allowed.");
-      w = le24(b, d + 4) + 1; h = le24(b, d + 7) + 1;
-    } else if (type === "VP8 ") {
-      if (len < 10 || b[d + 3] !== 0x9d || b[d + 4] !== 0x01 || b[d + 5] !== 0x2a) return no("The WebP file is damaged.");
-      const fw = (b[d + 6]! | (b[d + 7]! << 8)) & 0x3fff, fh = (b[d + 8]! | (b[d + 9]! << 8)) & 0x3fff;
-      if (w && (fw !== w || fh !== h)) return no("The WebP file is inconsistent.");
-      w = fw; h = fh; image++;
-    } else if (type === "VP8L") {
-      if (len < 5 || b[d] !== 0x2f) return no("The WebP file is damaged.");
-      const bits = le32(b, d + 1);
-      const fw = (bits & 0x3fff) + 1, fh = ((bits >>> 14) & 0x3fff) + 1;
-      if (w && (fw !== w || fh !== h)) return no("The WebP file is inconsistent.");
-      w = fw; h = fh; image++;
-    }
-    o = d + len + (len & 1);
-  }
-  if (o !== b.length) return no("The WebP file is damaged.");
-  if (image !== 1) return no("The WebP file has no single still image.");
-  return dims("image/webp", w, h);
-}
-
 /** Full structural check. Size bound first so nothing large is parsed. */
 export async function checkImage(b: Uint8Array): Promise<ImageCheck> {
   if (b.length === 0) return no("The file is empty.");
   if (b.length > IMAGE_MAX_BYTES) return no("Artwork must be 5 MB or smaller (5,000,000 bytes).");
   const t = sniff(b);
-  if (!t) return no("Only PNG, JPEG or WebP images are allowed.");
+  if (!t) return no("Only PNG or JPEG images are allowed.");
+  if (t === "image/webp") return no("WebP isn't supported. Please use PNG or JPEG.");
   try {
     if (t === "image/png") return await checkPng(b);
-    if (t === "image/jpeg") return checkJpeg(b);
-    return checkWebp(b);
+    return checkJpeg(b);
   } catch { return no("The image could not be read."); }
 }
 

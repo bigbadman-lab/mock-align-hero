@@ -10,8 +10,9 @@ async function full(b: Uint8Array) {
 }
 
 describe("server artwork decoding", () => {
-  it("decodes real PNG, JPEG and WebP (lossy + lossless)", async () => {
-    for (const n of ["sq.png", "sq.jpg", "sq.webp", "sq-lossless.webp"]) expect((await full(F(n))).ok, n).toBe(true);
+  it("decodes real PNG and JPEG; refuses WebP", async () => {
+    expect(await full(F("sq.webp"))).toMatchObject({ ok: false, error: expect.stringContaining("WebP") });
+    for (const n of ["sq.png", "sq.jpg"]) expect((await full(F(n))).ok, n).toBe(true);
   });
   it("rejects JPEG whose pixel data is corrupted but structure is intact", async () => {
     const j = F("sq.jpg");
@@ -22,8 +23,11 @@ describe("server artwork decoding", () => {
     expect(await full(F("bomb.png"))).toMatchObject({ ok: false });
     expect(await full(F("badfilter.png"))).toMatchObject({ ok: false });
   });
-  it("rejects non-square JPEG and under-64 WebP", async () => {
+  it("rejects non-square JPEG and JPEG over 2048 px", async () => {
     expect(await full(F("wide.jpg"))).toMatchObject({ ok: false, error: expect.stringContaining("square") });
-    expect(await full(F("under63.webp"))).toMatchObject({ ok: false, error: expect.stringContaining("at least 64") });
+    expect(await full(F("j2049.jpg"))).toMatchObject({ ok: false, error: expect.stringContaining("2048") });
+  });
+  it("decodes a 2048 px progressive JPEG within the memory cap", async () => {
+    expect((await full(F("j2048.jpg"))).ok).toBe(true);
   });
 });

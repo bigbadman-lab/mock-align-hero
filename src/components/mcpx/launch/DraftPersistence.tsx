@@ -179,7 +179,7 @@ export function ArtworkPanel({ signedIn, saved, dirty, drafts, onSaved }: { sign
   return (
     <div className="rounded-lg border border-border bg-card p-4 text-sm">
       <p className="text-foreground">Token artwork</p>
-      <p className="mt-1 text-muted-foreground">Square (1:1) PNG, JPEG or WebP, 5 MB maximum. Not cropped or resized.</p>
+      <p className="mt-1 text-muted-foreground">Square (1:1) PNG or JPEG, 5 MB maximum. Not cropped or resized.</p>
       {saved?.artwork && (
         <div className="mt-3 flex items-center gap-3">
           <img src={saved.artwork.url} alt="Saved token artwork" width={64} height={64} className="h-16 w-16 rounded border border-border object-cover" />
@@ -194,7 +194,7 @@ export function ArtworkPanel({ signedIn, saved, dirty, drafts, onSaved }: { sign
         <label className="block">
           <span className="text-foreground">{saved?.artwork ? "Replace artwork" : "Choose artwork"}</span>
           <span className="block text-xs text-subtle">or drag an image here</span>
-          <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="mt-2 block w-full text-muted-foreground" aria-describedby="artwork-err" onChange={(e) => void pick(e.target.files?.[0])} />
+          <input ref={inputRef} type="file" accept="image/png,image/jpeg" className="mt-2 block w-full text-muted-foreground" aria-describedby="artwork-err" onChange={(e) => void pick(e.target.files?.[0])} />
         </label>
         {preview && (
           <div className="mt-3 flex flex-wrap items-center gap-3">
