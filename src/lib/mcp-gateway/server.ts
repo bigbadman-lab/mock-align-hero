@@ -1,6 +1,6 @@
 // External MCP gateway (server-only). Official SDK, stateless, JSON responses.
 // Flow: client → bearer check → Origin check → SDK protocol handling → tool → shared rate limit → signed worker call.
-import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
+import { McpServer, createMcpHandler, type StandardSchemaWithJSON } from "@modelcontextprotocol/server";
 import { adaptersFor, type EndpointProfile } from "./registry";
 import { callWorker, hmac, takeShared, toolAvailability, workerConfig } from "@/lib/tools/relay";
 
@@ -29,8 +29,9 @@ function buildServer(profile: EndpointProfile, request: Request) {
   for (const a of adaptersFor(profile)) {
     server.registerTool(
       a.toolName,
-      { title: a.title, description: a.description, inputSchema: a.inputSchema, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
-      async (input) => {
+      { title: a.title, description: a.description, inputSchema: a.inputSchema as unknown as StandardSchemaWithJSON, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
+      async (raw: unknown) => {
+        const input = raw as Record<string, unknown>;
         const fail = (msg: string) => ({ isError: true, content: [{ type: "text" as const, text: msg }] });
         const cfg = workerConfig();
         if (!cfg) return fail("unavailable: execution service not configured");
