@@ -36,13 +36,13 @@ function decoder(kind: "jpeg" | "webp"): Promise<Decoder> {
       // @ts-expect-error -- wasm module import resolved by the server bundler
       const mod = await precompiled(() => import("@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm?module"), "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm");
       await (lib.init as unknown as Init)(mod, opts);
-      return (b) => lib.default(b);
+      return (b: ArrayBuffer) => lib.default(b);
     }
     const lib = await import("@jsquash/webp/decode");
     // @ts-expect-error -- wasm module import resolved by the server bundler
     const mod = await precompiled(() => import("@jsquash/webp/codec/dec/webp_dec.wasm?module"), "@jsquash/webp/codec/dec/webp_dec.wasm");
     await (lib.init as unknown as Init)(mod, opts);
-    return (b) => lib.default(b);
+    return (b: ArrayBuffer) => lib.default(b);
   })().catch((e) => { delete cache[kind]; throw e; }));
 }
 
