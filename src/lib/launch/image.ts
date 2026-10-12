@@ -62,8 +62,8 @@ async function inflateExact(data: Uint8Array, expected: number, rows: Array<[num
       for (let i = 0; i < value.byteLength; i++, total++) {
         if (total === next) {
           if (value[i]! > 4) { await r.cancel().catch(() => {}); return false; }
+          next += rows[ri]![0];
           if (--left === 0) { ri++; left = rows[ri]?.[1] ?? 0; }
-          next += rows[ri]?.[0] ?? 0;
         }
       }
     }
