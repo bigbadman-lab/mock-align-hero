@@ -46,7 +46,7 @@ export interface Draft {
   initialBuy: null | { amountMcp: string; slippageBps: number };
 }
 
-export type FieldErrors = Partial<Record<keyof DraftInput, string>>;
+export type FieldErrors = Partial<Record<keyof DraftInput, string | undefined>>;
 
 const utf8Len = (s: string) => new TextEncoder().encode(s).length;
 const CONTROL = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]/;
