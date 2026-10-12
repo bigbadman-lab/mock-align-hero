@@ -47,7 +47,9 @@ export const Route = createFileRoute("/api/creator/launch-artwork")({
           if (!(await m.takeLaunchBudget(s.wallet, "upload"))) return reply(429, { error: "rate_limited" });
           const bytes = await readBounded(request);
           if (!bytes) return reply(413, { error: "too_large" });
-          const img = await checkImage(bytes);
+          const checked = await checkImage(bytes);
+          if (!checked.ok) return reply(422, { error: "invalid_image", message: checked.error });
+          const img = await (await import("@/lib/launch/decode.server")).decodeArtwork(bytes, checked);
           if (!img.ok) return reply(422, { error: "invalid_image", message: img.error });
           const declared = (request.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
           if (declared !== img.type) return reply(422, { error: "invalid_image", message: "The file's contents don't match its type." });

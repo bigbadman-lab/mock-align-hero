@@ -4,9 +4,10 @@
 // Depth of server checking (documented limitation):
 //  - PNG: every chunk CRC-checked, APNG rejected, image data fully inflated with a hard output cap and
 //    required to equal exactly the size implied by the header (decompression bombs and truncation fail).
+//    Every scanline's filter byte is validated while streaming.
 //  - JPEG / WebP: container and every segment/chunk walked, frame dimensions read, animation rejected,
-//    truncation and trailing data rejected. Pixels are NOT decoded on the server (no decoder in the
-//    worker runtime); the browser additionally decodes before upload. Reported as PARTIAL, not PASS.
+//    truncation and trailing data rejected. The server then fully decodes the pixels with libjpeg /
+//    libwebp (decode.server.ts) and requires the decoded size to match the header.
 
 export const IMAGE_MAX_BYTES = 5_000_000; // decimal 5 MB
 export const IMAGE_MIN_SIDE = 64;
@@ -46,18 +47,25 @@ function dims(type: ImageType, width: number, height: number): ImageCheck {
   return { ok: true, type, width, height };
 }
 
-async function inflateExact(data: Uint8Array, expected: number): Promise<boolean> {
+/** Streams zlib output with a hard cap; every scanline must start with a valid PNG filter type (0–4). */
+async function inflateExact(data: Uint8Array, expected: number, rows: Array<[number, number]>): Promise<boolean> {
   const ds = new DecompressionStream("deflate");
   const w = ds.writable.getWriter();
   void w.write(data as unknown as BufferSource).then(() => w.close()).catch(() => {});
   const r = ds.readable.getReader();
-  let total = 0;
+  let total = 0, ri = 0, left = rows[0]?.[1] ?? 0, next = 0;
   try {
     for (;;) {
       const { done, value } = await r.read();
       if (done) break;
-      total += value.byteLength;
-      if (total > expected) { await r.cancel().catch(() => {}); return false; }
+      if (total + value.byteLength > expected) { await r.cancel().catch(() => {}); return false; }
+      for (let i = 0; i < value.byteLength; i++, total++) {
+        if (total === next) {
+          if (value[i]! > 4) { await r.cancel().catch(() => {}); return false; }
+          if (--left === 0) { ri++; left = rows[ri]?.[1] ?? 0; }
+          next += rows[ri]?.[0] ?? 0;
+        }
+      }
     }
   } catch { return false; }
   return total === expected;
@@ -100,15 +108,16 @@ async function checkPng(b: Uint8Array): Promise<ImageCheck> {
   if (!seenIdat) return no("The PNG file has no image data.");
   const row = (pw: number) => 1 + Math.ceil((pw * bits) / 8);
   let expected = 0;
-  if (!interlace) expected = h * row(w);
+  const rows: Array<[number, number]> = [];
+  if (!interlace) { expected = h * row(w); rows.push([row(w), h]); }
   else for (const [x0, y0, dx, dy] of ADAM7) {
     const pw = Math.ceil((w - x0) / dx), ph = Math.ceil((h - y0) / dy);
-    if (pw > 0 && ph > 0) expected += ph * row(pw);
+    if (pw > 0 && ph > 0) { expected += ph * row(pw); rows.push([row(pw), ph]); }
   }
   const all = new Uint8Array(idatLen);
   let p = 0;
   for (const c of idat) { all.set(c, p); p += c.length; }
-  if (!(await inflateExact(all, expected))) return no("The PNG image data is damaged or doesn't match its size.");
+  if (!(await inflateExact(all, expected, rows))) return no("The PNG image data is damaged or doesn't match its size.");
   return dims("image/png", w, h);
 }
 
