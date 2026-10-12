@@ -57,9 +57,9 @@ export async function decodeArtwork(bytes: Uint8Array, checked: Extract<ImageChe
     const copy = bytes.slice().buffer;
     diagnostics = 0;
     const img = await dec(copy);
-    if (diagnostics) { console.error("[decodeArtwork] diagnostics", diagnostics); return bad; }
+    if (diagnostics) return bad;
     if (img.width !== checked.width || img.height !== checked.height) return bad;
     if (img.data.length !== checked.width * checked.height * 4) return bad;
     return checked;
-  } catch (e) { console.error("[decodeArtwork]", e); return bad; }
+  } catch { return bad; }
 }
