@@ -21,3 +21,4 @@
 - Data ownership and refresh rules are documented in docs/DATA_REFRESH.md; registry query keys never include wallet state so wallet changes cannot refetch public data.
 - Tool execution: browser → same-origin proxy src/routes/api/tools/wallet-inspector.ts (validates, rate-limits via service-role-only `mcpx_rate_limit_take`, HMAC-signs) → separate Render worker in services/mcp-worker (only holder of the RPC key; no DB, no signing) — keeps provider credentials and execution out of the website and browser.
 - Tool CTAs render only when the proxy's GET reports the worker ready; otherwise honest "not connected" text — Publish = Live.
+- Tool relays share src/lib/tools/relay.ts: one visitor+global rate-limit budget ("tools:*" buckets) across all tools, and a tool is enabled only when the worker's /ready lists its tool id — adding tools must never multiply capacity or show "live" before the worker is redeployed.
