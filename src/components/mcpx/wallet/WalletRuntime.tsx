@@ -15,7 +15,8 @@ function initOnce() {
   if (window.__mcpxAppKit) return;
   window.__mcpxAppKit = true;
   createAppKit({
-    adapters: [new SolanaAdapter()],
+    // SDK types conflict with this project's strict optional-property setting; runtime shape is correct.
+    adapters: [new SolanaAdapter() as unknown as NonNullable<Parameters<typeof createAppKit>[0]["adapters"]>[number]],
     networks: [solana] as [AppKitNetwork],
     defaultNetwork: solana,
     projectId: REOWN_PROJECT_ID,

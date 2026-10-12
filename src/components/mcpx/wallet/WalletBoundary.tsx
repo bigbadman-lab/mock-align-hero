@@ -12,10 +12,10 @@ const Unavailable = ({ children }: { children: ReactNode }) => (
 
 // Contains any wallet SDK failure: children render again with "unavailable" state.
 class Guard extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
+  override state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(e: unknown) { console.warn("Wallet runtime failed", e); }
-  render() { return this.state.failed ? this.props.fallback : this.props.children; }
+  override componentDidCatch(e: unknown) { console.warn("Wallet runtime failed", e); }
+  override render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
 export function WalletBoundary({ children }: { children: ReactNode }) {
