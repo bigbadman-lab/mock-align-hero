@@ -43,3 +43,8 @@ Redeploy: Render → existing service → Manual Deploy → Deploy latest commit
 Tool `whale_watch` (catalogue id `whale-watch`), schema `mcpx.tool-execution.whale-watch.v1`, input `{"address":"<base58>","minLamports":"100000000"|"1000000000"|"10000000000"|"100000000000"}`.
 RPC budget per run: 1 getSignaturesForAddress (limit 20, finalized) + at most 10 getTransaction (jsonParsed, v0), 2 at a time, 8 s per call, 16 s run budget (inside the 20 s request deadline), no pagination, no retries — max 11 reads. Counts only successful System Program transfer/transferWithSeed instructions (outer + inner) where the address is sender or recipient. Native SOL only.
 Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `whale_watch`.
+
+## Account Checker (Phase 02-F)
+Tool `account_checker` (catalogue id `account-checker`), schema `mcpx.tool-execution.account-checker.v1`, input `{"address":"<base58>"}`.
+Exactly 1 RPC read: getAccountInfo (confirmed, base64, dataSlice 0/0 — no account data fetched). Lamports read as exact digits from the raw JSON. No rent comparison, no rentEpoch.
+Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `account_checker`.

@@ -6,6 +6,7 @@ import { inspectWallet, parseAddress, RpcError, TOOL_ID, SCHEMA } from "./inspec
 import { verifyTransaction, parseSignature, TV_TOOL_ID, TV_SCHEMA } from "./verify.mjs";
 import { scanToken, TS_TOOL_ID, TS_SCHEMA } from "./scan.mjs";
 import { monitorSupply, SM_TOOL_ID, SM_SCHEMA } from "./supply.mjs";
+import { checkAccount, AC_TOOL_ID, AC_SCHEMA } from "./account.mjs";
 import { watchWhales, validInput as wwValid, WW_TOOL_ID, WW_SCHEMA } from "./whale.mjs";
 
 const PORT = Number(process.env.PORT ?? 10000);
@@ -25,6 +26,7 @@ const TOOLS = {
   [SM_TOOL_ID]: { schema: SM_SCHEMA, key: "mint", valid: parseAddress, run: (v, o) => monitorSupply({ mint: v, ...o }), summary: (out) => ({ status: out.status, partial: out.partial ?? null, accounts: out.distribution?.accounts.length ?? 0 }) },
   // Multi-field input: `whole` validates the entire input object (exact keys) instead of one key.
   [WW_TOOL_ID]: { schema: WW_SCHEMA, whole: wwValid, run: (i, o) => watchWhales({ ...i, ...o }), summary: (out) => ({ complete: out.complete, transfers: out.transfers.length, attempted: out.coverage.transactionsAttempted }) },
+  [AC_TOOL_ID]: { schema: AC_SCHEMA, key: "address", valid: parseAddress, run: (v, o) => checkAccount({ address: v, ...o }), summary: (out) => ({ exists: out.exists, classification: out.classification }) },
 };
 
 const seenNonces = new Map();
