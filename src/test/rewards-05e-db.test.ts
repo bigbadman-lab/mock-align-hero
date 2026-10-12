@@ -57,15 +57,15 @@ d("05-E durable store (real Postgres)", () => {
     const [ra, rb] = await Promise.all([processNext(sa, CFG, run("worker-A")), processNext(sb, CFG, run("worker-B"))]);
     const kinds = [ra.kind, rb.kind].sort();
     expect(kinds.filter((k) => k === "SEALED")).toHaveLength(1);
-    expect((await a.unsafe("select count(*)::int n from public.mcpx_rw_receipt_consumption"))[0]!.n).toBe(1);
+    expect((await a.unsafe("select count(*)::int n from public.mcpx_rw_receipt_consumption"))[0]!['n']).toBe(1);
   });
 
   it("stale lease is reclaimed by the DB clock; live lease blocks", async () => {
     await reset();
-    expect((await a.unsafe("select public.mcpx_rw_acquire_lease('worker-A', 5) ok"))[0]!.ok).toBe(true);
-    expect((await b.unsafe("select public.mcpx_rw_acquire_lease('worker-B', 5) ok"))[0]!.ok).toBe(false);
+    expect((await a.unsafe("select public.mcpx_rw_acquire_lease('worker-A', 5) ok"))[0]!['ok']).toBe(true);
+    expect((await b.unsafe("select public.mcpx_rw_acquire_lease('worker-B', 5) ok"))[0]!['ok']).toBe(false);
     await a.unsafe("update public.mcpx_rw_proc_state set lease_until = now() - interval '1 second'");
-    expect((await b.unsafe("select public.mcpx_rw_acquire_lease('worker-B', 5) ok"))[0]!.ok).toBe(true);
+    expect((await b.unsafe("select public.mcpx_rw_acquire_lease('worker-B', 5) ok"))[0]!['ok']).toBe(true);
     // the old holder can no longer commit
     const sa = pgStore(wrap(a), "worker-A", 30, SRC);
     const fake = { planId: "plan_" + "0".repeat(32), inputDigest: "0".repeat(64), window: T0, status: "PLANNED", mode: "DRY_RUN", rewardsTotal: 0n, operationsTotal: 0n, solBudget: 0n, buybackBudget: 0n,
@@ -85,7 +85,7 @@ d("05-E durable store (real Postgres)", () => {
     await expect(call({ ...base, rewardsTotal: "9999", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key])).rejects.toThrow(/plan_totals_mismatch/);
     await expect(call({ ...base, rewardsTotal: "0", operationsTotal: "0", solBudget: "0", buybackBudget: "0" }, [])).rejects.toThrow(/unconsumed_receipt_omitted/);
     await expect(call({ ...base, mode: "LIVE", rewardsTotal: "6000", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key])).rejects.toThrow(/dry_run_only/);
-    expect((await call({ ...base, rewardsTotal: "6000", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key]))[0]!.r).toBe("COMMITTED");
+    expect((await call({ ...base, rewardsTotal: "6000", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key]))[0]!['r']).toBe("COMMITTED");
     await expect(call({ ...base, planId: "plan_" + "2".repeat(32), rewardsTotal: "6000", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key], T0 + 300, new Date(T0 * 1000).toISOString())).rejects.toThrow(/own_receipt_mismatch|duplicate key/);
     await expect(a.unsafe("update public.mcpx_rw_proc_state set watermark = watermark + interval '900 seconds'")).rejects.toThrow(/watermark_must_advance_one_window/);
     await expect(a.unsafe("update public.mcpx_rw_window_plans set status = 'PLANNED'")).rejects.toThrow(/append_only/);
