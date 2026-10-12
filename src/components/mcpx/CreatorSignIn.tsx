@@ -78,8 +78,14 @@ export function CreatorSignIn() {
       try {
         sig = await w.signMessage(new TextEncoder().encode(message));
       } catch (e) {
-        const unsupported = e instanceof Error && e.message === "unsupported_wallet";
-        return setS({ kind: "signed_out", note: unsupported ? "This wallet can't sign messages. Try another wallet." : "You declined the signature. Nothing was signed in." });
+        const msg = e instanceof Error ? e.message : String((e as { message?: unknown })?.message ?? e);
+        const code = (e as { code?: unknown })?.code;
+        console.warn("[mcpx] wallet signMessage failed", { code, msg, e });
+        const unsupported = msg === "unsupported_wallet";
+        const declined = code === 4001 || /reject|declin|denied|cancel/i.test(msg);
+        return setS({ kind: "signed_out", note: unsupported ? "This wallet can't sign messages. Try another wallet."
+          : declined ? "You declined the signature. Nothing was signed in."
+          : `The wallet couldn't show the sign-in request (${msg.slice(0, 120)}). Nothing was signed in.` });
       }
       setS({ kind: "pending", step: "Checking signature…" });
       const v = await post("/api/auth/verify", { address, nonce, signature: b64(sig) });
