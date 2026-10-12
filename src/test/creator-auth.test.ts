@@ -133,8 +133,7 @@ describe("creator wallet sign-in (TEST ONLY keys)", () => {
 
 describe("SIWS message format (wallet compatibility)", () => {
   it("nonce is alphanumeric and every field line matches the SIWS grammar", async () => {
-    const { createChallenge } = await import("@/lib/creator-auth/core");
-    const kp = await makeKeypair();
+    const kp = await keypair();
     const c = await createChallenge(store, kp.address, HOST);
     if (!c.ok) throw new Error("challenge failed");
     expect(c.nonce).toMatch(/^[A-Za-z0-9]{8,}$/);
