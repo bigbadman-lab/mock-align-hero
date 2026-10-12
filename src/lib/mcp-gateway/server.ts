@@ -30,7 +30,7 @@ function buildServer(profile: EndpointProfile, request: Request) {
     server.registerTool(
       a.toolName,
       { title: a.title, description: a.description, inputSchema: a.inputSchema, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
-      async (input: Record<string, unknown>) => {
+      async (input) => {
         const fail = (msg: string) => ({ isError: true, content: [{ type: "text" as const, text: msg }] });
         const cfg = workerConfig();
         if (!cfg) return fail("unavailable: execution service not configured");

@@ -10,7 +10,7 @@ export interface TemplateAdapter {
   workerToolId: string; // id the execution worker advertises on /ready
   title: string;
   description: string;
-  inputSchema: z.ZodObject;
+  inputSchema: z.ZodObject<{ address: z.ZodString }>;
   /** Build the exact signed worker payload from already-validated input. */
   toWorkerPayload(input: Record<string, unknown>): string;
   /** Strict check of the worker response before it reaches the client. */
@@ -30,8 +30,8 @@ const walletInspector: TemplateAdapter = {
   inputSchema: z.strictObject({
     address: z.string().min(32).max(44).refine(isValidSolanaAddress, "Must be a 32-byte base58 Solana public key").describe("Solana public address (base58)."),
   }),
-  toWorkerPayload: (i) => JSON.stringify({ schema: WI_SCHEMA, toolId: WI_TOOL_ID, input: { address: i.address } }),
-  validOutput: (out, i) => isWalletInspectorResult(out, String(i.address)),
+  toWorkerPayload: (i) => JSON.stringify({ schema: WI_SCHEMA, toolId: WI_TOOL_ID, input: { address: i["address"] } }),
+  validOutput: (out, i) => isWalletInspectorResult(out, String(i["address"])),
 };
 
 /** All implemented adapters, keyed by templateId. */
