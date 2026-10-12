@@ -56,7 +56,7 @@ describe("wallet display contract", () => {
 
   it("unsupported network never shows mainnet", () => {
     render(<Both view={{ status: "connected_unsupported_network", address: A }} />);
-    expect(screen.queryByText(/Solana mainnet$/)).toBeNull();
+    expect(screen.queryByText((_, el) => el?.tagName === "P" && /· Solana mainnet$|^Solana mainnet$/.test(el.textContent ?? ""))).toBeNull();
     expect(screen.getAllByText(/Unsupported network/).length).toBeGreaterThan(0);
   });
 
