@@ -95,8 +95,8 @@ function Home() {
         <PageContainer className="py-20">
           <SectionHeading label="Current status" title={<span id="status">What exists today</span>} />
           <div className="mt-8 grid gap-3 md:grid-cols-2">
-            <StatusMessage title="Available: site foundation">Template definitions and documentation.</StatusMessage>
-            <StatusMessage tone="warning" title="Not available yet">Onchain token creation, wallet connection and tool execution. $MCP has not been minted.</StatusMessage>
+            <StatusMessage title="Available now">Template definitions, documentation, Solana wallet connection (public address only) and the read-only verified registry.</StatusMessage>
+            <StatusMessage tone="warning" title="Not available yet">Onchain token creation, tool execution, earnings and rewards. $MCP has not been minted.</StatusMessage>
           </div>
         </PageContainer>
       </section>

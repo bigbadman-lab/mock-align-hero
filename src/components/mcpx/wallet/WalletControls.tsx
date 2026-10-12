@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@/lib/wallet/context";
 import { explorerAccountUrl, shortAddress } from "@/lib/wallet/state";
 import { buttonOutline, buttonPrimary } from "../primitives";
@@ -6,10 +6,13 @@ import { cn } from "@/lib/utils";
 
 export function useCopy() {
   const [msg, setMsg] = useState<string | null>(null);
+  const t = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(t.current), []);
   const copy = async (text: string) => {
     try { await navigator.clipboard.writeText(text); setMsg("Copied"); }
-    catch { setMsg("Copy failed"); }
-    setTimeout(() => setMsg(null), 2000);
+    catch { setMsg("Copy failed — select the address and copy it manually"); }
+    clearTimeout(t.current);
+    t.current = setTimeout(() => setMsg(null), 2000);
   };
   return { msg, copy };
 }
@@ -72,7 +75,9 @@ export function WalletPanel() {
           <p className="text-sm text-muted-foreground">
             {w.status === "unavailable" ? w.message : w.status === "error" ? w.message : "Connecting shows your public address here. It does not create an MCPX account and nothing is signed."}
           </p>
-          <WalletButton />
+          {w.status === "unavailable"
+            ? <button type="button" onClick={() => window.location.reload()} className={buttonOutline}>Reload page to retry</button>
+            : <WalletButton />}
         </div>
       )}
       <p className="mt-6 border-t border-border pt-4 text-xs leading-relaxed text-subtle">
