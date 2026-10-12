@@ -4,6 +4,8 @@ import { web3, pumpProgram, feeProgram, PROGRAMS, SDK_VERSIONS, instructionName 
 import { FEE_SPLIT_BPS } from "./config.mjs";
 import { assessParent } from "./parent.mjs";
 import { assemble, compile, manifest, feeFirst, verifyAlt, BuildError, PACKET_LIMIT } from "./build.mjs";
+import { verifyCreated, verifySimulationEvents } from "./launch-state.mjs";
+import { pump, BN } from "./sdk.mjs";
 import { BINDING_SCHEMA, CANDIDATE_TTL_MS, macBinding, verifyBindingMac, sha256hex, canonical } from "./binding.mjs";
 
 const { PublicKey, VersionedMessage } = web3;
@@ -28,6 +30,8 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     if (cfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
     if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
     if (req.creator === cfg.opsRecipient || req.creator === cfg.platformRecipient) return blocked(["FEE_RECIPIENT_DUPLICATE"]);
+    // Locked 04-B decision: the optional buy is a separate, later transaction. Refused, never stripped.
+    if (req.initialBuy) return blocked(["INITIAL_BUY_MUST_BE_SEPARATE"]);
     if (req.format === "v0_alt" && !cfg.lookupTable) return blocked(["ALT_NOT_CONFIGURED"]);
     const candidate = CANDIDATE_FOR[req.initialBuy ? req.initialBuy.mode : "null"];
     const evidence = { ...baseEvidence(req.format), candidate };
@@ -66,6 +70,23 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     });
     if (c.size > PACKET_LIMIT || !c.messageBytes) return blocked(["TX_TOO_LARGE"], { evidence });
 
+    // Real read-only simulation when the deps support it (chain mode always does). Fee configuration is
+    // only "verified" when the program's own events show creator=10000 → exact 60/25/15.
+    let feeConfigVerified = false;
+    if (deps.simulate) {
+      let sim;
+      try { sim = await deadline(deps.simulate(c.messageBytes), READ_DEADLINE_MS); }
+      catch { return { http: 503, body: { status: "ERROR", code: "RPC_UNAVAILABLE", launchReady: false } }; }
+      evidence.simulation = { status: sim.err ? "FAIL" : "PASS", unitsConsumed: sim.unitsConsumed, slot: sim.slot, sigVerify: false };
+      evidence.compute = sim.unitsConsumed != null ? { measuredUnits: sim.unitsConsumed } : "COMPUTE_NOT_MEASURED";
+      if (sim.err) return blocked(["SIMULATION_FAILED"], { evidence: { ...evidence, simulationError: sim.err, logsTail: sim.logs.slice(-8) } });
+      const evErr = verifySimulationEvents(sim.logs, { mint: req.mint, creator: req.creator, cfg });
+      if (evErr) return blocked([evErr], { evidence });
+      feeConfigVerified = true;
+      evidence.chainAcceptance = "SIMULATED_NOT_SENT";
+    }
+    evidence.feeConfigVerified = feeConfigVerified;
+
     const preparationId = randomUUID();
     const binding = {
       schema: BINDING_SCHEMA, preparationId, candidate, format: req.format, creator: req.creator, mint: req.mint,
@@ -76,7 +97,8 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
       messageSha256: sha256hex(c.messageBytes), expiresAt: new Date(now() + CANDIDATE_TTL_MS).toISOString(),
     };
     return { http: 200, body: {
-      status: "UNSIGNED_CANDIDATE", launchReady: false, preparationId,
+      status: "UNSIGNED_CANDIDATE", launchReady: false, preparationId, feeConfigVerified,
+      recovery: "If the outcome is unknown, call /status with this same mint; never re-prepare with a new mint until status is NOT_FOUND after lastValidBlockHeight passes.",
       messageBase64: c.messageBytes.toString("base64"), binding, bindingMac: macBinding(cfg.secret, binding), evidence,
     } };
   }
@@ -155,5 +177,53 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
       serializedBytes: sigLen + 64 * n + bytes.length, simulation: "SIMULATION_NOT_RUN", chainAcceptance: "BLOCKED", launchReady: false } };
   }
 
-  return { prepare, inspect };
+  async function status(req) {
+    if (cfg.state !== "READY_FOR_PREPARE" || !cfg.quoteMint) return { http: 200, body: { state: "UNKNOWN", code: cfg.quoteMint ? "NOT_CONFIGURED" : "QUOTE_MINT_MISSING" } };
+    let st;
+    try { st = await deadline(deps.getMintState(req.mint), READ_DEADLINE_MS); }
+    catch { return { http: 503, body: { state: "UNKNOWN", code: "RPC_UNAVAILABLE" } }; } // outage is never "not found"
+    return { http: 200, body: verifyCreated(st, { mint: req.mint, creator: req.creator, cfg }) };
+  }
+
+  /** Separate buy: built only against a creation whose final 60/25/15 config is verified on chain. */
+  async function prepareBuy(req) {
+    if (cfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
+    if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
+    const hash = sha256hex(canonical(req));
+    const hit = idem.get(req.idempotencyKey);
+    if (hit) return hit.hash === hash ? hit.result : { http: 409, body: { status: "ERROR", code: "IDEMPOTENCY_CONFLICT" } };
+    let st, global, feeConfig, bh;
+    try {
+      [st, global, feeConfig, bh] = await deadline(Promise.all([deps.getMintState(req.mint), deps.getGlobal(), deps.getFeeConfig(), deps.getLatestBlockhash()]), READ_DEADLINE_MS);
+    } catch { return { http: 503, body: { status: "ERROR", code: "RPC_UNAVAILABLE", launchReady: false } }; }
+    const v = verifyCreated(st, { mint: req.mint, creator: req.creator, cfg });
+    if (v.state !== "CREATED_FEE_VERIFIED") return blocked([v.code ?? "CREATION_NOT_FOUND"]);
+    if (v.curveComplete) return blocked(["CURVE_COMPLETE"]);
+    const mint = new PublicKey(req.mint), user = new PublicKey(req.creator), quoteAmount = new BN(req.quoteAmount);
+    let ixs, tokens;
+    try {
+      tokens = pump.getBuyV3TokenAmountFromQuoteAmount({ global, feeConfig, mintSupply: new BN(st.mintSupply), bondingCurve: st.bondingCurve, amount: quoteAmount, curveBaseTokenBalance: new BN(st.curveBaseTokenBalance) });
+      if (tokens.isZero()) return blocked(["BUY_QUOTE_FAILED"]);
+      const qtp = await deadline(deps.getQuoteTokenProgram(cfg.quoteMint), READ_DEADLINE_MS);
+      const p = { bondingCurve: st.bondingCurve, associatedUserAccountInfo: null, mint, user, amount: tokens, quoteAmount, slippage: req.slippageBps / 100, tokenProgram: new PublicKey(st.mintOwner), quoteTokenProgram: qtp };
+      ixs = req.mode === "buy_v3" ? await pump.PUMP_SDK.buyV3Instructions(p) : await pump.PUMP_SDK.buyExactQuoteInV3Instructions(p);
+    } catch { return blocked(["BUY_NOT_BUILDABLE"]); }
+    const c = compile(ixs, user, bh.blockhash, req.format);
+    const evidence = { ...baseEvidence(req.format), instructions: manifest(ixs), signers: c.signers, serializedBytes: c.size, headroomBytes: PACKET_LIMIT - c.size,
+      quotedTokens: tokens.toString(), priceGuaranteed: false, maxQuoteSpend: "quoteAmount plus slippage cap; actual fill may be lower" };
+    if (!c.messageBytes) return blocked(["TX_TOO_LARGE"], { evidence });
+    if (deps.simulate) {
+      try {
+        const sim = await deadline(deps.simulate(c.messageBytes), READ_DEADLINE_MS);
+        evidence.simulation = { status: sim.err ? "FAIL" : "PASS", unitsConsumed: sim.unitsConsumed, slot: sim.slot, sigVerify: false };
+        if (sim.err) return blocked(["SIMULATION_FAILED"], { evidence: { ...evidence, simulationError: sim.err } });
+      } catch { return { http: 503, body: { status: "ERROR", code: "RPC_UNAVAILABLE" } }; }
+    }
+    const result = { http: 200, body: { status: "UNSIGNED_BUY_CANDIDATE", requiresExplicitUserApproval: true, launchReady: false,
+      messageBase64: c.messageBytes.toString("base64"), lastValidBlockHeight: bh.lastValidBlockHeight, evidence } };
+    idem.set(req.idempotencyKey, { hash, result, exp: now() + CANDIDATE_TTL_MS });
+    return result;
+  }
+
+  return { prepare, inspect, status, prepareBuy };
 }

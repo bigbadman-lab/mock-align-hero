@@ -25,7 +25,19 @@ Website side (Lovable Cloud, later): `MCPX_TX_BUILDER_URL`, `MCPX_TX_BUILDER_SEC
 
 ## Routes
 - `GET /health` → `{ok:true}`; `GET /ready` → config/SDK/quote/recipient/ALT status (no addresses, `launchEnabled:false`).
-- `POST /internal/v1/launch/prepare` (scope `launch.prepare`), `POST /internal/v1/launch/inspect` (scope `launch.inspect`).
+- `POST /internal/v1/launch/prepare` (`launch.prepare`) — creation only: create_v2 + fee sharing config + 60/25/15 update. A requested initial buy is refused with `INITIAL_BUY_MUST_BE_SEPARATE`, never dropped. With chain deps the candidate is simulated (sigVerify off, nothing sent) and `feeConfigVerified` is true only when the program's events show creator 10000 → exact 60/25/15.
+- `POST /internal/v1/launch/inspect` (`launch.inspect`) — re-checks a candidate against its MAC'd binding.
+- `POST /internal/v1/launch/status` (`launch.status`) — `NOT_FOUND` / `CREATED_FEE_VERIFIED` / `CREATED_FEE_MISMATCH`; RPC outage is `UNKNOWN`, never `NOT_FOUND`.
+- `POST /internal/v1/launch/prepare-buy` (`launch.prepare_buy`) — separate optional buy (buy_v3 / exact-quote), only after status is `CREATED_FEE_VERIFIED`; `requiresExplicitUserApproval: true`, `priceGuaranteed: false`.
+
+### Failure recovery
+After an unknown creation outcome: poll `status` with the **same mint**. Never prepare with a new mint
+until `status` is `NOT_FOUND` *and* the candidate's `lastValidBlockHeight` has passed. Re-using the same
+mint makes a duplicate coin impossible (create_v2 fails if the mint exists). A mint found with the wrong
+fee shares is `CREATED_FEE_MISMATCH` and must not be bought into or listed.
+
+### Evidence tools (read-only)
+`node scripts/simulate-proxy.mjs <PROXY_PARENT_MINT>` · `node scripts/alt-plan.mjs <MCP_MINT> <OPS> <PLATFORM>` · see ALT_PROVISIONING.md.
 - Anything else: 404, or 405 with `Allow`.
 
 ### Auth
