@@ -1,7 +1,8 @@
 // External MCP gateway (server-only). Official SDK, stateless, JSON responses.
-// Flow: client → bearer check → Origin check → SDK protocol handling → tool → shared rate limit → signed worker call.
+// Flow: client → Origin/size/auth checks → (product resolution) → SDK protocol → tool → shared rate limit → signed worker call.
 import { McpServer, createMcpHandler, type StandardSchemaWithJSON } from "@modelcontextprotocol/server";
-import { adaptersFor, type EndpointProfile } from "./registry";
+import { adaptersFor, type EndpointProfile, type ProductSettings, type TemplateAdapter } from "./registry";
+import { parseCreationId, resolveProduct, type ProductDeps } from "./products";
 import { callWorker, hmac, takeShared, toolAvailability, workerConfig } from "@/lib/tools/relay";
 
 export const MAX_MCP_BODY = 8 * 1024;
@@ -21,30 +22,44 @@ export async function tokenMatches(given: string, expected: string): Promise<boo
   return d === 0;
 }
 
-function buildServer(profile: EndpointProfile, request: Request) {
+/** Execution dependencies; production uses the shared relay (same buckets, same signed worker). */
+export interface ExecDeps {
+  workerConfig: typeof workerConfig;
+  toolAvailability: typeof toolAvailability;
+  takeShared: typeof takeShared;
+  callWorker: typeof callWorker;
+}
+export const productionExecDeps: ExecDeps = { workerConfig, toolAvailability, takeShared, callWorker };
+
+interface ToolEntry { adapter: TemplateAdapter; settings: ProductSettings; description: string; scope: string }
+
+function buildServer(info: { name: string; title: string }, entries: ToolEntry[], request: Request, exec: ExecDeps) {
   const server = new McpServer(
-    { name: "mcpx-platform-demo", title: "MCPX platform demo (test)", version: "0.3.0" },
-    { instructions: "MCPX test endpoint. Read-only Solana mainnet tools. Results are on-demand reads, not monitoring." },
+    { name: info.name, title: info.title, version: "0.3.1" },
+    { instructions: "MCPX endpoint. Read-only Solana mainnet tools. Results are on-demand reads, not monitoring." },
   );
-  for (const a of adaptersFor(profile)) {
+  for (const { adapter: a, settings, description, scope } of entries) {
     server.registerTool(
       a.toolName,
-      { title: a.title, description: a.description, inputSchema: a.inputSchema as unknown as StandardSchemaWithJSON, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
+      { title: a.title, description, inputSchema: a.inputSchema as unknown as StandardSchemaWithJSON, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
       async (raw: unknown) => {
-        const input = raw as Record<string, unknown>;
         const fail = (msg: string) => ({ isError: true, content: [{ type: "text" as const, text: msg }] });
-        const cfg = workerConfig();
+        // Defence in depth: only the declared external fields reach the payload builder.
+        const parsed = a.inputSchema.safeParse(raw);
+        if (!parsed.success) return fail("invalid_input");
+        const input = parsed.data as Record<string, unknown>;
+        const cfg = exec.workerConfig();
         if (!cfg) return fail("unavailable: execution service not configured");
-        const avail = await toolAvailability(a.workerToolId);
+        const avail = await exec.toolAvailability(a.workerToolId);
         if (!avail.available) return fail("unavailable: tool not ready");
-        const lim = await takeShared(cfg, request); // same buckets as the website: MCP cannot bypass site quota
+        const lim = await exec.takeShared(cfg, request); // same buckets as the website: MCP cannot bypass site quota
         if (lim === "limited") return fail("rate_limited: shared quota reached, retry later");
         if (lim === "unavailable") return fail("unavailable: rate limiter unavailable");
-        const r = await callWorker(cfg, a.toWorkerPayload(input), request);
+        const r = await exec.callWorker(cfg, a.toWorkerPayload(input, settings), request);
         if (!r.ok) return fail(r.error);
-        if (!a.validOutput(r.out, input)) return fail("bad_response");
+        if (!a.validOutput(r.out, input, settings)) return fail("bad_response");
         const out = r.out as Record<string, unknown>;
-        console.log(JSON.stringify({ mcp: profile.id, tool: a.toolName, v: a.version, executionId: out["executionId"], partial: out["partial"] }));
+        console.log(JSON.stringify({ mcp: scope, tool: a.toolName, v: a.version, executionId: out["executionId"] }));
         return {
           content: [{ type: "text" as const, text: JSON.stringify(out) }],
           structuredContent: JSON.parse(JSON.stringify(out)) as Record<string, unknown>,
@@ -56,21 +71,68 @@ function buildServer(profile: EndpointProfile, request: Request) {
   return server;
 }
 
-/** Handles one HTTP request for a profile. Auth and Origin are checked before any protocol or worker work. */
-export async function handleMcp(profile: EndpointProfile, request: Request): Promise<Response> {
-  const expected = process.env["MCPX_MCP_TEST_TOKEN"];
-  if (!expected || expected.length < 32) return err(503, "not_configured");
+function preflight(request: Request): Response | null {
   const origin = request.headers.get("origin");
   if (origin && !ALLOWED_ORIGINS.includes(origin)) return err(403, "forbidden_origin");
-  const auth = request.headers.get("authorization") ?? "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!token || !(await tokenMatches(token, expected))) return err(401, "unauthorized", { "www-authenticate": 'Bearer realm="mcpx"' });
   const len = Number(request.headers.get("content-length") ?? "0");
   if (len > MAX_MCP_BODY) return err(413, "too_large");
-  const handler = createMcpHandler(() => buildServer(profile, request), { responseMode: "json", maxRequestBodySize: MAX_MCP_BODY });
+  return null;
+}
+const bearerOf = (request: Request) => {
+  const auth = request.headers.get("authorization") ?? "";
+  return auth.startsWith("Bearer ") ? auth.slice(7) : "";
+};
+const unauthorized = () => err(401, "unauthorized", { "www-authenticate": 'Bearer realm="mcpx"' });
+
+async function serve(build: () => McpServer, request: Request) {
+  const handler = createMcpHandler(build, { responseMode: "json", maxRequestBodySize: MAX_MCP_BODY });
   try {
     return await handler.fetch(request);
   } finally {
     await handler.close().catch(() => {});
   }
+}
+
+/** Platform demo endpoint (Phase 03-A). Auth and Origin are checked before any protocol or worker work. */
+export async function handleMcp(profile: EndpointProfile, request: Request, exec: ExecDeps = productionExecDeps): Promise<Response> {
+  const expected = process.env["MCPX_MCP_TEST_TOKEN"];
+  if (!expected || expected.length < 32) return err(503, "not_configured");
+  const origin = request.headers.get("origin");
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) return err(403, "forbidden_origin");
+  const token = bearerOf(request);
+  if (!token || !(await tokenMatches(token, expected))) return unauthorized();
+  const len = Number(request.headers.get("content-length") ?? "0");
+  if (len > MAX_MCP_BODY) return err(413, "too_large");
+  const entries = adaptersFor(profile).map((a) => ({ adapter: a, settings: a.defaultSettings, description: a.description, scope: profile.id }));
+  return serve(() => buildServer({ name: "mcpx-platform-demo", title: "MCPX platform demo (test)" }, entries, request, exec), request);
+}
+
+/**
+ * Product-scoped endpoint. Order: Origin/size → ID shape → bearer present → verified creation + active config
+ * → product credential → worker capability → exactly one tool. Unknown/inactive/misconfigured never reach the worker.
+ */
+export async function handleProductMcp(rawId: string, request: Request, deps: ProductDeps, exec: ExecDeps = productionExecDeps): Promise<Response> {
+  const pre = preflight(request);
+  if (pre) return pre;
+  const id = parseCreationId(rawId);
+  if (!id) return err(404, "not_found"); // no DB query for malformed IDs
+  const token = bearerOf(request);
+  if (!token) return unauthorized();
+  const res = await resolveProduct(deps, id);
+  if (!res.ok) {
+    if (res.reason === "store_unavailable") return err(503, "unavailable");
+    if (res.reason === "misconfigured") console.warn(JSON.stringify({ mcp: "product", creationId: id, error: "misconfigured" }));
+    return err(404, "not_found"); // inactive / unknown / misconfigured are indistinguishable externally
+  }
+  const p = res.product;
+  if (!(await deps.authorizeProduct(p, token))) return unauthorized();
+  const avail = await exec.toolAvailability(p.adapter.workerToolId);
+  if (!avail.available) return err(503, "unavailable");
+  const entry: ToolEntry = {
+    adapter: p.adapter,
+    settings: p.settings,
+    description: `${p.displayName} — ${p.adapter.description}`,
+    scope: `product:${p.creationId}`,
+  };
+  return serve(() => buildServer({ name: `mcpx-product-${p.creationId}`, title: p.displayName }, [entry], request, exec), request);
 }
