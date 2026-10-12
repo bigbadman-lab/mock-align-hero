@@ -88,8 +88,7 @@ rent and dust are paid from operations/fee reserve, never from holder budgets, a
 ## Native launch atomicity (from 04-B measurements)
 create_v2 + create_fee_sharing_config = 1,108 bytes (simulated PASS). Adding update_fee_shares_v2 (6000/4000) = ~1,406 bytes
 without a lookup table → too large; needs an ALT (~944–1,190 bytes). Until all three run in ONE transaction, a window exists
-where the coin trades with the creator as 100% shareholder → native launch BLOCKED. Alternative under review: create coin with
-creator = a fresh wallet whose only possible fee distribution goes to itself, then … still leaves a window → rejected.
+where the coin trades with the creator as 100% shareholder → native launch BLOCKED.
 Checklist: regular SOL pair, holderReward=false, mayhem=false, two approved treasuries, ALT provisioned, full atomic simulation,
 fee decoder live against the real mint, snapshot index running, exclusion list approved, $MCP quote eligibility proven.
 
