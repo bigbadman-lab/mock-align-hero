@@ -151,10 +151,10 @@ function ResultView({ r }: { r: TransactionVerifierResult }) {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            <StatusMessage tone={r.confirmation === "finalized" ? "success" : "info"} title={r.confirmation === "finalized" ? "Finalized" : "Confirmed (not yet finalized)"}>
+            <StatusMessage tone="info" title={r.confirmation === "finalized" ? "Finalized" : "Confirmed (not yet finalized)"}>
               <p>Included in slot {r.slot}.</p>
             </StatusMessage>
-            <StatusMessage tone={r.execution === "succeeded" ? "success" : "warning"} title={r.execution === "succeeded" ? "Execution succeeded" : r.execution === "failed" ? "Failed execution" : "Execution outcome unavailable"}>
+            <StatusMessage tone={r.execution === "succeeded" ? "info" : "warning"} title={r.execution === "succeeded" ? "Execution succeeded" : r.execution === "failed" ? "Failed execution" : "Execution outcome unavailable"}>
               <p>{r.execution === "failed" ? "The transaction landed onchain but its instructions failed. The fee was still charged." : r.execution === "succeeded" ? "No execution error was recorded." : "The provider returned no execution metadata."}</p>
             </StatusMessage>
           </div>
