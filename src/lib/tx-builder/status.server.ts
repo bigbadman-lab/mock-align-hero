@@ -8,8 +8,13 @@ export async function getBuilderStatus(fetchImpl: typeof fetch = fetch): Promise
   try {
     const r = await fetchImpl(new URL("/ready", url), { signal: AbortSignal.timeout(4000) });
     if (!r.ok) return { state: "BUILDER_UNREACHABLE" };
-    return interpretReady(await r.json());
-  } catch {
+    const text = await r.text();
+    if (text.length > 16_000) return { state: "BUILDER_MALFORMED" };
+    let body: unknown;
+    try { body = JSON.parse(text); } catch { return { state: "BUILDER_MALFORMED" }; }
+    return interpretReady(body);
+  } catch (e) {
+    if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) return { state: "BUILDER_TIMEOUT" };
     return { state: "BUILDER_UNREACHABLE" };
   }
 }

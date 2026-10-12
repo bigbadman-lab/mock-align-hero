@@ -20,12 +20,15 @@ export interface LaunchPrepareContractV1 {
 export type BuilderStatus =
   | { state: "BUILDER_NOT_DEPLOYED" }
   | { state: "BUILDER_UNREACHABLE" }
+  | { state: "BUILDER_TIMEOUT" }
+  | { state: "BUILDER_MALFORMED" }
   | { state: "BUILDER_NOT_CONFIGURED"; quoteMint: string }
   | { state: "BUILDER_READY_FOR_PREPARE"; quoteMint: string; launchEnabled: false };
 
 /** Interprets the builder's public /ready report; never claims launch capability. */
 export function interpretReady(body: unknown): BuilderStatus {
-  if (!body || typeof body !== "object") return { state: "BUILDER_UNREACHABLE" };
+  if (!body || typeof body !== "object" || Array.isArray(body)) return { state: "BUILDER_MALFORMED" };
+  if (typeof (body as Record<string, unknown>)["ready"] !== "boolean") return { state: "BUILDER_MALFORMED" };
   const b = body as Record<string, unknown>;
   const quoteMint = b["quoteMint"] === "CONFIGURED" ? "CONFIGURED" : "QUOTE_MINT_MISSING";
   if (b["ready"] !== true) return { state: "BUILDER_NOT_CONFIGURED", quoteMint };
