@@ -27,4 +27,4 @@
 - Product profiles: /mcp/$slug resolves slug → canonical mcp_creations.id via a server function (src/lib/product-profile.ts, injectable deps; production in product-profile.server.ts) that returns only an allowlisted profile — adapter describeSettings() text, never raw tool_config — and an endpoint URL only when the product is active and its adapter resolves, so public pages can never advertise an unusable MCP endpoint.
 
 - services/transaction-builder has its own AGENTS.md — read it before changing launch/transaction code.
-- src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch is preparation-only — draft validation in src/lib/launch/draft.ts (component state, never persisted or sent), readiness via GET-only getLaunchReadiness (redacted, 30 s cache, BLOCKED items stay blocked without on-chain proof); no signTransaction/send path — so no token can be created before verified 60/25/15.
+- src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch never signs or sends; drafts/artwork/metadata rules live in src/lib/launch/AGENTS.md.
