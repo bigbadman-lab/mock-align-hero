@@ -23,6 +23,7 @@ export default defineConfig({
         // Without this, production client builds resolve "buffer" to an empty browser stub and crash.
         name: "mcpx-browser-buffer",
         enforce: "pre",
+        apply: "build", // dev pre-bundling already handles buffer correctly
         resolveId(id: string) {
           if (this.environment?.name !== "client") return null;
           if (id === "buffer" || id === "buffer/" || id === "node:buffer") return BUFFER_PATH;
