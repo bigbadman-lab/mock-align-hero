@@ -16,7 +16,7 @@ export function RegistryLoading() {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       {head}
-      <p role="status" className="px-5 py-16 text-center text-sm text-muted-foreground">Checking the verified registry…</p>
+      <p role="status" aria-busy="true" className="px-5 py-16 text-center text-sm text-muted-foreground">Checking the verified registry…</p>
     </div>
   );
 }
@@ -30,8 +30,8 @@ export function VerifiedRegistry() {
   if (!r || r.status !== "ok") {
     return (
       <StatusMessage tone="warning" title="Registry unavailable">
-        <p>{r?.message ?? "The registry could not be reached."} This is not the same as having no listings.</p>
-        <button type="button" onClick={() => { if (!q.isFetching) void q.refetch({ cancelRefetch: false }); }} disabled={q.isFetching} className={`${buttonOutline} mt-4`}>
+        <p role="alert">{r?.message ?? "The registry could not be reached."} This is not the same as having no listings.</p>
+        <button type="button" onClick={() => { if (!q.isFetching) void q.refetch({ cancelRefetch: false }); }} disabled={q.isFetching} aria-busy={q.isFetching} className={`${buttonOutline} mt-4`}>
           {q.isFetching ? "Retrying…" : "Retry"}
         </button>
       </StatusMessage>

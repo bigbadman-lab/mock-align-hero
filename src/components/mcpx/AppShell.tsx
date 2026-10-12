@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { PageContainer } from "./primitives";
 import { WalletButton } from "./wallet/WalletControls";
+import logo from "@/assets/mcpx-logo.png";
 
 export const NAV = [
   { to: "/", label: "Home" },
@@ -14,12 +15,7 @@ export const NAV = [
 ] as const;
 
 export function Mark() {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6">
-      <rect x="1" y="1" width="22" height="22" rx="5" className="fill-none stroke-primary" strokeWidth="1.5" />
-      <path d="M6 16V8l3 4 3-4v8M14 8l4 8M18 8l-4 8" className="fill-none stroke-foreground" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <img src={logo} alt="" aria-hidden width={32} height={32} className="h-8 w-8 [image-rendering:pixelated]" />;
 }
 
 const linkCls =

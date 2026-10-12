@@ -1,13 +1,12 @@
 // Browser-only. Loaded lazily behind <ClientOnly>; never imported during SSR.
 // Global Buffer is installed by WalletBoundary before this module is loaded.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect, useWalletInfo } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
 import { solana as solanaNetwork } from "@reown/appkit/networks";
 import type { AppKitNetwork } from "@reown/appkit/networks";
 
 const solana = solanaNetwork as unknown as AppKitNetwork;
-import { WalletContext } from "@/lib/wallet/context";
 import { CONNECT_TIMEOUT_MS, REOWN_PROJECT_ID, deriveWalletStatus, type WalletView } from "@/lib/wallet/state";
 
 declare global { interface Window { __mcpxAppKit?: boolean } }
@@ -35,7 +34,8 @@ function initOnce() {
 }
 initOnce();
 
-export default function WalletRuntime({ children }: { children: ReactNode }) {
+// Renders nothing: reports wallet state upward so the page tree never remounts when the SDK loads.
+export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) => void }) {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount({ namespace: "solana" });
   const { caipNetworkId, switchNetwork } = useAppKitNetwork();
@@ -52,6 +52,11 @@ export default function WalletRuntime({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer.current);
   }, [pending]);
 
+  // SDK hook functions are not referentially stable; keep them in a ref so the
+  // reported view only changes when real wallet state changes (no render loops).
+  const fns = useRef({ open, switchNetwork, disconnect });
+  fns.current = { open, switchNetwork, disconnect };
+
   const view = useMemo<WalletView>(() => {
     const s = deriveWalletStatus({ isConnected, address, providerStatus: status, caipNetworkId, timedOut });
     const connected = s === "connected_mainnet" || s === "connected_unsupported_network";
@@ -60,12 +65,13 @@ export default function WalletRuntime({ children }: { children: ReactNode }) {
       address: connected ? address : undefined,
       walletName: connected ? walletInfo?.name : undefined,
       message: s === "error" ? "The wallet didn't respond in time." : undefined,
-      open: () => { setTimedOut(false); void open({ view: "Connect", namespace: "solana" }); },
-      openAccount: () => void open({ view: "Account" }),
-      switchToMainnet: () => void switchNetwork(solana),
-      disconnect: () => void disconnect({ namespace: "solana" }),
+      open: () => { setTimedOut(false); void fns.current.open({ view: "Connect", namespace: "solana" }); },
+      openAccount: () => void fns.current.open({ view: "Account" }),
+      switchToMainnet: () => void fns.current.switchNetwork(solana),
+      disconnect: () => void fns.current.disconnect({ namespace: "solana" }),
     };
-  }, [isConnected, address, status, caipNetworkId, timedOut, walletInfo?.name, open, switchNetwork, disconnect]);
+  }, [isConnected, address, status, caipNetworkId, timedOut, walletInfo?.name]);
 
-  return <WalletContext.Provider value={view}>{children}</WalletContext.Provider>;
+  useEffect(() => { onChange(view); }, [view, onChange]);
+  return null;
 }

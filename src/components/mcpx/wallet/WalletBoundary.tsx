@@ -1,6 +1,7 @@
 import { ClientOnly } from "@tanstack/react-router";
-import { Component, lazy, Suspense, type ReactNode } from "react";
+import { Component, lazy, Suspense, useCallback, useState, type ReactNode } from "react";
 import { WalletContext } from "@/lib/wallet/context";
+import type { WalletView } from "@/lib/wallet/state";
 
 const WalletRuntime = lazy(async () => {
   // Must run before any @reown/@solana module evaluates.
@@ -11,28 +12,31 @@ const WalletRuntime = lazy(async () => {
   return import("./WalletRuntime");
 });
 
-const Unavailable = ({ children }: { children: ReactNode }) => (
-  <WalletContext.Provider value={{ status: "unavailable", message: "Wallet connection couldn't load. The rest of the site works normally." }}>
-    {children}
-  </WalletContext.Provider>
-);
+const UNAVAILABLE: WalletView = { status: "unavailable", message: "Wallet connection couldn't load. The rest of the site works normally." };
 
-// Contains any wallet SDK failure: children render again with "unavailable" state.
-class Guard extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+// Contains any wallet SDK failure; reports "unavailable" instead.
+class Guard extends Component<{ children: ReactNode; onFail: () => void }, { failed: boolean }> {
   override state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  override componentDidCatch(e: unknown) { console.warn("Wallet runtime failed", e); }
-  override render() { return this.state.failed ? this.props.fallback : this.props.children; }
+  override componentDidCatch(e: unknown) { console.warn("Wallet runtime failed", e instanceof Error ? e.message : "unknown"); this.props.onFail(); }
+  override render() { return this.state.failed ? null : this.props.children; }
 }
 
+// Page content is always rendered in the same position, so loading or failing
+// the wallet SDK never remounts routes (no duplicate data requests).
 export function WalletBoundary({ children }: { children: ReactNode }) {
+  const [view, setView] = useState<WalletView>({ status: "loading" });
+  const fail = useCallback(() => setView(UNAVAILABLE), []);
   return (
-    <ClientOnly fallback={children}>
-      <Guard fallback={<Unavailable>{children}</Unavailable>}>
-        <Suspense fallback={children}>
-          <WalletRuntime>{children}</WalletRuntime>
-        </Suspense>
-      </Guard>
-    </ClientOnly>
+    <WalletContext.Provider value={view}>
+      {children}
+      <ClientOnly fallback={null}>
+        <Guard onFail={fail}>
+          <Suspense fallback={null}>
+            <WalletRuntime onChange={setView} />
+          </Suspense>
+        </Guard>
+      </ClientOnly>
+    </WalletContext.Provider>
   );
 }
