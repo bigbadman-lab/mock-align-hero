@@ -92,7 +92,7 @@ function Docs() {
             <p>This endpoint is planned and not available. Nothing responds at this address today.</p>
           </Doc>
           <Doc id="status" title="Current availability">
-            <p><span className="text-foreground">Available now:</span> this website, the six template definitions and this documentation.</p>
+            <p><span className="text-foreground">Available now:</span> this website, the six template definitions, this documentation, and a read-only registry of verified creations (currently empty) shown on the Paired page.</p>
             <p><span className="text-foreground">Not available:</span> wallet connection, token launching, tool execution, MCP endpoints, market listings, fees and rewards.</p>
           </Doc>
         </div>
