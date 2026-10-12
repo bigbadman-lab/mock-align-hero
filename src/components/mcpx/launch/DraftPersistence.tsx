@@ -179,7 +179,7 @@ export function ArtworkPanel({ signedIn, saved, dirty, drafts, onSaved }: { sign
   return (
     <div className="rounded-lg border border-border bg-card p-4 text-sm">
       <p className="text-foreground">Token artwork</p>
-      <p className="mt-1 text-muted-foreground">Square (1:1) PNG, JPEG or WebP, 5 MB maximum, {64}–{4096} pixels per side. Not cropped or resized.</p>
+      <p className="mt-1 text-muted-foreground">Square (1:1) PNG, JPEG or WebP, 5 MB maximum. Not cropped or resized.</p>
       {saved?.artwork && (
         <div className="mt-3 flex items-center gap-3">
           <img src={saved.artwork.url} alt="Saved token artwork" width={64} height={64} className="h-16 w-16 rounded border border-border object-cover" />
