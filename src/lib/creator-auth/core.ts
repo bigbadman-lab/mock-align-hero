@@ -124,7 +124,7 @@ export const sessionCookie = (token: string, maxAgeSec: number) =>
 export const clearCookie = () => `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
 
 /** CSRF + shape guard for cookie-authenticated mutations. Returns an error code or null. */
-export function checkMutation(request: Request): string | null {
+export function checkMutation(request: Request, opts: { maxBytes?: number; contentTypes?: string[] } = {}): string | null {
   if (request.method !== "POST") return "method_not_allowed";
   const origin = request.headers.get("origin");
   const host = request.headers.get("host") ?? "";
@@ -132,8 +132,9 @@ export function checkMutation(request: Request): string | null {
   try { if (new URL(origin).host !== host) return "forbidden"; } catch { return "forbidden"; }
   if (request.headers.get("sec-fetch-site") && request.headers.get("sec-fetch-site") !== "same-origin") return "forbidden";
   if (request.headers.get("x-mcpx-csrf") !== "1") return "forbidden";
-  if (!(request.headers.get("content-type") ?? "").startsWith("application/json")) return "unsupported_media_type";
-  if (Number(request.headers.get("content-length") ?? "0") > MAX_AUTH_BODY) return "too_large";
+  const ct = (request.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
+  if (!(opts.contentTypes ?? ["application/json"]).includes(ct)) return "unsupported_media_type";
+  if (Number(request.headers.get("content-length") ?? "0") > (opts.maxBytes ?? MAX_AUTH_BODY)) return "too_large";
   return null;
 }
 
