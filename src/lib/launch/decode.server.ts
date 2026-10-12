@@ -11,6 +11,12 @@
 import type { ImageCheck } from "./image";
 
 type Decoder = (buf: ArrayBuffer) => Promise<{ width: number; height: number; data: { length: number } }>;
+// libjpeg reports recoverable corruption (e.g. "premature end of data segment") as warnings and still
+// returns pixels; any decoder diagnostic during a decode fails the file. Decodes are synchronous inside
+// the codec, so one flag per call is race-free.
+let diagnostics = 0;
+const opts = { print: () => { diagnostics++; }, printErr: () => { diagnostics++; } };
+type Init = (m?: unknown, o?: unknown) => Promise<void>;
 const cache: Partial<Record<"jpeg" | "webp", Promise<Decoder>>> = {};
 
 async function precompiled(load: () => Promise<{ default: unknown }>): Promise<WebAssembly.Module | undefined> {
@@ -27,13 +33,13 @@ function decoder(kind: "jpeg" | "webp"): Promise<Decoder> {
       const lib = await import("@jsquash/jpeg/decode");
       // @ts-expect-error -- wasm module import resolved by the server bundler
       const mod = await precompiled(() => import("@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm?module"));
-      await (mod ? (lib.init as unknown as (m: WebAssembly.Module) => Promise<void>)(mod) : lib.init());
+      await (mod ? (lib.init as unknown as Init)(mod, opts) : (lib.init as unknown as Init)(opts));
       return (b) => lib.default(b);
     }
     const lib = await import("@jsquash/webp/decode");
     // @ts-expect-error -- wasm module import resolved by the server bundler
     const mod = await precompiled(() => import("@jsquash/webp/codec/dec/webp_dec.wasm?module"));
-    await (mod ? (lib.init as unknown as (m: WebAssembly.Module) => Promise<void>)(mod) : lib.init());
+    await (mod ? (lib.init as unknown as Init)(mod, opts) : (lib.init as unknown as Init)(opts));
     return (b) => lib.default(b);
   })().catch((e) => { delete cache[kind]; throw e; }));
 }
@@ -47,7 +53,9 @@ export async function decodeArtwork(bytes: Uint8Array, checked: Extract<ImageChe
   catch { throw new Error("decoder_unavailable"); } // infrastructure fault → 503, never "accepted"
   try {
     const copy = bytes.slice().buffer;
+    diagnostics = 0;
     const img = await dec(copy);
+    if (diagnostics) return bad;
     if (img.width !== checked.width || img.height !== checked.height) return bad;
     if (img.data.length !== checked.width * checked.height * 4) return bad;
     return checked;
