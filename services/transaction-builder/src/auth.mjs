@@ -3,7 +3,8 @@
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 
 export const SKEW_MS = 5 * 60_000;
-export const SCOPES = Object.freeze({ "/internal/v1/launch/prepare": "launch.prepare", "/internal/v1/launch/inspect": "launch.inspect" });
+export const SCOPES = Object.freeze({ "/internal/v1/launch/prepare": "launch.prepare", "/internal/v1/launch/inspect": "launch.inspect",
+  "/internal/v1/launch/prepare-buy": "launch.prepare_buy", "/internal/v1/launch/status": "launch.status" });
 
 export function signRequest(secret, { ts, nonce, scope, method, path, body }) {
   const bh = createHash("sha256").update(body).digest("hex");

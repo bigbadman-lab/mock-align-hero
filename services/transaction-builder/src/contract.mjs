@@ -39,3 +39,29 @@ export function validateInspect(b) {
   if (!b.binding || typeof b.binding !== "object" || Array.isArray(b.binding)) return bad("binding");
   return { ok: true, value: b };
 }
+
+export const PREPARE_BUY_SCHEMA = "mcpx.launch.prepare-buy.v1";
+export const STATUS_SCHEMA = "mcpx.launch.status.v1";
+export const SEPARATE_BUY_MODES = Object.freeze(["buy_v3", "buy_exact_quote_in_v3"]);
+
+/** Second, separate transaction: only after creation + final fee config are verified on chain. */
+export function validatePrepareBuy(b) {
+  if (!keysExact(b, ["schema", "idempotencyKey", "creator", "mint", "mode", "quoteAmount", "slippageBps", "format"])) return bad("fields");
+  if (b.schema !== PREPARE_BUY_SCHEMA) return bad("schema");
+  if (typeof b.idempotencyKey !== "string" || !UUID.test(b.idempotencyKey)) return bad("idempotencyKey");
+  if (!isPubkey(b.creator)) return bad("creator");
+  if (!isPubkey(b.mint) || b.mint === b.creator) return bad("mint");
+  if (!SEPARATE_BUY_MODES.includes(b.mode)) return bad("mode");
+  if (typeof b.quoteAmount !== "string" || !/^[1-9][0-9]{0,19}$/.test(b.quoteAmount) || BigInt(b.quoteAmount) > 18446744073709551615n) return bad("quoteAmount");
+  if (!Number.isInteger(b.slippageBps) || b.slippageBps < 1 || b.slippageBps > 1000) return bad("slippageBps");
+  if (b.format !== "legacy" && b.format !== "v0") return bad("format");
+  return { ok: true, value: b };
+}
+
+export function validateStatus(b) {
+  if (!keysExact(b, ["schema", "creator", "mint"])) return bad("fields");
+  if (b.schema !== STATUS_SCHEMA) return bad("schema");
+  if (!isPubkey(b.creator)) return bad("creator");
+  if (!isPubkey(b.mint)) return bad("mint");
+  return { ok: true, value: b };
+}
