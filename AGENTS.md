@@ -17,4 +17,4 @@
 - outbox_events has no browser access; a verified creation and its outbox event must be written in one Postgres transaction by the server.
 - Registry reads go through src/lib/registry.ts (bounded pages, no polling, failures never shown as "empty").
 - Wallet: one Reown AppKit instance created in src/components/mcpx/wallet/WalletRuntime.tsx, lazy-loaded client-only via WalletBoundary in __root; UI reads state only through useWallet() (src/lib/wallet). A connected wallet is never treated as an authenticated identity.
-- Wallet: src/components/mcpx/wallet/bufferPolyfill.ts must be imported before any @reown/@solana module — production bundles read `Buffer.from` at module init and browsers have no global Buffer (dev pre-bundling masks this; the published site crashes without it).
+- Wallet: vite.config.ts plugin "mcpx-browser-buffer" resolves `buffer` to the npm package in the client build, and WalletBoundary sets globalThis.Buffer inside its lazy loader before importing WalletRuntime — production otherwise stubs `buffer` as empty and `"sideEffects": false` drops side-effect-only polyfill imports (dev masks both; the published site crashes).
