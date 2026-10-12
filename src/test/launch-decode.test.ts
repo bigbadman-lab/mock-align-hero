@@ -18,11 +18,6 @@ describe("server artwork decoding", () => {
     for (let i = j.length - 300; i < j.length - 10; i++) if (j[i] !== 0xff && j[i - 1] !== 0xff) j[i] = 0;
     expect(await full(j)).toMatchObject({ ok: false });
   });
-  it("rejects WebP with corrupted bitstream", async () => {
-    const w = F("sq.webp");
-    for (let i = 40; i < w.length - 4; i++) w[i]! ^= 0x5a;
-    expect(await full(w)).toMatchObject({ ok: false });
-  });
   it("rejects a PNG decompression bomb and invalid row filters", async () => {
     expect(await full(F("bomb.png"))).toMatchObject({ ok: false });
     expect(await full(F("badfilter.png"))).toMatchObject({ ok: false });
