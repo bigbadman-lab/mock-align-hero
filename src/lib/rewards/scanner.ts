@@ -4,7 +4,7 @@
 import { decodeFeeEvents, type FeeEvidence } from "./pump-events";
 
 export type Rpc = {
-  signatures(address: string, opts: { until?: string; before?: string; limit: number }): Promise<{ signature: string; slot: number; err: unknown; confirmationStatus?: string }[]>;
+  signatures(address: string, opts: { until?: string | undefined; before?: string | undefined; limit: number }): Promise<{ signature: string; slot: number; err: unknown; confirmationStatus?: string }[]>;
   transaction(signature: string): Promise<unknown | null>;
 };
 
