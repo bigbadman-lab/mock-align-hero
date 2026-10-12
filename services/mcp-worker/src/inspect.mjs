@@ -40,7 +40,8 @@ export class RpcError extends Error {
   constructor(kind, message) { super(message); this.kind = kind; }
 }
 
-async function rpcCall(rpcUrl, method, params, fetchImpl, signal) {
+/** Bounded single JSON-RPC call; returns `result` (may be null). No retries. */
+export async function rpcFetch(rpcUrl, method, params, fetchImpl, signal, keepText = false) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), RPC_TIMEOUT_MS);
   const onAbort = () => ctrl.abort();
@@ -65,13 +66,23 @@ async function rpcCall(rpcUrl, method, params, fetchImpl, signal) {
     if (text.length > MAX_RPC_RESPONSE_BYTES) throw new RpcError("too_large", `${method} response too large`);
     let json;
     try { json = JSON.parse(text); } catch { throw new RpcError("bad_response", `${method} invalid JSON`); }
-    if (json.error) throw new RpcError("provider_error", `${method} RPC error ${json.error.code ?? ""}`.trim());
-    if (!json.result || typeof json.result.context?.slot !== "number") throw new RpcError("bad_response", `${method} missing context`);
-    return method === "getBalance" ? { ...json.result, rawText: text } : json.result;
+    if (json.error) {
+      const code = json.error.code;
+      if (code === -32015) throw new RpcError("unsupported_version", `${method} transaction version not supported`);
+      throw new RpcError("provider_error", `${method} RPC error ${code ?? ""}`.trim());
+    }
+    if (!("result" in json)) throw new RpcError("bad_response", `${method} missing result`);
+    return keepText ? { result: json.result, rawText: text } : json.result;
   } finally {
     clearTimeout(t);
     signal?.removeEventListener("abort", onAbort);
   }
+}
+
+async function rpcCall(rpcUrl, method, params, fetchImpl, signal) {
+  const { result, rawText } = await rpcFetch(rpcUrl, method, params, fetchImpl, signal, true);
+  if (!result || typeof result.context?.slot !== "number") throw new RpcError("bad_response", `${method} missing context`);
+  return method === "getBalance" ? { ...result, rawText } : result;
 }
 
 function normalizeTokenAccounts(value, program) {
