@@ -10,6 +10,24 @@ reports evidence. It never signs, submits, broadcasts, holds keys or spends. It 
 - **Instances: exactly 1.** Request-nonce replay protection and prepare idempotency are in memory;
   more than one instance (or autoscaling) would let a replayed request hit a second instance.
 - **Health check path:** `/health`. Readiness probe: `GET /ready`.
+- **Auto-deploy: Off** (manual deploys only, operator-reviewed). Region: any; plan: smallest paid or free.
+- Listens on `0.0.0.0:$PORT` (Render sets `PORT`; local default 10000).
+- `/health` = process alive only. `/ready.ready` = configuration valid; `launchBlocked` is always `true` and
+  `launchBlockers` lists what is still missing. A healthy, ready builder is **not** launch-ready.
+- Scaling past one instance requires durable shared nonce/idempotency/rate-limit state first.
+
+## Operator runbook (Phase 04-D) — every step needs explicit operator approval
+1. Confirm the commit containing this folder is on the Render-connected branch.
+2. Render → New → Web Service → same repo; root `services/transaction-builder`; Node; build `npm ci`; start `npm start`;
+   1 instance; Auto-Deploy Off; health check `/health`. Do **not** touch the existing `mcp-worker` service.
+3. Set env in Render only: `MCPX_TX_BUILDER_SECRET` (new, ≥32 chars, not the worker secret), `SOLANA_RPC_URL`,
+   `MCPX_FEE_OPS_RECIPIENT`, `MCPX_FEE_PLATFORM_RECIPIENT` (operator-verified keys — never placeholders).
+   Leave `MCPX_QUOTE_MINT` and `MCPX_LOOKUP_TABLE` **unset** until the real $MCP mint and ALT exist.
+4. Manual deploy. Check `GET /health` → `{"ok":true}`; `GET /ready` → `missing`/`invalid` list names to fix.
+5. In Lovable Cloud secrets set `MCPX_TX_BUILDER_URL` (https base URL, no path) and the same `MCPX_TX_BUILDER_SECRET`.
+6. Check: unsigned POST to `/internal/v1/launch/status` → 401; GET → 405. `/launch` shows the builder as
+   "ready for read-only validation" while every launch blocker stays BLOCKED.
+7. Publish the website only after review; re-check the six tools, the MCP demo endpoint and `/launch`.
 
 ### Environment
 | Name | Required | Notes |
