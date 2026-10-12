@@ -31,7 +31,7 @@ export function VerifiedRegistry() {
     return (
       <StatusMessage tone="warning" title="Registry unavailable">
         <p>{r?.message ?? "The registry could not be reached."} This is not the same as having no listings.</p>
-        <button type="button" onClick={() => q.refetch()} disabled={q.isFetching} className={`${buttonOutline} mt-4`}>
+        <button type="button" onClick={() => { if (!q.isFetching) void q.refetch({ cancelRefetch: false }); }} disabled={q.isFetching} className={`${buttonOutline} mt-4`}>
           {q.isFetching ? "Retrying…" : "Retry"}
         </button>
       </StatusMessage>
