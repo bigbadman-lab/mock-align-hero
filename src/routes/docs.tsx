@@ -86,14 +86,18 @@ function Docs() {
             <p>Of the creator fees actually collected on $MCP itself, 60% is planned for holders and 40% for the protocol. The holder portion would be split equally between SOL payouts and $MCP bought with SOL.</p>
             <p>This is not live. There is no APY and no guaranteed return.</p>
           </Doc>
-          <Doc id="endpoints" title="MCP endpoint model" planned>
-            <p>Each created tool is planned to have its own endpoint in this form:</p>
+          <Doc id="endpoints" title="MCP endpoint model">
+            <p><span className="text-foreground">Platform test endpoint (invite-only):</span> a real MCP server (Streamable HTTP, stateless) used to prove external clients can call Wallet Inspector. It needs a private access token issued by the MCPX team; there is no public access and no token is published here.</p>
+            <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">{`https://mcpx.fun/api/public/mcp/platform-demo
+Authorization: Bearer <token issued by MCPX>
+Tool: wallet_inspector  { "address": "<Solana public address>" }`}</pre>
+            <p>This is a platform test endpoint, not a user-created product. It shares the website's rate limits.</p>
+            <p><span className="text-foreground">Planned per-product endpoints:</span> each created tool is planned to have its own endpoint in this form. These are not available; nothing responds at this address today.</p>
             <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">https://mcp.mcpx.fun/{"{creation-id}"}/mcp</pre>
-            <p>This endpoint is planned and not available. Nothing responds at this address today.</p>
           </Doc>
           <Doc id="status" title="Current availability">
             <p><span className="text-foreground">Available now:</span> this website, the six template definitions, this documentation, Solana wallet connection (shows your public address only — not a sign-in, nothing is signed), and a read-only registry of verified creations shown on the Paired page.</p>
-            <p><span className="text-foreground">Not available:</span> token launching, external MCP endpoints, market listings, creator earnings and $MCP rewards.</p>
+            <p><span className="text-foreground">Not available:</span> token launching, public or per-product MCP endpoints, market listings, creator earnings and $MCP rewards.</p>
           </Doc>
         </div>
       </PageContainer>
