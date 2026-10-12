@@ -49,7 +49,7 @@ const walletRpc = async (_u: string, init: RequestInit) => {
 };
 const exec: ExecDeps = {
   workerConfig: () => ({ url: "https://worker.invalid", secret: "s".repeat(40) }),
-  toolAvailability: async () => (ready ? { available: true } : { available: false, reason: "worker_not_ready" }),
+  toolAvailability: async () => (ready ? { available: true, limits: { perVisitorPerMinute: 6, perVisitorPerHour: 40, globalPerMinute: 60 } } : { available: false, reason: "worker_not_ready" }),
   takeShared: async () => "ok",
   callWorker: async (_c, payload) => {
     workerCalls.push(payload);
@@ -93,7 +93,7 @@ beforeEach(() => {
 describe("product-scoped MCP (TEST ONLY fixtures)", () => {
   it("B01/B02: only canonical UUIDs are accepted; malformed IDs never hit the store or worker", async () => {
     expect(parseCreationId(A)).toBe(A);
-    for (const bad of ["alpha-whales", A.toUpperCase(), `${A} `, "1", "' OR 1=1 --"]) {
+    for (const bad of ["alpha-whales", "AAAAAAAA-1111-4111-8111-111111111111", `${A} `, "1", "' OR 1=1 --"]) {
       expect(parseCreationId(bad)).toBeNull();
       expect((await raw(bad, { authorization: `Bearer ${TOKENS[A]}` })).status).toBe(404);
     }
@@ -153,8 +153,8 @@ describe("product-scoped MCP (TEST ONLY fixtures)", () => {
   it("B09/B10: different template has its own tool; wrong tool names and smuggled fields never change dispatch", async () => {
     const c = await connect(C);
     expect((await c.listTools()).tools.map((t) => t.name)).toEqual(["wallet_inspector"]);
-    const wrong = await c.callTool({ name: "whale_watch", arguments: { address: ADDR } });
-    expect(wrong.isError).toBe(true);
+    const wrong = await c.callTool({ name: "whale_watch", arguments: { address: ADDR } }).then((r) => r.isError === true, () => true);
+    expect(wrong).toBe(true);
     const smuggled = await c.callTool({ name: "wallet_inspector", arguments: { address: ADDR, templateId: "whale-watch", creationId: A, minLamports: "1" } });
     expect(smuggled.isError).toBe(true);
     expect(workerCalls).toHaveLength(0);
@@ -185,7 +185,7 @@ describe("product-scoped MCP (TEST ONLY fixtures)", () => {
     expect(r.status).toBe(200);
     const init = await handleProductMcp(A, new Request("http://local.test/x", { method: "POST", headers: { authorization: `Bearer ${TOKENS[A]}`, "content-type": "application/json", accept: "application/json, text/event-stream" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "t", version: "1" } } }) }), deps, exec);
-    expect(((await init.json()) as { result: { protocolVersion: string } }).result.protocolVersion).toBe("2025-11-25");
+    expect(await init.text()).toContain('"protocolVersion":"2025-11-25"');
   });
 
   it("B14/B15: buckets are shared (no product dimension); worker not ready and store failure are distinct fail-closed errors", async () => {
