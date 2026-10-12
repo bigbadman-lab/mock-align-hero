@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { PageContainer } from "./primitives";
+import { WalletButton } from "./wallet/WalletControls";
 
 export const NAV = [
   { to: "/", label: "Home" },
@@ -63,6 +64,7 @@ function MobileNav() {
               </li>
             ))}
           </ul>
+          <div className="border-t border-border p-3"><WalletButton className="w-full" /></div>
         </nav>
       )}
     </div>
@@ -81,8 +83,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Mark />
             <span className="font-mono text-sm font-semibold tracking-[0.2em] text-foreground">MCPX</span>
           </Link>
-          <SiteNav />
-          <MobileNav />
+          <div className="flex items-center gap-3">
+            <SiteNav />
+            <div className="hidden md:block"><WalletButton /></div>
+            <MobileNav />
+          </div>
         </PageContainer>
       </header>
       <main id="main" className="flex-1">{children}</main>

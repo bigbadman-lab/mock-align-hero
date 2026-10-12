@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PageContainer, PageHeader, StatusMessage, EmptyState, FeatureAvailability, RouteError, buttonOutline } from "@/components/mcpx/primitives";
+import { WalletPanel } from "@/components/mcpx/wallet/WalletControls";
+import { PageContainer, PageHeader, EmptyState, FeatureAvailability, RouteError, buttonOutline } from "@/components/mcpx/primitives";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -7,7 +8,7 @@ export const Route = createFileRoute("/dashboard")({
       { title: "Dashboard — MCPX" },
       { name: "description", content: "Your future MCPX account: tools, fee records and rewards history." },
       { property: "og:title", content: "Dashboard — MCPX" },
-      { property: "og:description", content: "Account foundation. Wallet connection is not available in this phase." },
+      { property: "og:description", content: "Connect a Solana wallet to see your public address. Tools, fees and rewards arrive later." },
     ],
   }),
   component: Dashboard,
@@ -25,9 +26,7 @@ function Dashboard() {
     <>
       <PageHeader label="Account" title="Dashboard" intro="Your tools, fee records and rewards history will live here." />
       <PageContainer className="space-y-8 py-16">
-        <StatusMessage tone="warning" title="Wallet connection is not available in this phase.">
-          There is no account to show yet. Nothing on this page reflects real wallet data.
-        </StatusMessage>
+        <WalletPanel />
         <div className="grid gap-4 lg:grid-cols-3">
           {SECTIONS.map((s) => (
             <section key={s.id} aria-labelledby={`d-${s.id}`} className="rounded-lg border border-border bg-card">
