@@ -83,6 +83,7 @@ export const verifiedCreationsQuery = (page = 0) =>
     },
     staleTime: 5 * 60_000,
     retry: false,
+    retryOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
