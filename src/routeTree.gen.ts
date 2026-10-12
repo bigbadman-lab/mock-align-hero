@@ -15,6 +15,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as PairedRouteImport } from './routes/paired'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
+import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
@@ -62,6 +63,11 @@ const PairedRoute = PairedRouteImport.update({
 const McpIndexRoute = McpIndexRouteImport.update({
   id: '/mcp/',
   path: '/mcp/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpSlugRoute = McpSlugRouteImport.update({
+  id: '/mcp/$slug',
+  path: '/mcp/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsAccountCheckerRoute = ToolsAccountCheckerRouteImport.update({
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/mcp/$slug': typeof McpSlugRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/mcp/$slug': typeof McpSlugRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/mcp/$slug': typeof McpSlugRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/mcp/$slug'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/mcp/$slug'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/mcp/$slug'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -325,6 +337,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   LaunchRoute: typeof LaunchRoute
   PairedRoute: typeof PairedRoute
+  McpSlugRoute: typeof McpSlugRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
@@ -388,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp/'
       preLoaderRoute: typeof McpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/$slug': {
+      id: '/mcp/$slug'
+      path: '/mcp/$slug'
+      fullPath: '/mcp/$slug'
+      preLoaderRoute: typeof McpSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/account-checker': {
@@ -525,6 +545,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   LaunchRoute: LaunchRoute,
   PairedRoute: PairedRoute,
+  McpSlugRoute: McpSlugRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,
