@@ -111,8 +111,8 @@ describe("registry states", () => {
 
 describe("template definitions", () => {
   it("are exactly six with stable ids", () => {
-    expect(TEMPLATES.map((t) => t.id).sort()).toMatchSnapshot === undefined;
-    expect(TEMPLATES.length).toBe(6);
-    expect(new Set(TEMPLATES.map((t) => t.id)).size).toBe(6);
+    expect(TEMPLATES.map((t) => t.id)).toEqual([
+      "wallet-inspector", "whale-watch", "token-scanner", "supply-monitor", "tx-verifier", "account-checker",
+    ]);
   });
 });
