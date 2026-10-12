@@ -81,7 +81,7 @@ export function WalletPanel() {
         </div>
       )}
       <p className="mt-6 border-t border-border pt-4 text-xs leading-relaxed text-subtle">
-        A connected wallet is not a signed-in MCPX account. MCPX never asks you to sign or send anything in this phase.
+        A connected wallet is not a signed-in MCPX account. MCPX never asks you to sign a transaction; creator sign-in below asks for one readable message only when you choose it.
       </p>
     </section>
   );
