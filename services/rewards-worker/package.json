@@ -1,0 +1,20 @@
+{
+  "name": "mcpx-rewards-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCPX native rewards DRY-RUN planner. Render Background Worker. Not deployed. No signing, sending, swapping or payouts.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/worker.mjs --external:postgres --alias:@=../../src --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
+    "start": "node dist/worker.mjs"
+  },
+  "dependencies": {
+    "postgres": "3.4.9",
+    "bs58": "6.0.0",
+    "@solana/addresses": "5.5.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}
