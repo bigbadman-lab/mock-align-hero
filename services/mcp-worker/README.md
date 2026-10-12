@@ -23,3 +23,8 @@ The worker keeps limits in memory, so run exactly **one instance**.
 4. Deploy, then open `https://<your-service>.onrender.com/ready` — it must show `"ready":true`.
 5. Give the service base URL (no path) to Lovable to save as the website secret `MCPX_WORKER_URL`.
 6. In Helius, set a monthly credit cap / alerts for this key (provider budget cutoff).
+
+## Transaction Verifier (Phase 02-B)
+Tool `transaction_verifier`, schema `mcpx.tool-execution.transaction-verifier.v1`, input `{"signature":"<base58, 64 bytes>"}`.
+Reads `getTransaction` (jsonParsed, maxSupportedTransactionVersion 0) at `finalized`, and only if that returns null, once more at `confirmed`. Max 2 RPC reads per run; shares the worker's 8-concurrent / 60-per-minute limits with Wallet Inspector. `/ready` now lists `tools`; the website only enables a tool listed there.
+Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (keep 1 instance; no new env vars).
