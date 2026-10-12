@@ -21,6 +21,10 @@ import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scan
 import { Route as ToolsTransactionVerifierRouteImport } from './routes/tools.transaction-verifier'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
 import { Route as ToolsWhaleWatchRouteImport } from './routes/tools.whale-watch'
+import { Route as ApiAuthChallengeRouteImport } from './routes/api/auth/challenge'
+import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
+import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
+import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
@@ -91,6 +95,26 @@ const ToolsWhaleWatchRoute = ToolsWhaleWatchRouteImport.update({
   path: '/tools/whale-watch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthChallengeRoute = ApiAuthChallengeRouteImport.update({
+  id: '/api/auth/challenge',
+  path: '/api/auth/challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
+  id: '/api/auth/session',
+  path: '/api/auth/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
+  id: '/api/auth/verify',
+  path: '/api/auth/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCreatorProductsRoute = ApiCreatorProductsRouteImport.update({
+  id: '/api/creator/products',
+  path: '/api/creator/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiToolsAccountCheckerRoute = ApiToolsAccountCheckerRouteImport.update({
   id: '/api/tools/account-checker',
   path: '/api/tools/account-checker',
@@ -148,6 +172,10 @@ export interface FileRoutesByFullPath {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/auth/challenge': typeof ApiAuthChallengeRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -170,6 +198,10 @@ export interface FileRoutesByTo {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/auth/challenge': typeof ApiAuthChallengeRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -193,6 +225,10 @@ export interface FileRoutesById {
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
   '/tools/whale-watch': typeof ToolsWhaleWatchRoute
+  '/api/auth/challenge': typeof ApiAuthChallengeRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -217,6 +253,10 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/auth/challenge'
+    | '/api/auth/session'
+    | '/api/auth/verify'
+    | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
@@ -239,6 +279,10 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/auth/challenge'
+    | '/api/auth/session'
+    | '/api/auth/verify'
+    | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
@@ -261,6 +305,10 @@ export interface FileRouteTypes {
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
     | '/tools/whale-watch'
+    | '/api/auth/challenge'
+    | '/api/auth/session'
+    | '/api/auth/verify'
+    | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
@@ -284,6 +332,10 @@ export interface RootRouteChildren {
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
   ToolsWhaleWatchRoute: typeof ToolsWhaleWatchRoute
+  ApiAuthChallengeRoute: typeof ApiAuthChallengeRoute
+  ApiAuthSessionRoute: typeof ApiAuthSessionRoute
+  ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
+  ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
@@ -380,6 +432,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsWhaleWatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/challenge': {
+      id: '/api/auth/challenge'
+      path: '/api/auth/challenge'
+      fullPath: '/api/auth/challenge'
+      preLoaderRoute: typeof ApiAuthChallengeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/session': {
+      id: '/api/auth/session'
+      path: '/api/auth/session'
+      fullPath: '/api/auth/session'
+      preLoaderRoute: typeof ApiAuthSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/verify': {
+      id: '/api/auth/verify'
+      path: '/api/auth/verify'
+      fullPath: '/api/auth/verify'
+      preLoaderRoute: typeof ApiAuthVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/creator/products': {
+      id: '/api/creator/products'
+      path: '/api/creator/products'
+      fullPath: '/api/creator/products'
+      preLoaderRoute: typeof ApiCreatorProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/account-checker': {
       id: '/api/tools/account-checker'
       path: '/api/tools/account-checker'
@@ -452,6 +532,10 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
   ToolsWhaleWatchRoute: ToolsWhaleWatchRoute,
+  ApiAuthChallengeRoute: ApiAuthChallengeRoute,
+  ApiAuthSessionRoute: ApiAuthSessionRoute,
+  ApiAuthVerifyRoute: ApiAuthVerifyRoute,
+  ApiCreatorProductsRoute: ApiCreatorProductsRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
