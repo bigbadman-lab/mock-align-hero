@@ -114,6 +114,7 @@ export async function handleMcp(profile: EndpointProfile, request: Request, exec
 export async function handleProductMcp(rawId: string, request: Request, deps: ProductDeps, exec: ExecDeps = productionExecDeps): Promise<Response> {
   const pre = preflight(request);
   if (pre) return pre;
+  if (request.method !== "POST") return err(405, "method_not_allowed", { allow: "POST" });
   const id = parseCreationId(rawId);
   if (!id) return err(404, "not_found"); // no DB query for malformed IDs
   const token = bearerOf(request);
@@ -121,11 +122,18 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
   const res = await resolveProduct(deps, id);
   if (!res.ok) {
     if (res.reason === "store_unavailable") return err(503, "unavailable");
-    if (res.reason === "misconfigured") console.warn(JSON.stringify({ mcp: "product", creationId: id, error: "misconfigured" }));
+    if (res.reason === "misconfigured") console.warn(JSON.stringify({ mcp: "product", correlationId: crypto.randomUUID(), creationId: id, error: "misconfigured" }));
     return err(404, "not_found"); // inactive / unknown / misconfigured are indistinguishable externally
   }
   const p = res.product;
-  if (!(await deps.authorizeProduct(p, token))) return unauthorized();
+  let authorized: boolean;
+  try {
+    authorized = await deps.authorizeProduct(p, token);
+  } catch {
+    console.warn(JSON.stringify({ mcp: "product", correlationId: crypto.randomUUID(), error: "key_store_unavailable" }));
+    return err(503, "unavailable"); // never open on lookup failure
+  }
+  if (!authorized) return unauthorized();
   const avail = await exec.toolAvailability(p.adapter.workerToolId);
   if (!avail.available) return err(503, "unavailable");
   const entry: ToolEntry = {
