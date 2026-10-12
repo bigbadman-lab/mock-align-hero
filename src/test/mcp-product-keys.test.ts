@@ -6,6 +6,10 @@ import { authorizeProductKey, generateProductKey, isWellFormedProductKey, keyVer
 import type { ProductDeps, ProductConfig } from "@/lib/mcp-gateway/products";
 import { PLATFORM_DEMO, ADAPTERS, adapterExact } from "@/lib/mcp-gateway/registry";
 import { bucketsFor } from "@/lib/tools/relay";
+// @ts-expect-error plain JS worker module
+import { watchWhales } from "../../services/mcp-worker/src/whale.mjs";
+const rpcOk = (result: unknown) => new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result }));
+const emptyRpc = async () => rpcOk([]);
 
 const PEPPER = "p".repeat(64);
 const A = "aaaaaaaa-0000-4000-8000-00000000000a"; // TEST ONLY
@@ -39,7 +43,7 @@ const exec: ExecDeps = {
   callWorker: async (_c, payload) => {
     workerCalls++;
     const p = JSON.parse(payload);
-    return { ok: true, out: { schema: "mcpx.tool-execution.whale-watch.v1", toolId: "whale_watch", executionId: "e", network: "solana-mainnet", commitment: "confirmed", address: p.input.address, minLamports: p.input.minLamports, readAt: "2026-01-01T00:00:00.000Z", complete: true, coverage: { signaturesSampled: 0, transactionsExamined: 0, transactionsUnavailable: 0, undecodableInstructions: 0 }, transfers: [], warnings: [] } };
+    return { ok: true, out: await watchWhales({ ...p.input, rpcUrl: "https://rpc.invalid", executionId: "test", fetchImpl: emptyRpc, now: () => new Date("2026-01-01T00:00:00Z") }) };
   },
 };
 
