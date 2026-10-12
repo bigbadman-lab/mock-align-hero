@@ -231,6 +231,63 @@ export type Database = {
           },
         ]
       }
+      mcpx_auth_challenges: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          domain: string
+          expires_at: string
+          message: string
+          nonce_hash: string
+          wallet: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          domain: string
+          expires_at: string
+          message: string
+          nonce_hash: string
+          wallet: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          domain?: string
+          expires_at?: string
+          message?: string
+          nonce_hash?: string
+          wallet?: string
+        }
+        Relationships: []
+      }
+      mcpx_creator_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          network: string
+          revoked_at: string | null
+          token_hash: string
+          wallet: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          network: string
+          revoked_at?: string | null
+          token_hash: string
+          wallet: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          network?: string
+          revoked_at?: string | null
+          token_hash?: string
+          wallet?: string
+        }
+        Relationships: []
+      }
       mcpx_rate_limits: {
         Row: {
           bucket: string
