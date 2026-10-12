@@ -2,7 +2,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect, useWalletInfo } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
-import { solana } from "@reown/appkit/networks";
+import { solana as solanaNetwork } from "@reown/appkit/networks";
+import type { AppKitNetwork } from "@reown/appkit/networks";
+
+const solana = solanaNetwork as unknown as AppKitNetwork;
 import { WalletContext } from "@/lib/wallet/context";
 import { CONNECT_TIMEOUT_MS, REOWN_PROJECT_ID, deriveWalletStatus, type WalletView } from "@/lib/wallet/state";
 
@@ -13,7 +16,7 @@ function initOnce() {
   window.__mcpxAppKit = true;
   createAppKit({
     adapters: [new SolanaAdapter()],
-    networks: [solana],
+    networks: [solana] as [AppKitNetwork],
     defaultNetwork: solana,
     projectId: REOWN_PROJECT_ID,
     metadata: {
@@ -37,7 +40,7 @@ export default function WalletRuntime({ children }: { children: ReactNode }) {
   const { disconnect } = useDisconnect();
   const { walletInfo } = useWalletInfo();
   const [timedOut, setTimedOut] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const pending = status === "connecting" || status === "reconnecting";
   useEffect(() => {

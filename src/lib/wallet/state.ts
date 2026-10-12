@@ -17,23 +17,23 @@ export type WalletStatus =
 
 export interface WalletView {
   status: WalletStatus;
-  address?: string;
-  walletName?: string;
-  message?: string;
-  open?: () => void;
-  openAccount?: () => void;
-  switchToMainnet?: () => void;
-  disconnect?: () => void;
+  address?: string | undefined;
+  walletName?: string | undefined;
+  message?: string | undefined;
+  open?: (() => void) | undefined;
+  openAccount?: (() => void) | undefined;
+  switchToMainnet?: (() => void) | undefined;
+  disconnect?: (() => void) | undefined;
 }
 
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 export function deriveWalletStatus(input: {
   isConnected: boolean;
-  address?: string | null;
-  providerStatus?: string;
-  caipNetworkId?: string | null;
-  timedOut?: boolean;
+  address?: string | null | undefined;
+  providerStatus?: string | undefined;
+  caipNetworkId?: string | null | undefined;
+  timedOut?: boolean | undefined;
 }): Exclude<WalletStatus, "loading" | "unavailable"> {
   const { isConnected, address, providerStatus, caipNetworkId, timedOut } = input;
   if (isConnected && address && BASE58.test(address)) {
