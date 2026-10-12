@@ -7,6 +7,12 @@ export const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 export const PUMP_AMM_PROGRAM = "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA";
 export const WSOL_MINT = "So11111111111111111111111111111111111111112";
 const DEFAULT_PUBKEY = "11111111111111111111111111111111";
+// Anchor emit_cpi event authorities (PDA [b"__event_authority"]); observed on chain in finalized collections.
+// Only the program itself can sign as this PDA, so an event ix without it is a forgery and is refused.
+export const EVENT_AUTHORITY: Record<string, string> = {
+  [PUMP_PROGRAM]: "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1",
+  [PUMP_AMM_PROGRAM]: "GS4CU59F31iL7aR2Q8zVS8DRrcRnXX1yjQ66TqNVQnaR",
+};
 
 // Discriminators from @pump-fun/pump-sdk 4.0.0 bundled IDLs.
 const EVENT_IX_TAG = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
@@ -51,6 +57,7 @@ export function decodeFeeEvents(tx: RpcTx | null): DecodeResult {
       let d: Uint8Array;
       try { d = bs58.decode(ix.data); } catch { return { kind: "UNKNOWN", reason: "undecodable_inner_data" }; }
       if (d.length < 16 || !eq(d, 0, EVENT_IX_TAG)) continue;
+      if (ix.accounts.length !== 1 || keys[ix.accounts[0]!] !== EVENT_AUTHORITY[program]) return { kind: "UNKNOWN", reason: "event_authority_mismatch" };
       const base = { signature: tx.transaction.signatures[0]!, slot: tx.slot, blockTime: tx.blockTime ?? null, ixIndex: group.index, programId: program };
       if (program === PUMP_PROGRAM && eq(d, 8, COLLECT_CREATOR_FEE_EVENT)) {
         if (d.length < 16 + 8 + 32 + 8) return { kind: "UNKNOWN", reason: "short_event" };
