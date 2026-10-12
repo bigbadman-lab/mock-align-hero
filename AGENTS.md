@@ -16,3 +16,4 @@
 - Verified creations registry (mcp_creations) is publicly readable on safe columns only and writable solely by a future server-side verifier; never grant browser writes.
 - outbox_events has no browser access; a verified creation and its outbox event must be written in one Postgres transaction by the server.
 - Registry reads go through src/lib/registry.ts (bounded pages, no polling, failures never shown as "empty").
+- Wallet: one Reown AppKit instance created in src/components/mcpx/wallet/WalletRuntime.tsx, lazy-loaded client-only via WalletBoundary in __root; UI reads state only through useWallet() (src/lib/wallet). A connected wallet is never treated as an authenticated identity.
