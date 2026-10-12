@@ -496,6 +496,346 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_allocations: {
+        Row: {
+          buyback: number
+          carried_in: number
+          created_at: string
+          epoch_start: string
+          event_key: string
+          holder_sol: number
+          operations: number
+          receipt_amount: number
+          residual_out: number
+          seq: number
+        }
+        Insert: {
+          buyback: number
+          carried_in: number
+          created_at?: string
+          epoch_start: string
+          event_key: string
+          holder_sol: number
+          operations: number
+          receipt_amount: number
+          residual_out: number
+          seq?: number
+        }
+        Update: {
+          buyback?: number
+          carried_in?: number
+          created_at?: string
+          epoch_start?: string
+          event_key?: string
+          holder_sol?: number
+          operations?: number
+          receipt_amount?: number
+          residual_out?: number
+          seq?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_allocations_event_key_fkey"
+            columns: ["event_key"]
+            isOneToOne: true
+            referencedRelation: "mcpx_rw_fee_events"
+            referencedColumns: ["event_key"]
+          },
+        ]
+      }
+      mcpx_rw_cursors: {
+        Row: {
+          last_signature: string | null
+          last_slot: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          last_signature?: string | null
+          last_slot?: number | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          last_signature?: string | null
+          last_slot?: number | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_entitlements: {
+        Row: {
+          amount: number
+          branch: string
+          created_at: string
+          epoch_start: string
+          owner: string
+        }
+        Insert: {
+          amount: number
+          branch: string
+          created_at?: string
+          epoch_start: string
+          owner: string
+        }
+        Update: {
+          amount?: number
+          branch?: string
+          created_at?: string
+          epoch_start?: string
+          owner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_entitlements_epoch_start_fkey"
+            columns: ["epoch_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_epochs"
+            referencedColumns: ["epoch_start"]
+          },
+        ]
+      }
+      mcpx_rw_epochs: {
+        Row: {
+          buyback_total: number
+          created_at: string
+          epoch_start: string
+          holder_sol_total: number
+          lease_owner: string | null
+          lease_until: string | null
+          settled_at: string | null
+          snapshot_id: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          buyback_total?: number
+          created_at?: string
+          epoch_start: string
+          holder_sol_total?: number
+          lease_owner?: string | null
+          lease_until?: string | null
+          settled_at?: string | null
+          snapshot_id?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          buyback_total?: number
+          created_at?: string
+          epoch_start?: string
+          holder_sol_total?: number
+          lease_owner?: string | null
+          lease_until?: string | null
+          settled_at?: string | null
+          snapshot_id?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_fee_events: {
+        Row: {
+          amount: number
+          asset: string
+          block_time: string
+          commitment: string
+          event_index: number
+          event_key: string
+          ingested_at: string
+          ix_index: number
+          mint: string
+          program_id: string
+          quarantine_reason: string | null
+          recipient: string
+          signature: string
+          slot: number
+          source: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          asset: string
+          block_time: string
+          commitment: string
+          event_index: number
+          event_key: string
+          ingested_at?: string
+          ix_index: number
+          mint: string
+          program_id: string
+          quarantine_reason?: string | null
+          recipient: string
+          signature: string
+          slot: number
+          source: string
+          status: string
+        }
+        Update: {
+          amount?: number
+          asset?: string
+          block_time?: string
+          commitment?: string
+          event_index?: number
+          event_key?: string
+          ingested_at?: string
+          ix_index?: number
+          mint?: string
+          program_id?: string
+          quarantine_reason?: string | null
+          recipient?: string
+          signature?: string
+          slot?: number
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_payout_intents: {
+        Row: {
+          authorized_by: string | null
+          branch: string
+          created_at: string
+          epoch_start: string
+          id: string
+          state: string
+          total: number
+        }
+        Insert: {
+          authorized_by?: string | null
+          branch: string
+          created_at?: string
+          epoch_start: string
+          id?: string
+          state?: string
+          total: number
+        }
+        Update: {
+          authorized_by?: string | null
+          branch?: string
+          created_at?: string
+          epoch_start?: string
+          id?: string
+          state?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_payout_intents_epoch_start_fkey"
+            columns: ["epoch_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_epochs"
+            referencedColumns: ["epoch_start"]
+          },
+        ]
+      }
+      mcpx_rw_snapshot_holders: {
+        Row: {
+          amount: number
+          owner: string
+          snapshot_id: string
+        }
+        Insert: {
+          amount: number
+          owner: string
+          snapshot_id: string
+        }
+        Update: {
+          amount?: number
+          owner?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_snapshot_holders_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_rw_snapshots: {
+        Row: {
+          created_at: string
+          eligible_total: number
+          excluded_total: number
+          holder_count: number
+          id: string
+          mint: string
+          policy_approved: boolean
+          policy_version: string
+          slot: number
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          eligible_total: number
+          excluded_total: number
+          holder_count: number
+          id?: string
+          mint: string
+          policy_approved?: boolean
+          policy_version: string
+          slot: number
+          source: string
+        }
+        Update: {
+          created_at?: string
+          eligible_total?: number
+          excluded_total?: number
+          holder_count?: number
+          id?: string
+          mint?: string
+          policy_approved?: boolean
+          policy_version?: string
+          slot?: number
+          source?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_swap_intents: {
+        Row: {
+          budget_lamports: number
+          created_at: string
+          epoch_start: string
+          id: string
+          max_price_impact_bps: number
+          max_slippage_bps: number
+          min_out_base_units: number | null
+          state: string
+        }
+        Insert: {
+          budget_lamports: number
+          created_at?: string
+          epoch_start: string
+          id?: string
+          max_price_impact_bps: number
+          max_slippage_bps: number
+          min_out_base_units?: number | null
+          state?: string
+        }
+        Update: {
+          budget_lamports?: number
+          created_at?: string
+          epoch_start?: string
+          id?: string
+          max_price_impact_bps?: number
+          max_slippage_bps?: number
+          min_out_base_units?: number | null
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_swap_intents_epoch_start_fkey"
+            columns: ["epoch_start"]
+            isOneToOne: true
+            referencedRelation: "mcpx_rw_epochs"
+            referencedColumns: ["epoch_start"]
+          },
+        ]
+      }
       outbox_events: {
         Row: {
           aggregate_id: string
@@ -563,6 +903,17 @@ export type Database = {
           _key_id: string
         }
         Returns: boolean
+      }
+      mcpx_rw_conservation: {
+        Args: never
+        Returns: {
+          allocated: number
+          conserved: boolean
+          credited_events: number
+          quarantined_events: number
+          receipts: number
+          residual: number
+        }[]
       }
     }
     Enums: {
