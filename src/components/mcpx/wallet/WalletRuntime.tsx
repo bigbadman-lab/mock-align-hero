@@ -74,7 +74,20 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
         ? async (m: Uint8Array) => {
             const p = fns.current.walletProvider;
             if (!p || typeof p.signMessage !== "function") throw new Error("unsupported_wallet");
-            return p.signMessage(m);
+            // Call as a method so `this` stays bound, and normalize the many result shapes adapters return.
+            const r: unknown = await p.signMessage.call(p, m);
+            const raw = r instanceof Uint8Array ? r
+              : r && typeof r === "object" && "signature" in r ? (r as { signature: unknown }).signature
+              : r;
+            if (raw instanceof Uint8Array) return raw;
+            if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
+            if (raw && typeof raw === "object" && "data" in raw && Array.isArray((raw as { data: unknown }).data)) return Uint8Array.from((raw as { data: number[] }).data);
+            if (typeof raw === "string") {
+              const bs = await import("bs58").then((x) => x.default).catch(() => null);
+              if (bs) { try { return bs.decode(raw); } catch { /* fall through */ } }
+              try { return Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)); } catch { /* fall through */ }
+            }
+            throw new Error("unexpected_signature_format");
           }
         : undefined,
     };
