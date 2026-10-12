@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline, buttonPrimary } from "@/components/mcpx/primitives";
-import { useWallet } from "@/lib/wallet";
+import { useWallet } from "@/lib/wallet/context";
 import { explorerAccountUrl, shortAddress } from "@/lib/wallet/state";
 import { walletInspectorStatusQuery } from "@/lib/tools/status";
 import { WI_CLIENT_TIMEOUT_MS, WI_ENDPOINT, isValidSolanaAddress, type ToolErrorKind, type WalletInspectorResult } from "@/lib/tools/wallet-inspector";

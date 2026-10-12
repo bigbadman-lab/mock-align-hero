@@ -83,7 +83,7 @@ export function FeatureAvailability({ children = "Not available yet" }: { childr
   );
 }
 
-export function TemplateCard({ t }: { t: TemplateDefinition }) {
+export function TemplateCard({ t, action }: { t: TemplateDefinition; action?: ReactNode }) {
   return (
     <article className="group flex h-full flex-col rounded-lg border border-border bg-card p-6 transition-colors hover:border-border-strong">
       <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export function TemplateCard({ t }: { t: TemplateDefinition }) {
         ))}
       </ul>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-        <span className="font-mono text-xs text-subtle">{AVAILABILITY_NOTE}</span>
+        {action ?? <span className="font-mono text-xs text-subtle">{AVAILABILITY_NOTE}</span>}
         <Link to="/docs" hash="templates" className="text-sm text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-primary">
           View documentation
         </Link>
