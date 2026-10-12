@@ -41,6 +41,10 @@ export function buildMessage(p: { domain: string; address: string; nonce: string
   ].join("\n");
 }
 
+/** SIWS / EIP-4361 nonces must be alphanumeric only; wallets (e.g. Phantom) reject "-" or "_" as invalid formatting. */
+const randomNonce = () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("");
+export const NONCE_RE = /^[0-9a-f]{64}$/;
+
 export async function verifyEd25519(address: string, message: string, signature: Uint8Array): Promise<boolean> {
   if (signature.length !== 64) return false;
   try {
@@ -65,7 +69,7 @@ export interface AuthStore {
 
 export async function createChallenge(store: AuthStore, address: string, host: string, now = new Date()) {
   if (!ALLOWED_HOSTS.includes(host) || !isSolanaAddress(address)) return { ok: false as const, error: "invalid_input" };
-  const nonce = randomToken(); // 256 bits
+  const nonce = randomNonce(); // 256 bits, alphanumeric (SIWS)
   const expiresAt = new Date(now.getTime() + CHALLENGE_TTL_MS);
   const message = buildMessage({ domain: host, address, nonce, issuedAt: now, expiresAt });
   await store.insertChallenge({ nonceHash: await sha256(nonce), wallet: address, domain: host, message, expiresAt: expiresAt.toISOString() });
@@ -82,7 +86,7 @@ const b64ToBytes = (s: string) => {
 /** Consumes the challenge first (single use even on failure), then checks wallet, domain, expiry and signature. */
 export async function verifySignIn(store: AuthStore, p: { nonce: string; address: string; signature: string; host: string }, now = new Date()) {
   const deny = { ok: false as const, error: "sign_in_failed" };
-  if (typeof p.nonce !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(p.nonce) || !isSolanaAddress(p.address) || !ALLOWED_HOSTS.includes(p.host)) return deny;
+  if (typeof p.nonce !== "string" || !NONCE_RE.test(p.nonce) || !isSolanaAddress(p.address) || !ALLOWED_HOSTS.includes(p.host)) return deny;
   const sig = typeof p.signature === "string" ? b64ToBytes(p.signature) : null;
   if (!sig) return deny;
   const ch = await store.consumeChallenge(await sha256(p.nonce));
