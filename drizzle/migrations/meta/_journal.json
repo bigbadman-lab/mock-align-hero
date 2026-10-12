@@ -15,6 +15,13 @@
       "when": 1791808017222,
       "tag": "0001_mcpx_02a_tool_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791819033896,
+      "tag": "0002_mcpx_03b_product_configs",
+      "breakpoints": true
     }
   ]
 }

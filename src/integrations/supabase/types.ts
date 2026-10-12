@@ -74,6 +74,53 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_product_configs: {
+        Row: {
+          access_mode: string
+          activated_at: string | null
+          config_version: number
+          created_at: string
+          creation_id: string
+          lifecycle_state: string
+          template_id: string
+          template_version: string
+          tool_config: Json
+          updated_at: string
+        }
+        Insert: {
+          access_mode?: string
+          activated_at?: string | null
+          config_version?: number
+          created_at?: string
+          creation_id: string
+          lifecycle_state?: string
+          template_id: string
+          template_version: string
+          tool_config?: Json
+          updated_at?: string
+        }
+        Update: {
+          access_mode?: string
+          activated_at?: string | null
+          config_version?: number
+          created_at?: string
+          creation_id?: string
+          lifecycle_state?: string
+          template_id?: string
+          template_version?: string
+          tool_config?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_product_configs_creation_id_template_id_fkey"
+            columns: ["creation_id", "template_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id", "template_id"]
+          },
+        ]
+      }
       mcpx_rate_limits: {
         Row: {
           bucket: string
