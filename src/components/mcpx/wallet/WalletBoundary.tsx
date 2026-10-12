@@ -4,8 +4,10 @@ import { WalletContext } from "@/lib/wallet/context";
 
 const WalletRuntime = lazy(async () => {
   // Must run before any @reown/@solana module evaluates.
-  const { installBufferPolyfill } = await import("./bufferPolyfill");
-  installBufferPolyfill();
+  // Wallet SDK code calls the global Buffer; browsers have none.
+  const { Buffer } = await import("buffer");
+  const g = globalThis as typeof globalThis & { Buffer?: typeof Buffer };
+  if (!g.Buffer) g.Buffer = Buffer;
   return import("./WalletRuntime");
 });
 
