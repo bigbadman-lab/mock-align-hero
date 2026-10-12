@@ -19,12 +19,14 @@ const opts = { print: () => { diagnostics++; }, printErr: () => { diagnostics++;
 type Init = (m?: unknown, o?: unknown) => Promise<void>;
 const cache: Partial<Record<"jpeg" | "webp", Promise<Decoder>>> = {};
 
-async function precompiled(load: () => Promise<{ default: unknown }>): Promise<WebAssembly.Module | undefined> {
+async function precompiled(load: () => Promise<{ default: unknown }>, devPath: string): Promise<WebAssembly.Module> {
   try {
     const m = (await load()).default;
     if (m instanceof WebAssembly.Module) return m;
-  } catch { /* dev server (Node): let the codec locate its own .wasm file */ }
-  return undefined;
+  } catch { /* dev server / tests run on Node, where `?module` isn't available */ }
+  // Node-only fallback (never reached in the deployed bundle, where the import above is a real module).
+  const fs = await import("node:fs/promises");
+  return WebAssembly.compile(await fs.readFile(`${process.cwd()}/node_modules/${devPath}`));
 }
 
 function decoder(kind: "jpeg" | "webp"): Promise<Decoder> {
@@ -32,14 +34,14 @@ function decoder(kind: "jpeg" | "webp"): Promise<Decoder> {
     if (kind === "jpeg") {
       const lib = await import("@jsquash/jpeg/decode");
       // @ts-expect-error -- wasm module import resolved by the server bundler
-      const mod = await precompiled(() => import("@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm?module"));
-      await (mod ? (lib.init as unknown as Init)(mod, opts) : (lib.init as unknown as Init)(opts));
+      const mod = await precompiled(() => import("@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm?module"), "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm");
+      await (lib.init as unknown as Init)(mod, opts);
       return (b) => lib.default(b);
     }
     const lib = await import("@jsquash/webp/decode");
     // @ts-expect-error -- wasm module import resolved by the server bundler
-    const mod = await precompiled(() => import("@jsquash/webp/codec/dec/webp_dec.wasm?module"));
-    await (mod ? (lib.init as unknown as Init)(mod, opts) : (lib.init as unknown as Init)(opts));
+    const mod = await precompiled(() => import("@jsquash/webp/codec/dec/webp_dec.wasm?module"), "@jsquash/webp/codec/dec/webp_dec.wasm");
+    await (lib.init as unknown as Init)(mod, opts);
     return (b) => lib.default(b);
   })().catch((e) => { delete cache[kind]; throw e; }));
 }
