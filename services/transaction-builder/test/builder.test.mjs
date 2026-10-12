@@ -300,3 +300,21 @@ test("B04 separate buy only after verified 60/25/15 creation; needs explicit app
   }
   assert.equal((await call(ok, { path: "/internal/v1/launch/prepare-buy", body: buyBody(creator, mint, { mode: "buy_v2" }) })).status, 400);
 });
+
+test("D02 /ready: operational readiness never lifts launch blockers; nothing secret is reported", async () => {
+  const full = readyReport(loadConfig(ENV));
+  assert.equal(full.ready, true); assert.equal(full.launchBlocked, true); assert.equal(full.launchEnabled, false);
+  assert.deepEqual(full.launchBlockers, ["FULL_FEE_FIRST_SIMULATION_NOT_VERIFIED", "METADATA_STORAGE_NOT_CONFIGURED", "SIGNING_FLOW_NOT_APPROVED"]);
+  const bare = readyReport(loadConfig({ ...ENV, MCPX_QUOTE_MINT: "", MCPX_LOOKUP_TABLE: "" }));
+  assert.ok(bare.launchBlockers.includes("QUOTE_MINT_MISSING") && bare.launchBlockers.includes("LOOKUP_TABLE_NOT_CONFIGURED"));
+  const txt = JSON.stringify(full);
+  for (const v of [SECRET, ENV.SOLANA_RPC_URL, F.FIXTURE_OPS, F.FIXTURE_PLATFORM, QUOTE, ENV.MCPX_LOOKUP_TABLE]) assert.ok(!txt.includes(v));
+});
+
+test("D03 malformed secret/RPC/recipients fail closed and are reported by name only", () => {
+  const c = loadConfig({ ...ENV, MCPX_TX_BUILDER_SECRET: "short", SOLANA_RPC_URL: "http://rpc", MCPX_FEE_PLATFORM_RECIPIENT: F.FIXTURE_OPS });
+  assert.equal(c.state, "NOT_CONFIGURED");
+  assert.deepEqual(c.invalid.sort(), ["MCPX_FEE_RECIPIENTS_DUPLICATE", "MCPX_TX_BUILDER_SECRET", "SOLANA_RPC_URL"].sort());
+  const r = readyReport(c); assert.equal(r.ready, false); assert.equal(r.feeRecipients, "MISSING");
+  assert.ok(!JSON.stringify(r).includes("short"));
+});

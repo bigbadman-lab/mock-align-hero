@@ -11,9 +11,10 @@ export function builderItem(s: BuilderStatus): ReadinessItem {
     case "BUILDER_NOT_DEPLOYED": return { ...base, state: "NOT_CONFIGURED", detail: "Not deployed yet." };
     case "BUILDER_TIMEOUT": return { ...base, state: "UNKNOWN", detail: "Did not answer in time." };
     case "BUILDER_MALFORMED": return { ...base, state: "UNKNOWN", detail: "Answered with an unreadable report." };
+    case "BUILDER_UNHEALTHY": return { ...base, state: "UNKNOWN", detail: "Reachable but reported an error." };
     case "BUILDER_UNREACHABLE": return { ...base, state: "UNKNOWN", detail: "Could not be reached." };
     case "BUILDER_NOT_CONFIGURED": return { ...base, state: "NOT_CONFIGURED", detail: "Running but missing required settings." };
-    case "BUILDER_READY_FOR_PREPARE": return { ...base, state: "READY", detail: "Running and able to prepare drafts. It cannot sign or send." };
+    case "BUILDER_READY_FOR_PREPARE": return { ...base, state: "READY", detail: "Ready for read-only validation only. It cannot sign or send, and this does not make launch ready." };
   }
 }
 

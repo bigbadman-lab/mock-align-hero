@@ -7,7 +7,7 @@ export async function getBuilderStatus(fetchImpl: typeof fetch = fetch): Promise
   if (!url || !/^https:\/\//.test(url)) return { state: "BUILDER_NOT_DEPLOYED" };
   try {
     const r = await fetchImpl(new URL("/ready", url), { signal: AbortSignal.timeout(4000) });
-    if (!r.ok) return { state: "BUILDER_UNREACHABLE" };
+    if (!r.ok) return { state: "BUILDER_UNHEALTHY" };
     const text = await r.text();
     if (text.length > 16_000) return { state: "BUILDER_MALFORMED" };
     let body: unknown;

@@ -23,6 +23,13 @@ export function readyReport(cfg) {
     rpcConfigured: Boolean(cfg.rpcUrl), quoteMint: cfg.quoteMint ? "CONFIGURED" : "QUOTE_MINT_MISSING",
     feeRecipients: cfg.opsRecipient && cfg.platformRecipient && !cfg.invalid.some((i) => i.startsWith("MCPX_FEE")) ? "CONFIGURED" : "MISSING",
     feeSplitBps: FEE_SPLIT_BPS, lookupTable: cfg.lookupTable ? "CONFIGURED" : "NOT_CONFIGURED",
+    // Operational readiness never implies launch readiness: these stay listed until later phases prove them.
+    launchBlocked: true,
+    launchBlockers: [
+      ...(cfg.quoteMint ? [] : ["QUOTE_MINT_MISSING"]),
+      ...(cfg.lookupTable ? [] : ["LOOKUP_TABLE_NOT_CONFIGURED"]),
+      "FULL_FEE_FIRST_SIMULATION_NOT_VERIFIED", "METADATA_STORAGE_NOT_CONFIGURED", "SIGNING_FLOW_NOT_APPROVED",
+    ],
     launchEnabled: false, capabilities: ["launch.prepare", "launch.inspect", "launch.prepare_buy", "launch.status"],
     simulationSupport: "READ_ONLY_SIMULATE_SIGVERIFY_OFF",
   };
@@ -76,5 +83,5 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const handle = createApp({ cfg, deps });
   const server = http.createServer((q, s) => { handle(q, s).catch(() => { try { s.writeHead(500); s.end(); } catch {} }); });
   server.requestTimeout = 15_000; server.headersTimeout = 10_000;
-  server.listen(cfg.port, () => console.log(`mcpx-transaction-builder listening state=${cfg.state}`));
+  server.listen(cfg.port, "0.0.0.0", () => console.log(`mcpx-transaction-builder listening state=${cfg.state}`));
 }
