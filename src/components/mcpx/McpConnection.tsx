@@ -44,7 +44,7 @@ export function McpConnection({ endpoint, tool }: { endpoint: string; tool: Publ
         <p className="text-sm text-muted-foreground">{tool.description}</p>
         <ul className="list-disc pl-5 text-sm text-muted-foreground">{tool.fixedSettings.map((s) => <li key={s}>{s}</li>)}</ul>
         <p className="label-mono text-subtle">Input schema</p>
-        <Code>{JSON.stringify(tool.inputSchema, null, 2)}</Code>
+        <Code>{tool.inputSchema}</Code>
       </div>
       <div className="space-y-2 text-sm text-muted-foreground">
         <p className="label-mono text-subtle">Compatibility</p>

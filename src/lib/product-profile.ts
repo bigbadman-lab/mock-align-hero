@@ -26,7 +26,7 @@ export interface ProfileDeps {
 
 export type Availability = "active" | "inactive" | "suspended" | "not_configured" | "misconfigured";
 
-export interface PublicTool { name: string; adapterVersion: string; title: string; description: string; inputSchema: unknown; fixedSettings: string[] }
+export interface PublicTool { name: string; adapterVersion: string; title: string; description: string; inputSchema: string; fixedSettings: string[] }
 export interface PublicProfile {
   creationId: string; slug: string; displayName: string; ticker: string; description: string;
   templateId: string; templateName: string; engine: string | null; templateVersion: number;
@@ -65,7 +65,7 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
       availability = cfg.lifecycle_state === "active" ? "active" : cfg.lifecycle_state === "suspended" ? "suspended" : "inactive";
       tool = {
         name: adapter.toolName, adapterVersion: adapter.version, title: adapter.title, description: adapter.description,
-        inputSchema: z.toJSONSchema(adapter.inputSchema), fixedSettings: adapter.describeSettings(settings),
+        inputSchema: JSON.stringify(z.toJSONSchema(adapter.inputSchema), null, 2), fixedSettings: adapter.describeSettings(settings),
       };
     }
   }
