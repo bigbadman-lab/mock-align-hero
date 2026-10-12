@@ -57,7 +57,7 @@ export function pgStore(db: Db, workerId: string, leaseSecondsDefault = 60, src?
     },
     async commitWindow(expected, plan, carry) {
       const carryJson = Object.fromEntries([...carry].map(([o, v]) => [o, v.toString()]));
-      const q = await db.query("select public.mcpx_rw_commit_window($1,$2,$3,$4::jsonb,$5::text[],$6::text[],$7::jsonb,$8) as r",
+      const q = await db.query("select public.mcpx_rw_commit_window($1,$2,$3,$4::text::jsonb,$5::text[],$6::text[],$7::text::jsonb,$8) as r",
         [workerId, expected === null ? null : ts(expected), ts(plan.window), JSON.stringify(planToJson(plan)), plan.receiptKeys, plan.adjustmentKeys, JSON.stringify(carryJson), PROCESSOR_VERSION]);
       const r = q.rows[0]?.r;
       if (r === "LEASE_LOST") return "LEASE_LOST";

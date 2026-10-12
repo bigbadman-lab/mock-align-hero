@@ -81,7 +81,7 @@ d("05-E durable store (real Postgres)", () => {
     const key = (await sa.receipts())[0]!.key;
     const base = { planId: "plan_" + "1".repeat(32), inputDigest: "1".repeat(64), status: "HELD", mode: "DRY_RUN", holdReasons: ["X"], snapshotSlot: null };
     const call = (plan: object, own: string[], w = T0, exp: string | null = null) =>
-      a.unsafe("select public.mcpx_rw_commit_window('worker-A', $1, $2, $3::jsonb, $4::text[], '{}'::text[], '{}'::jsonb, 'test') r", [exp, new Date(w * 1000).toISOString(), JSON.stringify(plan), own] as never[]);
+      a.unsafe("select public.mcpx_rw_commit_window('worker-A', $1, $2, $3::text::jsonb, $4::text[], '{}'::text[], '{}'::jsonb, 'test') r", [exp, new Date(w * 1000).toISOString(), JSON.stringify(plan), own] as never[]);
     await expect(call({ ...base, rewardsTotal: "9999", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key])).rejects.toThrow(/plan_totals_mismatch/);
     await expect(call({ ...base, rewardsTotal: "0", operationsTotal: "0", solBudget: "0", buybackBudget: "0" }, [])).rejects.toThrow(/unconsumed_receipt_omitted/);
     await expect(call({ ...base, mode: "LIVE", rewardsTotal: "6000", operationsTotal: "4000", solBudget: "3000", buybackBudget: "3000" }, [key])).rejects.toThrow(/dry_run_only/);
