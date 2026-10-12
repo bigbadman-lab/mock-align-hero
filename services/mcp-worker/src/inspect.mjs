@@ -67,7 +67,7 @@ async function rpcCall(rpcUrl, method, params, fetchImpl, signal) {
     try { json = JSON.parse(text); } catch { throw new RpcError("bad_response", `${method} invalid JSON`); }
     if (json.error) throw new RpcError("provider_error", `${method} RPC error ${json.error.code ?? ""}`.trim());
     if (!json.result || typeof json.result.context?.slot !== "number") throw new RpcError("bad_response", `${method} missing context`);
-    return json.result;
+    return method === "getBalance" ? { ...json.result, rawText: text } : json.result;
   } finally {
     clearTimeout(t);
     signal?.removeEventListener("abort", onAbort);
@@ -110,8 +110,10 @@ export async function inspectWallet({ address, rpcUrl, executionId, fetchImpl = 
   const note = (part, r) => { const k = r.reason instanceof RpcError ? r.reason.kind : "internal"; errs.push(k); warnings.push({ part, kind: k, message: `${part} unavailable (${k})` }); };
 
   let solBalance = null;
-  if (bal.status === "fulfilled" && Number.isSafeInteger(bal.value.value) && bal.value.value >= 0) {
-    const l = String(bal.value.value);
+  // Lamports can exceed 2^53; read the exact digits from the raw JSON, never a float.
+  const lam = bal.status === "fulfilled" ? /"value"\s*:\s*(\d{1,20})\s*[,}]/.exec(bal.value.rawText ?? "")?.[1] : undefined;
+  if (bal.status === "fulfilled" && lam !== undefined) {
+    const l = lam.replace(/^0+(?=\d)/, "");
     solBalance = { lamports: l, solUi: formatUnits(l, 9) };
   } else note("balance", bal.status === "rejected" ? bal : { reason: new RpcError("bad_response", "bad balance") });
 
