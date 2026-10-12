@@ -10,7 +10,7 @@ export const Route = createFileRoute("/mcp")({
       { title: "MCP Templates — MCPX" },
       { name: "description", content: "Six planned MCPX tool templates across Wallet, Token and Verify engines." },
       { property: "og:title", content: "MCP Templates — MCPX" },
-      { property: "og:description", content: "Six planned Solana tool templates. Execution arrives in Phase 02." },
+      { property: "og:description", content: "Six read-only Solana tool templates; each shows a live link only when its execution service is ready." },
     ],
   }),
   component: McpPage,
