@@ -33,3 +33,8 @@ Redeploy: Render → existing service → Manual Deploy → Deploy latest commit
 Tool `token_scanner`, schema `mcpx.tool-execution.token-scanner.v1`, input `{"mint":"<base58 32-byte key>"}`.
 Exactly 2 parallel RPC reads at `confirmed`: `getAccountInfo` (jsonParsed — the node's own SPL/Token-2022 mint parser) and `getTokenSupply` (independent cross-check, its own slot reported). Unparseable Token-2022 extensions are reported as undecoded, never as absent. No new dependencies.
 Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `token_scanner`.
+
+## Supply Monitor (Phase 02-D)
+Tool `supply_monitor` (catalogue id `supply-monitor`), schema `mcpx.tool-execution.supply-monitor.v1`, input `{"mint":"<base58>"}`.
+Exactly 3 parallel RPC reads at `confirmed`: getAccountInfo (mint check, shared parser with Token Scanner), getTokenSupply (mandatory — failure fails the run), getTokenLargestAccounts (optional — failure gives a labelled partial result). Amounts are integer strings/BigInt; percentages floored to 4 decimals; N/A when supply is 0. Slots reported separately.
+Redeploy: Render → existing service → Manual Deploy → Deploy latest commit (1 instance, no new env vars). `/ready` then lists `supply_monitor`.

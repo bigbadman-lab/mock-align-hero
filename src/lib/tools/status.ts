@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { WI_ENDPOINT } from "./wallet-inspector";
 import { TV_ENDPOINT } from "./transaction-verifier";
 import { TS_ENDPOINT } from "./token-scanner";
+import { SM_ENDPOINT } from "./supply-monitor";
 
 export interface ToolStatus { available: boolean; reason?: string; limits?: { perVisitorPerMinute: number; perVisitorPerHour: number; globalPerMinute: number } }
 
@@ -23,3 +24,4 @@ const statusQuery = (toolId: string, endpoint: string) => queryOptions({
 export const walletInspectorStatusQuery = statusQuery("wallet_inspector", WI_ENDPOINT);
 export const transactionVerifierStatusQuery = statusQuery("transaction_verifier", TV_ENDPOINT);
 export const tokenScannerStatusQuery = statusQuery("token_scanner", TS_ENDPOINT);
+export const supplyMonitorStatusQuery = statusQuery("supply_monitor", SM_ENDPOINT);
