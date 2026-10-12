@@ -19,10 +19,12 @@ import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-mo
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
 import { Route as ToolsTransactionVerifierRouteImport } from './routes/tools.transaction-verifier'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
+import { Route as ToolsWhaleWatchRouteImport } from './routes/tools.whale-watch'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
+import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -75,6 +77,11 @@ const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
   path: '/tools/wallet-inspector',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsWhaleWatchRoute = ToolsWhaleWatchRouteImport.update({
+  id: '/tools/whale-watch',
+  path: '/tools/whale-watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiToolsSupplyMonitorRoute = ApiToolsSupplyMonitorRouteImport.update({
   id: '/api/tools/supply-monitor',
   path: '/api/tools/supply-monitor',
@@ -96,6 +103,11 @@ const ApiToolsWalletInspectorRoute = ApiToolsWalletInspectorRouteImport.update({
   path: '/api/tools/wallet-inspector',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiToolsWhaleWatchRoute = ApiToolsWhaleWatchRouteImport.update({
+  id: '/api/tools/whale-watch',
+  path: '/api/tools/whale-watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,10 +120,12 @@ export interface FileRoutesByFullPath {
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/tools/whale-watch': typeof ToolsWhaleWatchRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
+  '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,10 +138,12 @@ export interface FileRoutesByTo {
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/tools/whale-watch': typeof ToolsWhaleWatchRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
+  '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,10 +157,12 @@ export interface FileRoutesById {
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/tools/whale-watch': typeof ToolsWhaleWatchRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
+  '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -159,10 +177,12 @@ export interface FileRouteTypes {
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/tools/whale-watch'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
+    | '/api/tools/whale-watch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -175,10 +195,12 @@ export interface FileRouteTypes {
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/tools/whale-watch'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
+    | '/api/tools/whale-watch'
   id:
     | '__root__'
     | '/'
@@ -191,10 +213,12 @@ export interface FileRouteTypes {
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/tools/whale-watch'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
+    | '/api/tools/whale-watch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,10 +232,12 @@ export interface RootRouteChildren {
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
+  ToolsWhaleWatchRoute: typeof ToolsWhaleWatchRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
+  ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -286,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsWalletInspectorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/whale-watch': {
+      id: '/tools/whale-watch'
+      path: '/tools/whale-watch'
+      fullPath: '/tools/whale-watch'
+      preLoaderRoute: typeof ToolsWhaleWatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/supply-monitor': {
       id: '/api/tools/supply-monitor'
       path: '/api/tools/supply-monitor'
@@ -314,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsWalletInspectorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools/whale-watch': {
+      id: '/api/tools/whale-watch'
+      path: '/api/tools/whale-watch'
+      fullPath: '/api/tools/whale-watch'
+      preLoaderRoute: typeof ApiToolsWhaleWatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -328,10 +368,12 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
+  ToolsWhaleWatchRoute: ToolsWhaleWatchRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
+  ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

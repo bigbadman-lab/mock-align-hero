@@ -6,6 +6,7 @@ import { inspectWallet, parseAddress, RpcError, TOOL_ID, SCHEMA } from "./inspec
 import { verifyTransaction, parseSignature, TV_TOOL_ID, TV_SCHEMA } from "./verify.mjs";
 import { scanToken, TS_TOOL_ID, TS_SCHEMA } from "./scan.mjs";
 import { monitorSupply, SM_TOOL_ID, SM_SCHEMA } from "./supply.mjs";
+import { watchWhales, validInput as wwValid, WW_TOOL_ID, WW_SCHEMA } from "./whale.mjs";
 
 const PORT = Number(process.env.PORT ?? 10000);
 const RPC_URL = process.env.HELIUS_RPC_URL ?? "";
@@ -22,6 +23,8 @@ const TOOLS = {
   [TV_TOOL_ID]: { schema: TV_SCHEMA, key: "signature", valid: parseSignature, run: (v, o) => verifyTransaction({ signature: v, ...o }), summary: (out) => ({ status: out.found ? "found" : "not_found", execution: out.execution }) },
   [TS_TOOL_ID]: { schema: TS_SCHEMA, key: "mint", valid: parseAddress, run: (v, o) => scanToken({ mint: v, ...o }), summary: (out) => ({ status: out.status, program: out.program }) },
   [SM_TOOL_ID]: { schema: SM_SCHEMA, key: "mint", valid: parseAddress, run: (v, o) => monitorSupply({ mint: v, ...o }), summary: (out) => ({ status: out.status, partial: out.partial ?? null, accounts: out.distribution?.accounts.length ?? 0 }) },
+  // Multi-field input: `whole` validates the entire input object (exact keys) instead of one key.
+  [WW_TOOL_ID]: { schema: WW_SCHEMA, whole: wwValid, run: (i, o) => watchWhales({ ...i, ...o }), summary: (out) => ({ complete: out.complete, transfers: out.transfers.length, attempted: out.coverage.transactionsAttempted }) },
 };
 
 const seenNonces = new Map();
@@ -66,7 +69,9 @@ createServer((req, res) => {
     const keys = input && typeof input === "object" ? Object.keys(input).sort().join(",") : "";
     const tool = keys === "input,schema,toolId" && Object.hasOwn(TOOLS, input.toolId) ? TOOLS[input.toolId] : null;
     if (!tool || input.schema !== tool.schema) return send(res, 400, { error: "unsupported_tool" });
-    if (!input.input || typeof input.input !== "object" || Object.keys(input.input).join(",") !== tool.key || !tool.valid(input.input[tool.key])) return send(res, 400, { error: "invalid_input" });
+    if (!input.input || typeof input.input !== "object" || Array.isArray(input.input)) return send(res, 400, { error: "invalid_input" });
+    const okInput = tool.whole ? tool.whole(input.input) : Object.keys(input.input).join(",") === tool.key && tool.valid(input.input[tool.key]);
+    if (!okInput) return send(res, 400, { error: "invalid_input" });
 
     if (Date.now() - windowStart > 60_000) { windowStart = Date.now(); windowHits = 0; }
     if (++windowHits > PER_MINUTE || inFlight >= MAX_CONCURRENT) return send(res, 429, { error: "busy" });
@@ -77,7 +82,7 @@ createServer((req, res) => {
     const kill = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
     res.on("close", () => ctrl.abort());
     try {
-      const out = await tool.run(input.input[tool.key], { rpcUrl: RPC_URL, executionId, signal: ctrl.signal });
+      const out = await tool.run(tool.whole ? input.input : input.input[tool.key], { rpcUrl: RPC_URL, executionId, signal: ctrl.signal });
       log({ executionId, tool: input.toolId, ms: Date.now() - started, ...tool.summary(out) });
       send(res, 200, out);
     } catch (e) {
