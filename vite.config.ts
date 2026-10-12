@@ -20,20 +20,6 @@ export default defineConfig({
   vite: {
     plugins: [
       {
-        // Artwork decoders (src/lib/launch/decode.server.ts) import their WebAssembly as precompiled
-        // modules (`*.wasm?module`). The SSR step can't load those; hand the absolute path through so the
-        // final server bundler (unwasm) emits it as a real Worker WebAssembly module import. The deployed
-        // runtime forbids compiling WebAssembly from bytes, so inlining would fail only after publish.
-        name: "mcpx-server-wasm-module",
-        enforce: "pre",
-        apply: "build",
-        async resolveId(id: string, importer?: string) {
-          if (this.environment?.name === "client" || !id.endsWith(".wasm?module")) return null;
-          const r = await this.resolve(id.slice(0, -"?module".length), importer, { skipSelf: true });
-          return r ? { id: `${r.id}?module`, external: true } : null;
-        },
-      },
-      {
         // Wallet SDK deps (safe-buffer, borsh, @solana/*) call require("buffer").Buffer at module init.
         // Without this, production client builds resolve "buffer" to an empty browser stub and crash.
         name: "mcpx-browser-buffer" /* also resolves events */,
