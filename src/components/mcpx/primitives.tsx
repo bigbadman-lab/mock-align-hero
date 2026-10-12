@@ -92,12 +92,12 @@ export function TemplateCard({ t }: { t: TemplateDefinition }) {
       </div>
       <h3 className="mt-4 text-lg font-semibold text-foreground">{t.name}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.purpose}</p>
-      <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+      <ul className="mt-4 mb-6 space-y-2 text-sm text-muted-foreground">
         {t.details.map((d) => (
           <li key={d} className="flex gap-2"><span aria-hidden className="text-subtle">—</span>{d}</li>
         ))}
       </ul>
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 mt-6">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <span className="font-mono text-xs text-subtle">{AVAILABILITY_NOTE}</span>
         <Link to="/docs" hash="templates" className="text-sm text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-primary">
           View documentation
