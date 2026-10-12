@@ -1,5 +1,6 @@
 // Explicit, user-initiated creator sign-in. Separate from Connect Wallet; never automatic, never a transaction.
 // Session state is read once on mount and after sign-in/out — no polling.
+import { ProductKeys } from "./ProductKeys";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWallet } from "@/lib/wallet/context";
 import { shortAddress } from "@/lib/wallet/state";
@@ -124,7 +125,7 @@ export function CreatorSignIn() {
             <p className="text-foreground">Signed in as <span className="font-mono">{shortAddress(s.wallet)}</span> until {new Date(s.expiresAt).toLocaleString()}.</p>
             {s.productsError ? <p>Couldn't load your products. Try again later.</p>
               : s.products && s.products.length === 0 ? <p>No verified MCPX products to manage.</p>
-              : <ul className="list-disc pl-5">{s.products?.map((p) => <li key={p.creationId}>{p.displayName}</li>)}</ul>}
+              : <ul className="space-y-3">{s.products?.map((p) => <ProductKeys key={`${s.wallet}:${p.creationId}`} creationId={p.creationId} displayName={p.displayName} onSessionEnded={() => setS({ kind: "signed_out", note: "Your session ended. Sign in again to continue." })} />)}</ul>}
             <button type="button" onClick={() => void signOut()} className={buttonOutline}>Sign out</button>
           </>
         )}
