@@ -4,7 +4,7 @@ import { accountCheckerStatusQuery, whaleWatchStatusQuery, supplyMonitorStatusQu
 import { PageContainer, PageHeader, TemplateCard, RouteError } from "@/components/mcpx/primitives";
 import { ENGINES, TEMPLATES } from "@/lib/templates";
 
-export const Route = createFileRoute("/mcp")({
+export const Route = createFileRoute("/mcp/")({
   head: () => ({
     meta: [
       { title: "MCP Templates — MCPX" },

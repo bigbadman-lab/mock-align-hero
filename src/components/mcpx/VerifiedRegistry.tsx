@@ -52,7 +52,7 @@ export function VerifiedRegistry() {
         <ul>
           {r.items.map((c) => (
             <li key={c.id} className="grid gap-1 border-b border-border px-5 py-4 last:border-0 sm:grid-cols-4 sm:gap-4">
-              <span className="text-sm text-foreground">{c.display_name} <span className="font-mono text-subtle">${c.ticker}</span></span>
+              <Link to="/mcp/$slug" params={{ slug: c.slug }} className="text-sm text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-primary">{c.display_name} <span className="font-mono text-subtle">${c.ticker}</span></Link>
               <span className="text-sm text-muted-foreground">{TEMPLATES.find((t) => t.id === c.template_id)?.name ?? c.template_id}</span>
               <span className="truncate font-mono text-xs text-muted-foreground">{c.child_mint}</span>
               <span className="font-mono text-xs text-muted-foreground">{new Date(c.verified_at).toISOString().slice(0, 10)}</span>
