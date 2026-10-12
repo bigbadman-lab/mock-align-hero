@@ -28,9 +28,10 @@ function png(w: number, h: number, raw: Uint8Array, pad = 0) {
 }
 
 describe("artwork validation (same checks run on the server)", () => {
-  it("accepts square PNG, JPEG, lossy and lossless WebP with their real sizes", async () => {
-    for (const [f, t] of [["sq.png", "image/png"], ["sq.jpg", "image/jpeg"], ["sq.webp", "image/webp"], ["sq-lossless.webp", "image/webp"]] as const)
+  it("accepts square PNG and JPEG with their real sizes; refuses WebP", async () => {
+    for (const [f, t] of [["sq.png", "image/png"], ["sq.jpg", "image/jpeg"]] as const)
       expect(await checkImage(fx(f))).toEqual({ ok: true, type: t, width: 256, height: 256 });
+    for (const f of ["sq.webp", "sq-lossless.webp"]) expect(await checkImage(fx(f))).toMatchObject({ ok: false, error: expect.stringContaining("WebP") });
   });
   it("accepts a valid PNG of exactly 5,000,000 bytes and rejects 5,000,001", async () => {
     const raw = new Uint8Array(64 * (1 + 64 * 3));
@@ -46,12 +47,12 @@ describe("artwork validation (same checks run on the server)", () => {
     expect(await checkImage(fx("wide.png"))).toMatchObject({ ok: false, error: expect.stringContaining("300×200") });
     expect((await checkImage(fx("sq.gif"))).ok).toBe(false);
     expect((await checkImage(fx("x.svg"))).ok).toBe(false);
-    expect(await checkImage(fx("anim.webp"))).toMatchObject({ ok: false, error: expect.stringContaining("Animated") });
+    expect((await checkImage(fx("anim.webp"))).ok).toBe(false);
     expect((await checkImage(new Uint8Array()))).toMatchObject({ ok: false });
     expect((await checkImage(cat(new TextEncoder().encode("<html>"), fx("sq.png"))))).toMatchObject({ ok: false });
   });
   it("rejects truncated or damaged files", async () => {
-    for (const f of ["sq.png", "sq.jpg", "sq.webp"]) {
+    for (const f of ["sq.png", "sq.jpg"]) {
       const b = fx(f);
       expect((await checkImage(b.subarray(0, b.length - 20))).ok).toBe(false);
     }
