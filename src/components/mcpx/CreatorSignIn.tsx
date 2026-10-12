@@ -1,7 +1,7 @@
 // Explicit, user-initiated creator sign-in. Separate from Connect Wallet; never automatic, never a transaction.
 // Session state is read once on mount and after sign-in/out — no polling.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useWallet } from "@/lib/wallet";
+import { useWallet } from "@/lib/wallet/context";
 import { shortAddress } from "@/lib/wallet/state";
 import { buttonOutline, FeatureAvailability } from "@/components/mcpx/primitives";
 
