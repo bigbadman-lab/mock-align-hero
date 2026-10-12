@@ -15,9 +15,11 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
 import { Route as ToolsTransactionVerifierRouteImport } from './routes/tools.transaction-verifier'
 import { Route as ToolsWalletInspectorRouteImport } from './routes/tools.wallet-inspector'
+import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
@@ -52,6 +54,11 @@ const PairedRoute = PairedRouteImport.update({
   path: '/paired',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsSupplyMonitorRoute = ToolsSupplyMonitorRouteImport.update({
+  id: '/tools/supply-monitor',
+  path: '/tools/supply-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsTokenScannerRoute = ToolsTokenScannerRouteImport.update({
   id: '/tools/token-scanner',
   path: '/tools/token-scanner',
@@ -66,6 +73,11 @@ const ToolsTransactionVerifierRoute =
 const ToolsWalletInspectorRoute = ToolsWalletInspectorRouteImport.update({
   id: '/tools/wallet-inspector',
   path: '/tools/wallet-inspector',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiToolsSupplyMonitorRoute = ApiToolsSupplyMonitorRouteImport.update({
+  id: '/api/tools/supply-monitor',
+  path: '/api/tools/supply-monitor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiToolsTokenScannerRoute = ApiToolsTokenScannerRouteImport.update({
@@ -92,9 +104,11 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -106,9 +120,11 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -121,9 +137,11 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/mcp': typeof McpRoute
   '/paired': typeof PairedRoute
+  '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
   '/tools/transaction-verifier': typeof ToolsTransactionVerifierRoute
   '/tools/wallet-inspector': typeof ToolsWalletInspectorRoute
+  '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -137,9 +155,11 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -151,9 +171,11 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -165,9 +187,11 @@ export interface FileRouteTypes {
     | '/launch'
     | '/mcp'
     | '/paired'
+    | '/tools/supply-monitor'
     | '/tools/token-scanner'
     | '/tools/transaction-verifier'
     | '/tools/wallet-inspector'
+    | '/api/tools/supply-monitor'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -180,9 +204,11 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   McpRoute: typeof McpRoute
   PairedRoute: typeof PairedRoute
+  ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
   ToolsTransactionVerifierRoute: typeof ToolsTransactionVerifierRoute
   ToolsWalletInspectorRoute: typeof ToolsWalletInspectorRoute
+  ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
@@ -232,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PairedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/supply-monitor': {
+      id: '/tools/supply-monitor'
+      path: '/tools/supply-monitor'
+      fullPath: '/tools/supply-monitor'
+      preLoaderRoute: typeof ToolsSupplyMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/token-scanner': {
       id: '/tools/token-scanner'
       path: '/tools/token-scanner'
@@ -251,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/wallet-inspector'
       fullPath: '/tools/wallet-inspector'
       preLoaderRoute: typeof ToolsWalletInspectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/supply-monitor': {
+      id: '/api/tools/supply-monitor'
+      path: '/api/tools/supply-monitor'
+      fullPath: '/api/tools/supply-monitor'
+      preLoaderRoute: typeof ApiToolsSupplyMonitorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tools/token-scanner': {
@@ -284,9 +324,11 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   McpRoute: McpRoute,
   PairedRoute: PairedRoute,
+  ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,
   ToolsTransactionVerifierRoute: ToolsTransactionVerifierRoute,
   ToolsWalletInspectorRoute: ToolsWalletInspectorRoute,
+  ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
