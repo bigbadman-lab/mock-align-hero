@@ -28,6 +28,7 @@ import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/to
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
+import { Route as ApiPublicMcpProductsCreationIdRouteImport } from './routes/api/public/mcp/products.$creationId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -127,6 +128,12 @@ const ApiPublicMcpPlatformDemoRoute =
     path: '/api/public/mcp/platform-demo',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMcpProductsCreationIdRoute =
+  ApiPublicMcpProductsCreationIdRouteImport.update({
+    id: '/api/public/mcp/products/$creationId',
+    path: '/api/public/mcp/products/$creationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -169,6 +177,7 @@ export interface FileRoutesByTo {
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -191,6 +200,7 @@ export interface FileRoutesById {
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/mcp/products/$creationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/mcp/products/$creationId'
   id:
     | '__root__'
     | '/'
@@ -256,6 +268,7 @@ export interface FileRouteTypes {
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/mcp/products/$creationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -278,6 +291,7 @@ export interface RootRouteChildren {
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
   ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
+  ApiPublicMcpProductsCreationIdRoute: typeof ApiPublicMcpProductsCreationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -415,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMcpPlatformDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mcp/products/$creationId': {
+      id: '/api/public/mcp/products/$creationId'
+      path: '/api/public/mcp/products/$creationId'
+      fullPath: '/api/public/mcp/products/$creationId'
+      preLoaderRoute: typeof ApiPublicMcpProductsCreationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -438,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
   ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
+  ApiPublicMcpProductsCreationIdRoute: ApiPublicMcpProductsCreationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

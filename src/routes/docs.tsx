@@ -92,8 +92,10 @@ function Docs() {
 Authorization: Bearer <token issued by MCPX>
 Tool: wallet_inspector  { "address": "<Solana public address>" }`}</pre>
             <p>This is a platform test endpoint, not a user-created product. It shares the website's rate limits.</p>
-            <p><span className="text-foreground">Planned per-product endpoints:</span> each created tool is planned to have its own endpoint in this form. These are not available; nothing responds at this address today.</p>
+            <p><span className="text-foreground">Terms:</span> a <em>template</em> is one of the tool designs listed on this site. A <em>created product</em> is a template launched by a creator and independently verified on-chain; its permanent ID never changes. A <em>product page</em> is the human-readable page for that product. An <em>MCP endpoint</em> is the address an AI assistant connects to — each product exposes exactly one tool with its own fixed settings.</p>
+            <p><span className="text-foreground">Planned per-product endpoints:</span> each created product is planned to have its own endpoint in this form. These are not available; nothing responds at this address today, and there are currently zero created products.</p>
             <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">https://mcp.mcpx.fun/{"{creation-id}"}/mcp</pre>
+            <p>Product access keys have not been issued yet, so no product endpoint accepts connections. Six templates are implemented; ten are planned before public launches.</p>
           </Doc>
           <Doc id="status" title="Current availability">
             <p><span className="text-foreground">Available now:</span> this website, the six template definitions, this documentation, Solana wallet connection (shows your public address only — not a sign-in, nothing is signed), and a read-only registry of verified creations shown on the Paired page.</p>
