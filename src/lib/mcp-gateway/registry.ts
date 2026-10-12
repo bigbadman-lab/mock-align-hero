@@ -18,6 +18,8 @@ export interface TemplateAdapter {
   inputSchema: z.ZodObject<{ address: z.ZodString }>;
   /** Strict allowlist for product tool_config; returns null when invalid. */
   parseSettings(raw: unknown): ProductSettings | null;
+  /** Public, human-readable description of server-fixed settings (safe to show; never raw config). */
+  describeSettings(settings: ProductSettings): string[];
   /** Default settings for non-product (platform) endpoints. */
   defaultSettings: ProductSettings;
   /** Build the exact signed worker payload from validated input + server-fixed settings. */
@@ -43,6 +45,7 @@ const walletInspector: TemplateAdapter = {
     "Amounts are exact integer strings (`amountRaw`) plus decimals. Shared rate limits apply.",
   inputSchema: z.strictObject({ address: addressSchema() }),
   parseSettings: (raw) => (isPlainObject(raw) && Object.keys(raw).length === 0 ? {} : null),
+  describeSettings: () => ["No product-level settings: every caller gets the same read."],
   defaultSettings: {},
   toWorkerPayload: (i) => JSON.stringify({ schema: WI_SCHEMA, toolId: WI_TOOL_ID, input: { address: i["address"] } }),
   validOutput: (out, i) => isWalletInspectorResult(out, String(i["address"])),
@@ -62,6 +65,10 @@ const whaleWatch: TemplateAdapter = {
     if (!isPlainObject(raw) || Object.keys(raw).join(",") !== "minLamports") return null;
     const v = raw["minLamports"];
     return WW_THRESHOLDS.some((t) => t.lamports === v) ? { minLamports: v as string } : null;
+  },
+  describeSettings: (s) => {
+    const t = WW_THRESHOLDS.find((x) => x.lamports === s["minLamports"]);
+    return [`Minimum transfer reported: ${t ? t.label : "unknown"} — fixed by this product on the server; callers cannot change it.`];
   },
   defaultSettings: { minLamports: "1000000000" },
   toWorkerPayload: (i, s) => JSON.stringify({ schema: WW_SCHEMA, toolId: WW_TOOL_ID, input: { address: i["address"], minLamports: s["minLamports"] } }),
