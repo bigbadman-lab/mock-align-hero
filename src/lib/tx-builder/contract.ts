@@ -21,6 +21,7 @@ export type BuilderStatus =
   | { state: "BUILDER_NOT_DEPLOYED" }
   | { state: "BUILDER_UNREACHABLE" }
   | { state: "BUILDER_TIMEOUT" }
+  | { state: "BUILDER_UNHEALTHY" }
   | { state: "BUILDER_MALFORMED" }
   | { state: "BUILDER_NOT_CONFIGURED"; quoteMint: string }
   | { state: "BUILDER_READY_FOR_PREPARE"; quoteMint: string; launchEnabled: false };

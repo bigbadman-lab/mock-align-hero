@@ -57,3 +57,14 @@ describe("launch readiness (04-C)", () => {
     expect(interpretReady({ ready: "yes" })).toEqual({ state: "BUILDER_MALFORMED" });
   });
 });
+
+describe("builder bridge states (04-D)", () => {
+  it("an error HTTP status is UNHEALTHY, distinct from unreachable", async () => {
+    const { getBuilderStatus } = await import("@/lib/tx-builder/status.server");
+    const prev = process.env["MCPX_TX_BUILDER_URL"];
+    process.env["MCPX_TX_BUILDER_URL"] = "https://builder.example";
+    const f = (async () => new Response("x", { status: 503 })) as unknown as typeof fetch;
+    expect(await getBuilderStatus(f)).toEqual({ state: "BUILDER_UNHEALTHY" });
+    process.env["MCPX_TX_BUILDER_URL"] = prev ?? "";
+  });
+});
