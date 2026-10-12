@@ -73,7 +73,6 @@ describe("fee ingest", () => {
 
 describe("epochs", () => {
   it("aligns to 5-minute UTC windows; boundary belongs to the new epoch", () => {
-    expect(epochStart(1_800_000_299)).toBe(1_799_999_700 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 0 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300 - 300 + 300);
     expect(epochStart(1_800_000_100) % 300).toBe(0);
     expect(epochStart(1_800_000_300)).toBe(1_800_000_300);
     expect(epochStart(1_800_000_299)).toBe(1_800_000_000);
