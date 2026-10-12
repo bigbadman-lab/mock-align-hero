@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2.5"><Mark /><span className="font-mono text-sm tracking-[0.2em]">MCPX</span></div>
             <p className="text-sm text-muted-foreground">Every token powers a tool.</p>
             <p className="max-w-md text-xs leading-relaxed text-subtle">
-              $MCP has not been minted. Wallet connection shows a public address only. Token launching and tool execution are not available yet.
+              $MCP has not been minted. Wallet connection shows a public address only. Template tools are read-only. Token launching is not available yet.
             </p>
           </div>
           <nav aria-label="Footer">
