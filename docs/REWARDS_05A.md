@@ -97,3 +97,18 @@ MCPX_NATIVE_REWARDS_TREASURY (60%) and MCPX_NATIVE_OPERATIONS_TREASURY (40%) are
 transfers are plain lamport sends). Separate signers: creator/launch key (one-time, then retired), buyback signer, payout signer
 (hot, capped per window, funded from rewards treasury by multisig top-up), admin (cold / multisig). Two Phantom wallets plus one
 multisig suffice; child 25%/15% wallets are not reused.
+
+## Phase 05-D — five-minute processor (DRY-RUN)
+Module: `src/lib/rewards/processor.ts` (pure, injectable store; tests `src/test/rewards-05d.test.ts`).
+- Input: only 05-C-decoded distributions fetched at `finalized` that pass `checkNativeSplit` (mint, sharing-config PDA, exactly 2 shareholders 6000/4000 to configured treasuries). Receipt key = signature:ix:event, so curve/AMM paths and racing scanners can't double count. AMM sweeps are never ingested.
+- Per receipt: SOL = floor(rewards/2), buyback = rest (odd lamport → buyback). Operations recorded only from its own observed transfer.
+- Windows: 300 s UTC; sealed strictly in order, one per call, only when both wall clock and finalized block time ≥ end + `finalityLagSeconds`. Empty windows seal as zero plans. RPC unknown → nothing sealed.
+- Late receipts never rewrite a sealed (frozen) plan; they are consumed by the next window as `adjustmentKeys`.
+- Concurrency: CAS lease + commit conditioned on the expected watermark (atomic plan + consumed receipts + carry). Production must run one instance; a second instance is safe (LEASE_HELD / RACE_LOST) but idle.
+- Plans: deterministic `planId` (SHA-256 of inputs), mode DRY_RUN, status HELD whenever any prerequisite is missing; `executionId` null; buyback token entitlements null until a verified fill (`allocateFill`). APPROVED/SUBMITTED/CONFIRMED/RECONCILED exist for schema design but `transitionPlan` refuses them.
+- Costs (fees, ATA rent, wSOL) come from an approved operations reserve, never from holder budgets; unknown/insufficient → HOLD.
+- Reconciler distinguishes UNKNOWN / NOT_FOUND / value; shortfall or excess fails closed.
+- Not yet built: Postgres store for processor state (no migration applied in 05-D) and a separately deployed rewards worker.
+
+### Quote-asset gate (SDK 4.0.0 + mainnet Global fixture slot 456134403, read-only)
+`pumpQuoteTarget`: a SOL-paired (quote = default key), depth-0 Pump coin is admitted without allowlisting; other quotes need `whitelistedQuoteMints` (currently only USDC) or a quote-control entry. `maxCurveDepth` = 1; mayhem and complete-awaiting-migration curves rejected. So a plain SOL-paired, non-mayhem $MCP appears eligible per SDK — NOT proven on chain (needs a read-only create_v2 simulation against a real SOL-paired coin).
