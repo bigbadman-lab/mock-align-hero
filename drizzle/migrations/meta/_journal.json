@@ -22,6 +22,13 @@
       "when": 1791819033896,
       "tag": "0002_mcpx_03b_product_configs",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791819664509,
+      "tag": "0003_mcpx_03c_product_access_keys",
+      "breakpoints": true
     }
   ]
 }
