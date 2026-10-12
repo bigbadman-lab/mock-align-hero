@@ -199,8 +199,11 @@ describe("product-scoped MCP (TEST ONLY fixtures)", () => {
     expect(workerCalls).toHaveLength(0);
   });
 
-  it("production wiring denies every product credential (none issued yet)", async () => {
+  it("production wiring denies when the key pepper is not configured", async () => {
+    const saved = process.env["MCPX_PRODUCT_KEY_PEPPER"];
+    delete process.env["MCPX_PRODUCT_KEY_PEPPER"];
     const { productionProductDeps } = await import("@/lib/mcp-gateway/products.server");
     expect(await productionProductDeps.authorizeProduct({} as never, TOKENS[A]!)).toBe(false);
+    if (saved) process.env["MCPX_PRODUCT_KEY_PEPPER"] = saved;
   });
 });
