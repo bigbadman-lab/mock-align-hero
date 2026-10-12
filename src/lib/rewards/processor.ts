@@ -203,7 +203,7 @@ export function classify(r: ProcessResult): HoldClass[] {
   const c = new Set<HoldClass>();
   if (r.plan.receiptKeys.length + r.plan.adjustmentKeys.length === 0) c.add("NO_VERIFIED_RECEIPTS");
   for (const h of r.plan.holdReasons) {
-    if (/_UNSET$/.test(h)) c.add(h.startsWith("REWARDS") || h.startsWith("OPERATIONS") ? "TREASURY_NOT_CONFIGURED" : "TREASURY_NOT_CONFIGURED");
+    if (/_UNSET$/.test(h)) c.add("TREASURY_NOT_CONFIGURED"); // mint, sharing config or treasuries not configured
     else if (h === "HOLDER_INDEX_UNAVAILABLE" || h.startsWith("SNAPSHOT_") || h.includes("supply") || h.includes("ambiguous")) c.add("SNAPSHOT_INCOMPLETE");
     else if (h.includes("exclusion_config_not_approved")) c.add("POLICY_UNAPPROVED");
     else if (h.startsWith("COST_RESERVE")) c.add("COST_RESERVE_UNAVAILABLE");
