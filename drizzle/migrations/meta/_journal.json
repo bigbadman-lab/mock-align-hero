@@ -43,6 +43,13 @@
       "when": 1791834309007,
       "tag": "0005_launch_drafts_04e",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791837488610,
+      "tag": "0006_mcpx_05a_native_rewards_ledger",
+      "breakpoints": true
     }
   ]
 }
