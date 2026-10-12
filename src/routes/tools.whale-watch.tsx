@@ -160,7 +160,7 @@ function ResultView({ r }: { r: WhaleWatchResult }) {
       <p className="break-all font-mono text-sm text-foreground">{r.address}{url && <> · <a className="underline" href={url} target="_blank" rel="noreferrer">Solscan</a></>}</p>
       <p className="text-sm text-muted-foreground">
         Native SOL transfers of at least <span className="font-mono text-foreground">{r.minSol} SOL</span>. Inspected {c.transactionsAttempted} of the {c.signaturesSeen} most recent transactions
-        {c.notInspected > 0 && ` (${c.notInspected} newer-than-cutoff… older ones not inspected)`}; {c.transactionsDecoded} decoded, {c.failedTransactions} failed onchain (nothing moved).
+        {c.notInspected > 0 && ` (the ${c.notInspected} older ones were not inspected)`}; {c.transactionsDecoded} decoded, {c.failedTransactions} failed onchain (nothing moved).
       </p>
       {!r.complete && (
         <StatusMessage tone="warning" title="Partial sample">
