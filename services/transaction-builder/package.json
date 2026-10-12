@@ -1,0 +1,19 @@
+{
+  "name": "mcpx-transaction-builder",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "MCPX unsigned launch-candidate builder (Phase 04-A). Separate Render service; never signs, submits or holds keys.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/builder.test.mjs",
+    "measure": "node scripts/measure.mjs"
+  },
+  "dependencies": {
+    "@pump-fun/pump-sdk": "4.0.0",
+    "@solana/spl-token": "0.4.14",
+    "@solana/web3.js": "1.98.4",
+    "bn.js": "5.2.2"
+  }
+}
