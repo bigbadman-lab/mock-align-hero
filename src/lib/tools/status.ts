@@ -3,6 +3,7 @@ import { WI_ENDPOINT } from "./wallet-inspector";
 import { TV_ENDPOINT } from "./transaction-verifier";
 import { TS_ENDPOINT } from "./token-scanner";
 import { SM_ENDPOINT } from "./supply-monitor";
+import { WW_ENDPOINT } from "./whale-watch";
 
 export interface ToolStatus { available: boolean; reason?: string; limits?: { perVisitorPerMinute: number; perVisitorPerHour: number; globalPerMinute: number } }
 
@@ -25,3 +26,4 @@ export const walletInspectorStatusQuery = statusQuery("wallet_inspector", WI_END
 export const transactionVerifierStatusQuery = statusQuery("transaction_verifier", TV_ENDPOINT);
 export const tokenScannerStatusQuery = statusQuery("token_scanner", TS_ENDPOINT);
 export const supplyMonitorStatusQuery = statusQuery("supply_monitor", SM_ENDPOINT);
+export const whaleWatchStatusQuery = statusQuery("whale_watch", WW_ENDPOINT);
