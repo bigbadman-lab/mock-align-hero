@@ -28,4 +28,4 @@
 
 - services/transaction-builder has its own AGENTS.md — read it before changing launch/transaction code.
 - src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch never signs or sends; drafts/artwork/metadata rules live in src/lib/launch/AGENTS.md.
-- Native rewards (src/lib/rewards): pure integer economics/epochs/snapshot/ledger with injectable store; tables mcpx_rw_* are service-role only, append-only, carry-chained and conservation-checked in SQL; no execution paths — see docs/REWARDS_05A.md.
+- Native rewards (src/lib/rewards): pure integer economics/epochs/snapshot/ledger with injectable store; tables mcpx_rw_* are service-role only, append-only, carry-chained and conservation-checked in SQL; no execution paths — fee proof = Pump self-CPI events with event-authority check (pump-events.ts); see docs/REWARDS_05A.md.
