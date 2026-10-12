@@ -692,6 +692,32 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_owner_carry: {
+        Row: {
+          lamports: number
+          owner: string
+          window_start: string
+        }
+        Insert: {
+          lamports: number
+          owner: string
+          window_start: string
+        }
+        Update: {
+          lamports?: number
+          owner?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_owner_carry_window_start_fkey"
+            columns: ["window_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_window_plans"
+            referencedColumns: ["window_start"]
+          },
+        ]
+      }
       mcpx_rw_payout_intents: {
         Row: {
           authorized_by: string | null
@@ -729,6 +755,189 @@ export type Database = {
             referencedColumns: ["epoch_start"]
           },
         ]
+      }
+      mcpx_rw_policies: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          config: Json
+          config_sha256: string
+          created_at: string
+          effective_from_slot: number | null
+          version: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          config: Json
+          config_sha256: string
+          created_at?: string
+          effective_from_slot?: number | null
+          version: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          config?: Json
+          config_sha256?: string
+          created_at?: string
+          effective_from_slot?: number | null
+          version?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_proc_runs: {
+        Row: {
+          at: string
+          correlation_id: string
+          id: number
+          outcome: string
+          reason: string | null
+          window_start: string | null
+          worker_id: string
+        }
+        Insert: {
+          at?: string
+          correlation_id: string
+          id?: number
+          outcome: string
+          reason?: string | null
+          window_start?: string | null
+          worker_id: string
+        }
+        Update: {
+          at?: string
+          correlation_id?: string
+          id?: number
+          outcome?: string
+          reason?: string | null
+          window_start?: string | null
+          worker_id?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_proc_state: {
+        Row: {
+          heartbeat_at: string | null
+          id: number
+          lease_owner: string | null
+          lease_until: string | null
+          updated_at: string
+          watermark: string | null
+        }
+        Insert: {
+          heartbeat_at?: string | null
+          id: number
+          lease_owner?: string | null
+          lease_until?: string | null
+          updated_at?: string
+          watermark?: string | null
+        }
+        Update: {
+          heartbeat_at?: string | null
+          id?: number
+          lease_owner?: string | null
+          lease_until?: string | null
+          updated_at?: string
+          watermark?: string | null
+        }
+        Relationships: []
+      }
+      mcpx_rw_receipt_consumption: {
+        Row: {
+          kind: string
+          receipt_key: string
+          window_start: string
+        }
+        Insert: {
+          kind: string
+          receipt_key: string
+          window_start: string
+        }
+        Update: {
+          kind?: string
+          receipt_key?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_receipt_consumption_receipt_key_fkey"
+            columns: ["receipt_key"]
+            isOneToOne: true
+            referencedRelation: "mcpx_rw_sharing_receipts"
+            referencedColumns: ["receipt_key"]
+          },
+          {
+            foreignKeyName: "mcpx_rw_receipt_consumption_window_start_fkey"
+            columns: ["window_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_window_plans"
+            referencedColumns: ["window_start"]
+          },
+        ]
+      }
+      mcpx_rw_sharing_receipts: {
+        Row: {
+          block_time: string
+          buyback_budget: number
+          commitment: string
+          event_index: number
+          ingested_at: string
+          ix_index: number
+          mint: string
+          operations_lamports: number
+          operations_recipient: string
+          program_id: string
+          receipt_key: string
+          rewards_lamports: number
+          rewards_recipient: string
+          sharing_config: string
+          signature: string
+          slot: number
+          sol_budget: number
+          window_start: string
+        }
+        Insert: {
+          block_time: string
+          buyback_budget: number
+          commitment: string
+          event_index: number
+          ingested_at?: string
+          ix_index: number
+          mint: string
+          operations_lamports: number
+          operations_recipient: string
+          program_id: string
+          receipt_key: string
+          rewards_lamports: number
+          rewards_recipient: string
+          sharing_config: string
+          signature: string
+          slot: number
+          sol_budget: number
+          window_start: string
+        }
+        Update: {
+          block_time?: string
+          buyback_budget?: number
+          commitment?: string
+          event_index?: number
+          ingested_at?: string
+          ix_index?: number
+          mint?: string
+          operations_lamports?: number
+          operations_recipient?: string
+          program_id?: string
+          receipt_key?: string
+          rewards_lamports?: number
+          rewards_recipient?: string
+          sharing_config?: string
+          signature?: string
+          slot?: number
+          sol_budget?: number
+          window_start?: string
+        }
+        Relationships: []
       }
       mcpx_rw_snapshot_holders: {
         Row: {
@@ -836,6 +1045,63 @@ export type Database = {
           },
         ]
       }
+      mcpx_rw_window_plans: {
+        Row: {
+          buyback_budget: number
+          committed_by: string
+          created_at: string
+          hold_reasons: string[]
+          input_digest: string
+          mode: string
+          operations_total: number
+          plan: Json
+          plan_id: string
+          policy_version: string | null
+          processor_version: string
+          rewards_total: number
+          snapshot_slot: number | null
+          sol_budget: number
+          status: string
+          window_start: string
+        }
+        Insert: {
+          buyback_budget: number
+          committed_by: string
+          created_at?: string
+          hold_reasons?: string[]
+          input_digest: string
+          mode: string
+          operations_total: number
+          plan: Json
+          plan_id: string
+          policy_version?: string | null
+          processor_version: string
+          rewards_total: number
+          snapshot_slot?: number | null
+          sol_budget: number
+          status: string
+          window_start: string
+        }
+        Update: {
+          buyback_budget?: number
+          committed_by?: string
+          created_at?: string
+          hold_reasons?: string[]
+          input_digest?: string
+          mode?: string
+          operations_total?: number
+          plan?: Json
+          plan_id?: string
+          policy_version?: string | null
+          processor_version?: string
+          rewards_total?: number
+          snapshot_slot?: number | null
+          sol_budget?: number
+          status?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       outbox_events: {
         Row: {
           aggregate_id: string
@@ -904,6 +1170,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      mcpx_rw_acquire_lease: {
+        Args: { _owner: string; _ttl_seconds: number }
+        Returns: boolean
+      }
+      mcpx_rw_commit_window: {
+        Args: {
+          _adj: string[]
+          _carry: Json
+          _expected: string
+          _own: string[]
+          _owner: string
+          _plan: Json
+          _processor_version: string
+          _window: string
+        }
+        Returns: string
+      }
       mcpx_rw_conservation: {
         Args: never
         Returns: {
@@ -915,6 +1198,7 @@ export type Database = {
           residual: number
         }[]
       }
+      mcpx_rw_release_lease: { Args: { _owner: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
