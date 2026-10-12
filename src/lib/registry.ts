@@ -3,6 +3,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 export const REGISTRY_PAGE_SIZE = 25;
+export const REGISTRY_TIMEOUT_MS = 10_000;
 
 export interface VerifiedCreationSummary {
   id: string;
@@ -76,7 +77,7 @@ export const verifiedCreationsQuery = (page = 0) =>
   queryOptions({
     queryKey: ["registry", "verified-creations", page],
     queryFn: ({ signal }) => {
-      const timeout = AbortSignal.timeout(10_000);
+      const timeout = AbortSignal.timeout(REGISTRY_TIMEOUT_MS);
       const s = AbortSignal.any ? AbortSignal.any([signal, timeout]) : signal;
       return fetchVerifiedCreations(page, s);
     },
