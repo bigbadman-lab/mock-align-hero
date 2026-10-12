@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      mcp_creations: {
+        Row: {
+          child_mint: string
+          created_at: string
+          creator_wallet: string
+          description: string
+          display_name: string
+          fee_config_evidence_id: string | null
+          id: string
+          network: string
+          quote_mint: string
+          slug: string
+          template_id: string
+          template_version: number
+          ticker: string
+          updated_at: string
+          verified_at: string
+          verified_slot: number
+          verified_tx_signature: string
+        }
+        Insert: {
+          child_mint: string
+          created_at?: string
+          creator_wallet: string
+          description?: string
+          display_name: string
+          fee_config_evidence_id?: string | null
+          id?: string
+          network: string
+          quote_mint: string
+          slug: string
+          template_id: string
+          template_version: number
+          ticker: string
+          updated_at?: string
+          verified_at: string
+          verified_slot: number
+          verified_tx_signature: string
+        }
+        Update: {
+          child_mint?: string
+          created_at?: string
+          creator_wallet?: string
+          description?: string
+          display_name?: string
+          fee_config_evidence_id?: string | null
+          id?: string
+          network?: string
+          quote_mint?: string
+          slug?: string
+          template_id?: string
+          template_version?: number
+          ticker?: string
+          updated_at?: string
+          verified_at?: string
+          verified_slot?: number
+          verified_tx_signature?: string
+        }
+        Relationships: []
+      }
+      outbox_events: {
+        Row: {
+          aggregate_id: string
+          aggregate_type: string
+          created_at: string
+          event_type: string
+          event_version: number
+          id: string
+          idempotency_key: string
+          occurred_at: string
+          payload: Json
+        }
+        Insert: {
+          aggregate_id: string
+          aggregate_type: string
+          created_at?: string
+          event_type: string
+          event_version: number
+          id?: string
+          idempotency_key: string
+          occurred_at?: string
+          payload?: Json
+        }
+        Update: {
+          aggregate_id?: string
+          aggregate_type?: string
+          created_at?: string
+          event_type?: string
+          event_version?: number
+          id?: string
+          idempotency_key?: string
+          occurred_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

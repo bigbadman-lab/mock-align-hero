@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791800924232,
+      "tag": "0000_mcpx_01b_registry_outbox",
+      "breakpoints": true
+    }
+  ]
 }
