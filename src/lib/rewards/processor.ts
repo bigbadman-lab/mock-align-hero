@@ -24,8 +24,10 @@ export type Receipt = {
 export type WindowState = "OPEN" | "PLANNED" | "HELD" | "ZERO";
 export type PlanStatus = "PLANNED" | "HELD" | "CANCELLED" | "APPROVED" | "SUBMITTED" | "CONFIRMED" | "RECONCILED";
 
+export const PROCESSOR_VERSION = "05e-1";
+
 export type Plan = {
-  planId: string; window: number; revision: number; mode: "DRY_RUN"; status: PlanStatus;
+  planId: string; inputDigest: string; window: number; revision: number; mode: "DRY_RUN"; status: PlanStatus;
   receiptKeys: string[]; adjustmentKeys: string[];
   rewardsTotal: bigint; operationsTotal: bigint; solBudget: bigint; buybackBudget: bigint;
   snapshotSlot: number | null; snapshotConfigVersion: string | null;
@@ -47,7 +49,7 @@ export type Store = {
   watermark(): Promise<number | null>; // last sealed window start
   sealedPlan(window: number): Promise<Plan | null>;
   /** Atomic: write plan + mark receipts consumed + advance watermark to plan.window + per-owner carry. Fails if watermark moved. */
-  commitWindow(expectedWatermark: number | null, plan: Plan, carry: Map<string, bigint>): Promise<boolean>;
+  commitWindow(expectedWatermark: number | null, plan: Plan, carry: Map<string, bigint>): Promise<boolean | "LEASE_LOST">;
   ownerCarry(): Promise<Map<string, bigint>>;
   consumed(): Promise<Set<string>>;
 };
@@ -98,7 +100,7 @@ export type ProcessInput = {
 
 export type ProcessResult =
   | { kind: "LEASE_HELD" } | { kind: "NOT_DUE"; nextWindow: number } | { kind: "CHAIN_TIME_UNKNOWN" } | { kind: "RACE_LOST" }
-  | { kind: "SEALED"; plan: Plan };
+  | { kind: "SEALED"; plan: Plan } | { kind: "LEASE_LOST" } | { kind: "RECONCILIATION_ALARM"; window: number; stored: string; recomputed: string };
 
 async function sha256Hex(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -156,8 +158,9 @@ export async function processNext(store: Store, cfg: NativeConfig, inp: ProcessI
     }
 
     const canonical = JSON.stringify({ window, keys: rs.map((r) => r.key), snap: snap ? [snap.slot, snap.configVersion] : null, sol: String(solBudget), bb: String(buybackBudget) });
+    const inputDigest = await sha256Hex(canonical);
     const plan: Plan = {
-      planId: `plan_${(await sha256Hex(canonical)).slice(0, 32)}`, window, revision: 1, mode: "DRY_RUN",
+      planId: `plan_${inputDigest.slice(0, 32)}`, inputDigest, window, revision: 1, mode: "DRY_RUN",
       status: rs.length === 0 ? "PLANNED" : "HELD",
       receiptKeys: own.map((r) => r.key).sort(), adjustmentKeys: late.map((r) => r.key).sort(),
       rewardsTotal, operationsTotal, solBudget, buybackBudget,
@@ -167,11 +170,46 @@ export async function processNext(store: Store, cfg: NativeConfig, inp: ProcessI
       costs, holdReasons: [...new Set(hold)], executionId: null,
     };
     if (inp.crashAt === "before_commit") throw new Error("crash_before_commit");
-    if (!(await store.commitWindow(wm, plan, carryOut))) return { kind: "RACE_LOST" };
+    const ok = await store.commitWindow(wm, plan, carryOut);
+    if (ok === "LEASE_LOST") return { kind: "LEASE_LOST" };
+    if (!ok) {
+      // Someone sealed this window: a replay must reproduce the identical digest, otherwise raise an alarm.
+      const stored = await store.sealedPlan(window);
+      if (stored && stored.inputDigest !== plan.inputDigest) return { kind: "RECONCILIATION_ALARM", window, stored: stored.inputDigest, recomputed: plan.inputDigest };
+      return { kind: "RACE_LOST" };
+    }
     return { kind: "SEALED", plan };
   } finally {
     await store.releaseLease(inp.workerId);
   }
+}
+
+/** Bounded catch-up: seal at most `maxWindows` windows per pass; stops at the first non-SEALED result. */
+export async function runPass(store: Store, cfg: NativeConfig, inp: ProcessInput, maxWindows: number) {
+  if (!Number.isInteger(maxWindows) || maxWindows < 1 || maxWindows > 288) throw new Error("max_windows_out_of_range");
+  const out: ProcessResult[] = [];
+  for (let i = 0; i < maxWindows; i++) { const r = await processNext(store, cfg, inp); out.push(r); if (r.kind !== "SEALED") break; }
+  return out;
+}
+
+/** Operator-facing reason classes (05-E). Unknown inputs never collapse into "zero". */
+export type HoldClass = "NO_VERIFIED_RECEIPTS" | "RPC_UNKNOWN" | "SNAPSHOT_INCOMPLETE" | "POLICY_UNAPPROVED" | "TREASURY_NOT_CONFIGURED"
+  | "REORG_OR_FINALITY_UNCERTAIN" | "COST_RESERVE_UNAVAILABLE" | "LEDGER_IMBALANCE" | "EXECUTION_NOT_APPROVED";
+export function classify(r: ProcessResult): HoldClass[] {
+  if (r.kind === "CHAIN_TIME_UNKNOWN") return ["RPC_UNKNOWN"];
+  if (r.kind === "NOT_DUE") return ["REORG_OR_FINALITY_UNCERTAIN"];
+  if (r.kind === "RECONCILIATION_ALARM") return ["LEDGER_IMBALANCE"];
+  if (r.kind !== "SEALED") return [];
+  const c = new Set<HoldClass>();
+  if (r.plan.receiptKeys.length + r.plan.adjustmentKeys.length === 0) c.add("NO_VERIFIED_RECEIPTS");
+  for (const h of r.plan.holdReasons) {
+    if (/_UNSET$/.test(h)) c.add("TREASURY_NOT_CONFIGURED"); // mint, sharing config or treasuries not configured
+    else if (h === "HOLDER_INDEX_UNAVAILABLE" || h.startsWith("SNAPSHOT_") || h.includes("supply") || h.includes("ambiguous")) c.add("SNAPSHOT_INCOMPLETE");
+    else if (h.includes("exclusion_config_not_approved")) c.add("POLICY_UNAPPROVED");
+    else if (h.startsWith("COST_RESERVE")) c.add("COST_RESERVE_UNAVAILABLE");
+    else if (h === "EXECUTION_NOT_APPROVED") c.add("EXECUTION_NOT_APPROVED");
+  }
+  return [...c];
 }
 
 /** Pro-rata with per-owner carry: each owner's prior carry is added to their share; below minimum → carried for that owner. */
@@ -245,6 +283,7 @@ export function memoryStore() {
     async sealedPlan(w) { return plans.get(w) ?? null; },
     async commitWindow(exp, p, c) {
       if (wm !== exp || plans.has(p.window)) return false;
+      if (exp !== null && p.window !== exp + EPOCH_SECONDS) throw new Error("non_contiguous_window");
       plans.set(p.window, Object.freeze(p)); for (const k of [...p.receiptKeys, ...p.adjustmentKeys]) consumed.add(k);
       wm = p.window; carry = new Map(c); return true;
     },

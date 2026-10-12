@@ -50,6 +50,20 @@
       "when": 1791837488610,
       "tag": "0006_mcpx_05a_native_rewards_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791842054638,
+      "tag": "0007_mcpx_05e_rewards_processor_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791842108140,
+      "tag": "0008_mcpx_05e_rewards_processor_tables",
+      "breakpoints": true
     }
   ]
 }

@@ -112,3 +112,18 @@ Module: `src/lib/rewards/processor.ts` (pure, injectable store; tests `src/test/
 
 ### Quote-asset gate (SDK 4.0.0 + mainnet Global fixture slot 456134403, read-only)
 `pumpQuoteTarget`: a SOL-paired (quote = default key), depth-0 Pump coin is admitted without allowlisting; other quotes need `whitelistedQuoteMints` (currently only USDC) or a quote-control entry. `maxCurveDepth` = 1; mayhem and complete-awaiting-migration curves rejected. So a plain SOL-paired, non-mayhem $MCP appears eligible per SDK — NOT proven on chain (needs a read-only create_v2 simulation against a real SOL-paired coin).
+
+## Phase 05-E — durable processor state, holder history, worker package
+Schema (additive, applied, 0 financial rows): `mcpx_rw_sharing_receipts` (05-C receipts, finalized only, sol=floor(r/2) checked), `mcpx_rw_policies` (versioned, immutable, approval provenance), `mcpx_rw_proc_state` (singleton watermark+lease; watermark trigger: +1 window only), `mcpx_rw_window_plans` (immutable DRY_RUN plans, input digest), `mcpx_rw_receipt_consumption` (PK = each receipt allocated once), `mcpx_rw_owner_carry`, `mcpx_rw_proc_runs`; cursor monotonic trigger on `mcpx_rw_cursors`. All RLS-on, no policies, anon/authenticated revoked; lease/commit functions service_role only.
+Why new receipt table instead of `mcpx_rw_fee_events`: that table + `mcpx_rw_allocations` model the 05-A single-receipt 30/30/40 chain; fee-sharing receipts carry two verified recipients and a 50/50 internal split — different facts, not duplicated.
+Store: `src/lib/rewards/store.pg.ts`; commit re-derives totals in SQL and refuses forged totals, omitted receipts, non-DRY_RUN, stale lease, stale watermark.
+Holder history: `holder-history.ts` = anchor (complete finalized account set at slot S incl. zero balances + supply) + contiguous seq-numbered changes (create/balance/owner/delegate/freeze/close/supply) with coverage proof; blocks on any gap or supply mismatch. Production source = `unavailableHistory` (BLOCKED). getProgramAccounts is current-state only and is never used for past windows. A real source needs an anchor taken at/after mint creation plus a continuous finalized-block indexer (e.g. Geyser/archival provider) — not configured.
+
+### Recorded multi-process proof (local throwaway Postgres 17 with migrations 0006+05-E applied)
+```
+ingest twice (two processes) → CREDITED, DUPLICATE
+process A SIGKILL while holding lease → exit 137; lease live, watermark null
+process B while lease live → LEASE_HELD
+after lease expiry, 4 processes race → 1 SEALED (plan_fa40b80f…), 3 LEASE_HELD; consumed=1
+fresh process → next window SEALED; stored SOL plan alice 225000 / bob 75000
+```
