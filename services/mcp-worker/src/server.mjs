@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { inspectWallet, parseAddress, RpcError, TOOL_ID, SCHEMA } from "./inspect.mjs";
 import { verifyTransaction, parseSignature, TV_TOOL_ID, TV_SCHEMA } from "./verify.mjs";
+import { scanToken, TS_TOOL_ID, TS_SCHEMA } from "./scan.mjs";
 
 const PORT = Number(process.env.PORT ?? 10000);
 const RPC_URL = process.env.HELIUS_RPC_URL ?? "";
@@ -18,6 +19,7 @@ const REQUEST_TIMEOUT_MS = 20_000;
 const TOOLS = {
   [TOOL_ID]: { schema: SCHEMA, key: "address", valid: parseAddress, run: (v, o) => inspectWallet({ address: v, ...o }), summary: (out) => ({ status: out.partial ? "partial" : "ok", holdings: out.tokenHoldings.length }) },
   [TV_TOOL_ID]: { schema: TV_SCHEMA, key: "signature", valid: parseSignature, run: (v, o) => verifyTransaction({ signature: v, ...o }), summary: (out) => ({ status: out.found ? "found" : "not_found", execution: out.execution }) },
+  [TS_TOOL_ID]: { schema: TS_SCHEMA, key: "mint", valid: parseAddress, run: (v, o) => scanToken({ mint: v, ...o }), summary: (out) => ({ status: out.status, program: out.program }) },
 };
 
 const seenNonces = new Map();
