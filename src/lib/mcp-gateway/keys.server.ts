@@ -1,5 +1,5 @@
-// Server-only key store + operator issuance/revocation. Not reachable from any route or UI:
-// creator self-service is blocked until wallet sign-in (SIWS) is verified server-side.
+// Server-only key store + issuance/revocation. Reached only from /api/creator/products after a verified
+// session AND verified-creator ownership check (or operator tooling).
 import { generateProductKey, readPepper, type KeyStore, type StoredKey } from "./keys";
 
 export const productionKeyStore: KeyStore = {
@@ -19,7 +19,7 @@ export const productionKeyStore: KeyStore = {
 
 export interface IssueRequest {
   creationId: string;
-  actorKind: "operator"; // "creator" only once SIWS exists
+  actorKind: "operator" | "creator"; // "creator" only after verified session + ownership check
   actorRef: string;
   idempotencyKey: string;
   label?: string;
@@ -46,9 +46,11 @@ export async function issueProductKey(req: IssueRequest): Promise<{ keyId: strin
   return { keyId: data, plaintext: row?.verifier === k.verifier ? k.plaintext : null };
 }
 
-export async function revokeProductKey(creationId: string, keyId: string, actorRef: string): Promise<boolean> {
+export const revokeProductKey = (creationId: string, keyId: string, actorRef: string) => revokeProductKeyAs(creationId, keyId, "operator", actorRef);
+
+export async function revokeProductKeyAs(creationId: string, keyId: string, actorKind: "operator" | "creator", actorRef: string): Promise<boolean> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.rpc("mcpx_revoke_product_key", { _creation_id: creationId, _key_id: keyId, _actor_kind: "operator", _actor_ref: actorRef });
+  const { data, error } = await supabaseAdmin.rpc("mcpx_revoke_product_key", { _creation_id: creationId, _key_id: keyId, _actor_kind: actorKind, _actor_ref: actorRef });
   if (error) throw new Error("revoke_failed");
   return data === true;
 }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { WalletPanel } from "@/components/mcpx/wallet/WalletControls";
+import { CreatorSignIn } from "@/components/mcpx/CreatorSignIn";
 import { PageContainer, PageHeader, FeatureAvailability, RouteError, buttonOutline } from "@/components/mcpx/primitives";
 
 export const Route = createFileRoute("/dashboard")({
@@ -28,6 +29,7 @@ function Dashboard() {
       <PageHeader label="Account" title="Dashboard" intro="Your connected wallet today. Creations, earnings, rewards and tool activity will appear here once they exist." />
       <PageContainer className="space-y-8 py-16">
         <WalletPanel />
+        <CreatorSignIn />
         <section aria-labelledby="d-creations" className="rounded-lg border border-border bg-card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="d-creations" className="text-sm font-semibold">Verified MCP creations</h2>
