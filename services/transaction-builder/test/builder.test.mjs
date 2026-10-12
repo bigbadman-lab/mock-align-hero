@@ -53,7 +53,7 @@ async function call(app, { method = "POST", path, body = "", headers = {}, sign 
   });
 }
 const prepBody = (o = {}) => JSON.stringify({ schema: "mcpx.launch.prepare.v1", idempotencyKey: randomUUID(), creator: F.kp().publicKey.toBase58(), mint: F.kp().publicKey.toBase58(),
-  name: "Fixture Tool Coin", symbol: "FIXT", uri: "https://mcpx.fun/meta/fixture.json", initialBuy: { mode: "buy_v3", quoteAmount: "1000000000", slippageBps: 100 }, format: "v0_alt", ...o });
+  name: "Fixture Tool Coin", symbol: "FIXT", uri: "https://mcpx.fun/meta/fixture.json", initialBuy: null, format: "v0_alt", ...o });
 
 test("S01 /health and /ready distinguish config, SDK, quote and recipients", async () => {
   const none = loadConfig({});
@@ -207,9 +207,9 @@ test("T07 any change to bound values invalidates the candidate", async () => {
 
 test("T08 a failing optional buy never downgrades to create-only", async () => {
   const app = createApp({ cfg: loadConfig(ENV), deps: await fixtureDeps() });
-  const r = await call(app, { path: "/internal/v1/launch/prepare", body: prepBody({ initialBuy: { mode: "buy_v2", quoteAmount: "1000000000", slippageBps: 100 } }) });
+  const r = await call(app, { path: "/internal/v1/launch/prepare", body: prepBody({ initialBuy: { mode: "buy_v3", quoteAmount: "1000000000", slippageBps: 100 } }) });
   assert.equal(r.json.status, "BLOCKED");
-  assert.deepEqual(r.json.reasons, ["TX_TOO_LARGE"]);
+  assert.deepEqual(r.json.reasons, ["INITIAL_BUY_MUST_BE_SEPARATE"], "refused explicitly, never stripped to create-only");
   assert.equal(r.json.messageBase64, undefined);
   await assert.rejects(assemble({ candidate: "D", creator: F.kp().publicKey.toBase58(), mint: F.kp().publicKey.toBase58(), name: "X", symbol: "X", uri: "https://x.y/z", initialBuy: null,
     quoteMint: QUOTE, quoteTokenProgram: F.SPL, opsRecipient: F.FIXTURE_OPS, platformRecipient: F.FIXTURE_PLATFORM, global: F.global, feeConfig: F.feeConfig, parent: parentOk() }), (e) => e instanceof BuildError && e.code === "INITIAL_BUY_REQUIRED");
@@ -228,6 +228,7 @@ test("T10 simulation not run; chain acceptance stays BLOCKED", async () => {
   const r = await call(app, { path: "/internal/v1/launch/prepare", body: prepBody() });
   assert.equal(r.json.evidence.simulation, "SIMULATION_NOT_RUN");
   assert.equal(r.json.evidence.chainAcceptance, "BLOCKED");
+  assert.equal(r.json.feeConfigVerified, false);
   assert.equal(r.json.evidence.compute, "COMPUTE_NOT_MEASURED");
 });
 
@@ -239,4 +240,63 @@ test("idempotency: same key + same body returns the same candidate; different bo
   assert.equal(a.json.preparationId, b.json.preparationId);
   const changed = JSON.stringify({ ...JSON.parse(body), symbol: "OTHER" });
   assert.equal((await call(app, { path: "/internal/v1/launch/prepare", body: changed })).status, 409);
+});
+
+// ---- Phase 04-B ----
+import { verifyCreated } from "../src/launch-state.mjs";
+const cfgB = loadConfig(ENV);
+function createdState(creator, mint, o = {}) {
+  const bc = { ...pump.newBondingCurve(F.global, F.FIXTURE_QUOTE, null, undefined, false, F.parentFixture("active").curve), isMayhemMode: false,
+    creator: pump.feeSharingConfigPda(new web3.PublicKey(mint)), quoteMint: F.FIXTURE_QUOTE, ...o.curve };
+  const shares = o.shares ?? [[creator, 6000], [F.FIXTURE_OPS, 2500], [F.FIXTURE_PLATFORM, 1500]];
+  return { mintOwner: F.T22.toBase58(), bondingCurve: bc, curveBaseTokenBalance: bc.realTokenReserves.toString(), mintSupply: F.global.tokenTotalSupply.toString(),
+    sharingConfig: o.noConfig ? null : { mint: new web3.PublicKey(mint), admin: new web3.PublicKey(o.admin ?? creator), adminRevoked: false, version: 1,
+      shareholders: shares.map(([a, b]) => ({ address: new web3.PublicKey(a), shareBps: b })) } };
+}
+
+test("B01 simulation failure blocks creation; missing fee events never count as verified", async () => {
+  const fail = createApp({ cfg: cfgB, deps: await fixtureDeps({ simulate: async () => ({ err: { InstructionError: [2, { Custom: 6000 }] }, unitsConsumed: 1, logs: ["x"], slot: 1 }) }) });
+  const r = await call(fail, { path: "/internal/v1/launch/prepare", body: prepBody() });
+  assert.deepEqual(r.json.reasons, ["SIMULATION_FAILED"]); assert.equal(r.json.messageBase64, undefined);
+  const noEv = createApp({ cfg: cfgB, deps: await fixtureDeps({ simulate: async () => ({ err: null, unitsConsumed: 300000, logs: [], slot: 1 }) }) });
+  assert.deepEqual((await call(noEv, { path: "/internal/v1/launch/prepare", body: prepBody() })).json.reasons, ["SIMULATION_EVENTS_MISSING"]);
+  const down = createApp({ cfg: cfgB, deps: await fixtureDeps({ simulate: async () => { throw new Error("rpc"); } }) });
+  assert.equal((await call(down, { path: "/internal/v1/launch/prepare", body: prepBody() })).json.code, "RPC_UNAVAILABLE");
+});
+
+test("B02 creation status: not found, verified, and every mismatch", () => {
+  const creator = F.kp().publicKey.toBase58(), mint = F.kp().publicKey.toBase58(), x = { mint, creator, cfg: cfgB };
+  assert.equal(verifyCreated({ mintOwner: null, bondingCurve: null, sharingConfig: null }, x).state, "NOT_FOUND");
+  assert.equal(verifyCreated(createdState(creator, mint), x).state, "CREATED_FEE_VERIFIED");
+  assert.equal(verifyCreated(createdState(creator, mint, { shares: [[creator, 10000]] }), x).code, "FEE_SHARES_MISMATCH", "fee config never updated");
+  assert.equal(verifyCreated(createdState(creator, mint, { shares: [[creator, 6000], [F.FIXTURE_OPS, 1500], [F.FIXTURE_PLATFORM, 2500]] }), x).code, "FEE_SHARES_MISMATCH");
+  assert.equal(verifyCreated(createdState(creator, mint, { noConfig: true }), x).code, "SHARING_CONFIG_NOT_FOUND");
+  assert.equal(verifyCreated(createdState(creator, mint, { curve: { creator: new web3.PublicKey(creator) } }), x).code, "CURVE_CREATOR_NOT_SHARING_CONFIG");
+  assert.equal(verifyCreated(createdState(creator, mint, { curve: { quoteMint: F.kp().publicKey } }), x).code, "QUOTE_MINT_MISMATCH");
+  assert.equal(verifyCreated(createdState(creator, mint, { admin: F.kp().publicKey.toBase58() }), x).code, "SHARING_ADMIN_MISMATCH");
+});
+
+test("B03 status endpoint: RPC outage is UNKNOWN, never NOT_FOUND", async () => {
+  const app = createApp({ cfg: cfgB, deps: await fixtureDeps({ getMintState: async () => { throw new Error("down"); } }) });
+  const r = await call(app, { path: "/internal/v1/launch/status", body: JSON.stringify({ schema: "mcpx.launch.status.v1", creator: F.kp().publicKey.toBase58(), mint: F.kp().publicKey.toBase58() }) });
+  assert.equal(r.status, 503); assert.equal(r.json.state, "UNKNOWN");
+});
+
+const buyBody = (creator, mint, o = {}) => JSON.stringify({ schema: "mcpx.launch.prepare-buy.v1", idempotencyKey: randomUUID(), creator, mint, mode: "buy_v3", quoteAmount: "1000000000", slippageBps: 100, format: "v0", ...o });
+
+test("B04 separate buy only after verified 60/25/15 creation; needs explicit approval; no price guarantee", async () => {
+  const creator = F.kp().publicKey.toBase58(), mint = F.kp().publicKey.toBase58();
+  const notYet = createApp({ cfg: cfgB, deps: await fixtureDeps({ getMintState: async () => ({ mintOwner: null, bondingCurve: null, sharingConfig: null }) }) });
+  assert.deepEqual((await call(notYet, { path: "/internal/v1/launch/prepare-buy", body: buyBody(creator, mint) })).json.reasons, ["CREATION_NOT_FOUND"]);
+  const unpaid = createApp({ cfg: cfgB, deps: await fixtureDeps({ getMintState: async () => createdState(creator, mint, { shares: [[creator, 10000]] }) }) });
+  assert.deepEqual((await call(unpaid, { path: "/internal/v1/launch/prepare-buy", body: buyBody(creator, mint) })).json.reasons, ["FEE_SHARES_MISMATCH"]);
+  const ok = createApp({ cfg: cfgB, deps: await fixtureDeps({ getMintState: async () => createdState(creator, mint) }) });
+  for (const mode of ["buy_v3", "buy_exact_quote_in_v3"]) {
+    const r = await call(ok, { path: "/internal/v1/launch/prepare-buy", body: buyBody(creator, mint, { mode }) });
+    assert.equal(r.json.status, "UNSIGNED_BUY_CANDIDATE", JSON.stringify(r.json));
+    assert.equal(r.json.requiresExplicitUserApproval, true); assert.equal(r.json.evidence.priceGuaranteed, false);
+    assert.ok(r.json.evidence.instructions.some((i) => i.name === mode)); assert.deepEqual(r.json.evidence.signers, [creator]);
+    assert.ok(r.json.evidence.serializedBytes <= 1232);
+  }
+  assert.equal((await call(ok, { path: "/internal/v1/launch/prepare-buy", body: buyBody(creator, mint, { mode: "buy_v2" }) })).status, 400);
 });
