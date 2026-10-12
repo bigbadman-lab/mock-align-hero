@@ -1,5 +1,5 @@
 // Browser- and server-safe contract for Wallet Inspector v1. No secrets here.
-import { PublicKey } from "@solana/web3.js";
+import { isAddress } from "@solana/addresses";
 
 export const WI_SCHEMA = "mcpx.tool-execution.wallet-inspector.v1";
 export const WI_TOOL_ID = "wallet_inspector";
@@ -37,12 +37,7 @@ export type ToolErrorKind =
 /** Real 32-byte Solana public key check (not a regex). */
 export function isValidSolanaAddress(s: string): boolean {
   if (s.length < 32 || s.length > 44) return false;
-  try {
-    const k = new PublicKey(s);
-    return k.toBytes().length === 32 && k.toBase58() === s;
-  } catch {
-    return false;
-  }
+  return isAddress(s); // decodes base58 and requires exactly 32 bytes
 }
 
 const isStr = (v: unknown): v is string => typeof v === "string";
