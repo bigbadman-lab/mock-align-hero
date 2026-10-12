@@ -288,6 +288,196 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_launch_artifacts: {
+        Row: {
+          bytes: number
+          content_type: string
+          created_at: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          height: number | null
+          id: string
+          kind: string
+          object_path: string
+          public_url: string
+          sha256: string
+          width: number | null
+        }
+        Insert: {
+          bytes: number
+          content_type: string
+          created_at?: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          height?: number | null
+          id?: string
+          kind: string
+          object_path: string
+          public_url: string
+          sha256: string
+          width?: number | null
+        }
+        Update: {
+          bytes?: number
+          content_type?: string
+          created_at?: string
+          creator_wallet?: string
+          draft_id?: string
+          draft_revision?: number
+          height?: number | null
+          id?: string
+          kind?: string
+          object_path?: string
+          public_url?: string
+          sha256?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_launch_artifacts_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_launch_attempts: {
+        Row: {
+          artwork_sha256: string | null
+          blockhash: string | null
+          blockhash_expires_at: string | null
+          config_versions: Json
+          created_at: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          evidence: Json | null
+          id: string
+          idempotency_key: string
+          metadata_sha256: string | null
+          mint_pubkey: string | null
+          signature: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          artwork_sha256?: string | null
+          blockhash?: string | null
+          blockhash_expires_at?: string | null
+          config_versions?: Json
+          created_at?: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          evidence?: Json | null
+          id?: string
+          idempotency_key: string
+          metadata_sha256?: string | null
+          mint_pubkey?: string | null
+          signature?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          artwork_sha256?: string | null
+          blockhash?: string | null
+          blockhash_expires_at?: string | null
+          config_versions?: Json
+          created_at?: string
+          creator_wallet?: string
+          draft_id?: string
+          draft_revision?: number
+          evidence?: Json | null
+          id?: string
+          idempotency_key?: string
+          metadata_sha256?: string | null
+          mint_pubkey?: string | null
+          signature?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_launch_attempts_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_launch_drafts: {
+        Row: {
+          abandoned_at: string | null
+          artwork_id: string | null
+          buy_preference: Json | null
+          chain_status: string
+          create_key: string
+          created_at: string
+          creator_wallet: string
+          description: string
+          id: string
+          link: string | null
+          metadata_id: string | null
+          product_name: string
+          revision: number
+          settings: Json
+          status: string
+          symbol: string
+          template_id: string
+          template_version: number
+          token_name: string
+          updated_at: string
+        }
+        Insert: {
+          abandoned_at?: string | null
+          artwork_id?: string | null
+          buy_preference?: Json | null
+          chain_status?: string
+          create_key: string
+          created_at?: string
+          creator_wallet: string
+          description: string
+          id?: string
+          link?: string | null
+          metadata_id?: string | null
+          product_name: string
+          revision?: number
+          settings?: Json
+          status?: string
+          symbol: string
+          template_id: string
+          template_version?: number
+          token_name: string
+          updated_at?: string
+        }
+        Update: {
+          abandoned_at?: string | null
+          artwork_id?: string | null
+          buy_preference?: Json | null
+          chain_status?: string
+          create_key?: string
+          created_at?: string
+          creator_wallet?: string
+          description?: string
+          id?: string
+          link?: string | null
+          metadata_id?: string | null
+          product_name?: string
+          revision?: number
+          settings?: Json
+          status?: string
+          symbol?: string
+          template_id?: string
+          template_version?: number
+          token_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mcpx_rate_limits: {
         Row: {
           bucket: string

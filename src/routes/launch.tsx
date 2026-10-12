@@ -9,6 +9,7 @@ import { shortAddress } from "@/lib/wallet/state";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
 import type { ReadinessItem, ReadyState } from "@/lib/launch/readiness";
 import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
+import { ArtworkPanel, MetadataPanel, SavedDrafts, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
 
 export const Route = createFileRoute("/launch")({
   head: () => ({
@@ -71,6 +72,18 @@ function Launch() {
   const [review, setReview] = useState<{ draft: Draft; wallet: string | null } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
+  const drafts = useDrafts(session.s === "signed_in" ? session.wallet : null);
+  const [saved, setSaved] = useState<DraftView | null>(null);
+  const savedJson = saved ? JSON.stringify(saved.input) : null;
+  const dirty = savedJson !== JSON.stringify(input);
+  const openDraft = (d: DraftView) => { setSaved(d); setInput(d.input); setErrors({}); setReview(null); setNotice(null); };
+  const onSave = async () => {
+    const r = validateDraft(input);
+    if (!r.ok) { setErrors(r.errors); requestAnimationFrame(() => errorRef.current?.focus()); return; }
+    const out = await drafts.save(saved, input);
+    if (out.draft) { setSaved(out.draft); setInput(out.draft.input); }
+    if (out.fields) setErrors(out.fields);
+  };
   const reviewRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
@@ -116,7 +129,7 @@ function Launch() {
       <PageHeader label="Builder" title="Launch preparation" intro="Draft and check a tool token. Token creation is unavailable — nothing on this page creates, signs or sends anything." />
       <PageContainer className="space-y-12 py-16">
         <StatusMessage tone="warning" title="Launch preparation — token creation unavailable">
-          Required technical prerequisites are missing (listed below). You can prepare and review a draft; it stays in this page only and is lost when you leave.
+          Required technical prerequisites are missing (listed below). You can prepare, save and review a draft. Saving a draft or publishing its metadata does not create, launch or own a token.
         </StatusMessage>
 
         <section aria-labelledby="readiness">
@@ -140,6 +153,8 @@ function Launch() {
         </section>
 
         {notice && <StatusMessage tone="warning" title={notice} />}
+
+        {session.s === "signed_in" && <SavedDrafts drafts={drafts} current={saved?.id ?? null} onOpen={openDraft} onNew={() => { setSaved(null); setInput(EMPTY); setReview(null); }} onAbandoned={(id) => { if (saved?.id === id) { setSaved(null); setInput(EMPTY); setReview(null); } }} />}
 
         {!review ? (
           <form onSubmit={onReview} noValidate className="space-y-8" aria-labelledby="draft">
@@ -194,10 +209,7 @@ function Launch() {
               <FieldError id="description" msg={errors.description} />
             </label>
 
-            <div className="rounded-lg border border-border bg-card p-4 text-sm">
-              <p className="text-foreground">Token artwork</p>
-              <p className="mt-1 text-muted-foreground">Not available yet: there is no approved public storage for token images and metadata. Nothing is uploaded.</p>
-            </div>
+            <ArtworkPanel signedIn={session.s === "signed_in"} saved={saved} dirty={dirty} drafts={drafts} onSaved={(d) => { setSaved(d); setReview(null); }} />
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
               <p className="text-foreground">Creator wallet</p>
@@ -224,15 +236,28 @@ function Launch() {
             </fieldset>
 
             <div className="flex flex-wrap gap-3">
+              {session.s === "signed_in" && (
+                <button type="button" className={buttonOutline} onClick={onSave} disabled={drafts.busy !== null || (!!saved && !dirty)}>
+                  {drafts.busy === "save" ? "Saving…" : saved ? (dirty ? "Save changes" : "Saved") : "Save draft"}
+                </button>
+              )}
               <button type="submit" className={buttonPrimary}>Review draft</button>
               <Link to="/mcp" className={buttonOutline}>Browse templates</Link>
             </div>
+            <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+              {session.s !== "signed_in" ? "Sign in as a creator from the Dashboard to save drafts and artwork. Without sign-in, your draft stays on this page only." : drafts.message ?? (saved ? (dirty ? `Unsaved changes (saved revision ${saved.revision}).` : `Saved — revision ${saved.revision}.`) : "Not saved yet.")}
+            </p>
           </form>
         ) : (
           <section aria-labelledby="review" className="space-y-6">
             <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Draft review — preparation only</h2>
             <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
-            <p className="text-sm text-muted-foreground">This draft has not been sent anywhere. Creating the token stays unavailable until every prerequisite above is proven.</p>
+            {saved && !dirty ? (
+              <MetadataPanel saved={saved} drafts={drafts} onSaved={setSaved} />
+            ) : (
+              <p className="text-sm text-muted-foreground">{session.s === "signed_in" ? "Save this draft and its artwork to publish token metadata." : "This draft has not been sent anywhere."}</p>
+            )}
+            <p className="text-sm text-muted-foreground">Creating the token stays unavailable until every prerequisite above is proven. There is no Launch, Sign or Buy step.</p>
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" className={buttonOutline} onClick={() => { setReview(null); setNotice(null); }}>Edit</button>
               <button type="button" className={buttonOutline} onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied("ok"), () => setCopied("fail"))}>Copy draft summary</button>

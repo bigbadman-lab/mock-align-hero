@@ -32,7 +32,7 @@ export function serverReadiness(s: BuilderStatus): ReadinessItem[] {
     { id: "alt", label: "Production lookup table", state: "BLOCKED", detail: "Not created on chain. Needed to fit the fee-first creation in one transaction." },
     builderItem(s),
     { id: "simulation", label: "Full fee-first simulation (create → fee sharing → 60/25/15)", state: "BLOCKED", detail: "Needs the real parent token and lookup table first." },
-    { id: "storage", label: "Verified token metadata storage", state: "NOT_CONFIGURED", detail: "No approved public storage for artwork and metadata yet." },
+    { id: "storage", label: "Token artwork and metadata storage", state: "READY", detail: "Signed-in creators can save artwork and publish metadata at mcpx.fun addresses. Storing metadata does not create a token." },
     { id: "signing", label: "Approved signing flow", state: "BLOCKED", detail: "Transaction signing has not been approved. This site only signs sign-in messages." },
   ];
 }
