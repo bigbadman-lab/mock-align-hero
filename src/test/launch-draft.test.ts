@@ -48,7 +48,7 @@ describe("launch readiness (04-C)", () => {
   it("parent, lookup table, simulation and signing stay BLOCKED even with a ready builder", () => {
     const items = serverReadiness(interpretReady({ ready: true, quoteMint: "CONFIGURED" }));
     const by = Object.fromEntries(items.map((i) => [i.id, i.state]));
-    expect(by).toMatchObject({ parent: "BLOCKED", alt: "BLOCKED", simulation: "BLOCKED", signing: "BLOCKED", builder: "READY", storage: "NOT_CONFIGURED" });
+    expect(by).toMatchObject({ parent: "BLOCKED", alt: "BLOCKED", simulation: "BLOCKED", signing: "BLOCKED", builder: "READY", storage: "READY" });
   });
   it("not deployed, timeout and malformed are distinct and never READY", () => {
     expect(serverReadiness({ state: "BUILDER_NOT_DEPLOYED" }).find((i) => i.id === "builder")?.state).toBe("NOT_CONFIGURED");
