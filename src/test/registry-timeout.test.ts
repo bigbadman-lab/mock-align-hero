@@ -5,8 +5,8 @@ vi.mock("@/integrations/supabase/client", () => {
   const builder: Record<string, unknown> = {};
   let signal: AbortSignal | undefined;
   for (const m of ["from", "select", "order", "range"]) builder[m] = () => builder;
-  builder.abortSignal = (s: AbortSignal) => { signal = s; return builder; };
-  builder.then = (_ok: unknown, fail: (e: unknown) => void) =>
+  builder["abortSignal"] = (s: AbortSignal) => { signal = s; return builder; };
+  builder["then"] = (_ok: unknown, fail: (e: unknown) => void) =>
     new Promise((_, reject) => signal?.addEventListener("abort", () => reject(new Error("AbortError: signal is aborted")))).catch(fail);
   return { supabase: builder };
 });
