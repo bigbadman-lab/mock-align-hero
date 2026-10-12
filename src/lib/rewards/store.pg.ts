@@ -4,7 +4,7 @@
 import { PROCESSOR_VERSION, type Plan, type Receipt, type Store } from "./processor";
 
 /** Minimal driver contract (works with `postgres`/porsager `sql.unsafe` or node-postgres `client.query`). */
-export type Db = { query(text: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[] }> };
+export type Db = { query(text: string, params?: unknown[]): Promise<{ rows: any[] }> };
 
 const ts = (s: number) => new Date(s * 1000).toISOString();
 const sec = (v: unknown) => Math.floor(new Date(v as string).getTime() / 1000);
