@@ -5,14 +5,12 @@
 //  - JPEG: jpeg-js (pure JavaScript, no WebAssembly — the deployed runtime can't load WASM from the
 //          server bundle). Strict mode (no tolerant decoding), resolution and memory caps enforced by
 //          the decoder itself; decoded size must equal the header.
-//  - WebP: NO server pixel decoder available without WebAssembly. Structure-only on the server
-//          (every chunk walked, VP8/VP8L headers checked, animation rejected); the browser decodes
-//          before upload. Documented limitation — see the 04-E report.
+//  - WebP: not accepted (no server decoder without WebAssembly on this stack).
 import jpeg from "jpeg-js";
 import type { ImageCheck } from "./image";
 
-const MAX_MP = 17; // 4096² ≈ 16.8 MP
-const MAX_MEM_MB = 96; // RGB output for 4096² is ~48 MB; keeps headroom under the worker memory limit
+const MAX_MP = 4.2; // JPEG_MAX_SIDE 2048² ≈ 4.19 MP
+const MAX_MEM_MB = 64; // measured: a 2048² progressive JPEG needs ~56 MB; stays well under the worker limit
 
 export async function decodeArtwork(bytes: Uint8Array, checked: Extract<ImageCheck, { ok: true }>): Promise<ImageCheck> {
   if (checked.type !== "image/jpeg") return checked;
