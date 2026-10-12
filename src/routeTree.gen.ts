@@ -25,6 +25,8 @@ import { Route as ToolsWhaleWatchRouteImport } from './routes/tools.whale-watch'
 import { Route as ApiAuthChallengeRouteImport } from './routes/api/auth/challenge'
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
+import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creator/launch-artwork'
+import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
@@ -32,6 +34,7 @@ import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/tok
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
+import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/public/launch-assets.$'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
 import { Route as ApiPublicMcpProductsCreationIdRouteImport } from './routes/api/public/mcp/products.$creationId'
 
@@ -116,6 +119,16 @@ const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
   path: '/api/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCreatorLaunchArtworkRoute = ApiCreatorLaunchArtworkRouteImport.update({
+  id: '/api/creator/launch-artwork',
+  path: '/api/creator/launch-artwork',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCreatorLaunchDraftsRoute = ApiCreatorLaunchDraftsRouteImport.update({
+  id: '/api/creator/launch-drafts',
+  path: '/api/creator/launch-drafts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCreatorProductsRoute = ApiCreatorProductsRouteImport.update({
   id: '/api/creator/products',
   path: '/api/creator/products',
@@ -152,6 +165,12 @@ const ApiToolsWhaleWatchRoute = ApiToolsWhaleWatchRouteImport.update({
   path: '/api/tools/whale-watch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLaunchAssetsSplatRoute =
+  ApiPublicLaunchAssetsSplatRouteImport.update({
+    id: '/api/public/launch-assets/$',
+    path: '/api/public/launch-assets/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMcpPlatformDemoRoute =
   ApiPublicMcpPlatformDemoRouteImport.update({
     id: '/api/public/mcp/platform-demo',
@@ -182,6 +201,8 @@ export interface FileRoutesByFullPath {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
@@ -189,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
@@ -209,6 +231,8 @@ export interface FileRoutesByTo {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
@@ -216,6 +240,7 @@ export interface FileRoutesByTo {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
@@ -237,6 +262,8 @@ export interface FileRoutesById {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
@@ -244,6 +271,7 @@ export interface FileRoutesById {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
@@ -266,6 +294,8 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/launch-artwork'
+    | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
@@ -273,6 +303,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/mcp/products/$creationId'
   fileRoutesByTo: FileRoutesByTo
@@ -293,6 +324,8 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/launch-artwork'
+    | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
@@ -300,6 +333,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/mcp/products/$creationId'
   id:
@@ -320,6 +354,8 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/launch-artwork'
+    | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/supply-monitor'
@@ -327,6 +363,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/mcp/products/$creationId'
   fileRoutesById: FileRoutesById
@@ -348,6 +385,8 @@ export interface RootRouteChildren {
   ApiAuthChallengeRoute: typeof ApiAuthChallengeRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
+  ApiCreatorLaunchArtworkRoute: typeof ApiCreatorLaunchArtworkRoute
+  ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
@@ -355,6 +394,7 @@ export interface RootRouteChildren {
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
   ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
+  ApiPublicLaunchAssetsSplatRoute: typeof ApiPublicLaunchAssetsSplatRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
   ApiPublicMcpProductsCreationIdRoute: typeof ApiPublicMcpProductsCreationIdRoute
 }
@@ -473,6 +513,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/creator/launch-artwork': {
+      id: '/api/creator/launch-artwork'
+      path: '/api/creator/launch-artwork'
+      fullPath: '/api/creator/launch-artwork'
+      preLoaderRoute: typeof ApiCreatorLaunchArtworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/creator/launch-drafts': {
+      id: '/api/creator/launch-drafts'
+      path: '/api/creator/launch-drafts'
+      fullPath: '/api/creator/launch-drafts'
+      preLoaderRoute: typeof ApiCreatorLaunchDraftsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/creator/products': {
       id: '/api/creator/products'
       path: '/api/creator/products'
@@ -522,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsWhaleWatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/launch-assets/$': {
+      id: '/api/public/launch-assets/$'
+      path: '/api/public/launch-assets/$'
+      fullPath: '/api/public/launch-assets/$'
+      preLoaderRoute: typeof ApiPublicLaunchAssetsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mcp/platform-demo': {
       id: '/api/public/mcp/platform-demo'
       path: '/api/public/mcp/platform-demo'
@@ -556,6 +617,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthChallengeRoute: ApiAuthChallengeRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
+  ApiCreatorLaunchArtworkRoute: ApiCreatorLaunchArtworkRoute,
+  ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
@@ -563,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
   ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
+  ApiPublicLaunchAssetsSplatRoute: ApiPublicLaunchAssetsSplatRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
   ApiPublicMcpProductsCreationIdRoute: ApiPublicMcpProductsCreationIdRoute,
 }

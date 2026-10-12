@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/creator/launch-drafts")({
           if (!s) return reply(401, { error: "unauthorized" });
           const m = await import("@/lib/launch/drafts.server");
           if (p.action !== "get" && !(await m.takeLaunchBudget(s.wallet, "save"))) return reply(429, { error: "rate_limited" });
-          const origin = new URL(request.url).protocol === "http:" && !request.headers.get("host")?.startsWith("localhost") ? "" : `https://${request.headers.get("host")}`;
+          const origin = `https://${request.headers.get("host")}`; // host already checked against ALLOWED_HOSTS
           try {
             if (p.action === "get") { const d = await m.getDraft(s.wallet, p.id); return d ? reply(200, { draft: d }) : reply(404, { error: "not_found" }); }
             if (p.action === "create") return reply(200, { draft: await m.createDraft(s.wallet, p.createKey, p.draft) });
