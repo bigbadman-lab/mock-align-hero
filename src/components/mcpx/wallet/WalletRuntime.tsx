@@ -1,4 +1,5 @@
 // Browser-only. Loaded lazily behind <ClientOnly>; never imported during SSR.
+import "./bufferPolyfill"; // must run before @reown/@solana module init
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect, useWalletInfo } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
