@@ -129,7 +129,7 @@ describe("C03 five-minute orchestration", () => {
     expect(r1.at(-1)).toMatchObject({ stage: "BUY", reason: "AWAITING_FINALIZED_BUY" });
     const r2 = await runWindow(mk({ seen, budget: async () => ({ sol: 0n, buyback: 300n, tokens: 0n, ops: 1n, evidence: true }), pendingFills: async () => 1 }).d, W);
     expect(r2.at(-1)).toMatchObject({ stage: "FILL", status: "WAITING" });
-    const x = mk({ seen, budget: async () => ({ sol: 0n, buyback: 300n, tokens: 777n, ops: 1n, evidence: true }) });
+    const x = mk({ seen, budget: async () => ({ sol: 0n, buyback: 300n, tokens: 777n, ops: 1n, evidence: true }), sealed: async () => ({ snapshotComplete: true, solRows: [], tokenRowsFor: (inv) => (inv > 0n ? [{ owner: "h00", amount: inv }] : []) }) });
     await runWindow(x.d, W);
     expect(x.calls.some((k) => k.startsWith("TOKEN_PAYOUT"))).toBe(true);
   });
