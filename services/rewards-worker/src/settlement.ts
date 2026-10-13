@@ -76,7 +76,7 @@ export function verifySettlement(t: FinalTx, e: Expected): Proof {
   if (!e.mint || !e.tokenProgram) return { kind: "MISMATCH", reason: "MINT_OR_PROGRAM_UNSET" };
   const preT = t.meta.preTokenBalances, postT = t.meta.postTokenBalances;
   if (!preT || !postT) return { kind: "UNKNOWN", reason: "TOKEN_BALANCES_MISSING" };
-  const bal = new Map<number, { owner: string; mint: string; prog?: string; pre: bigint; post: bigint }>();
+  const bal = new Map<number, { owner: string; mint: string; prog: string | undefined; pre: bigint; post: bigint }>();
   for (const [arr, side] of [[preT, "pre"], [postT, "post"]] as const) for (const b of arr) {
     if (!b.owner) return { kind: "UNKNOWN", reason: "TOKEN_OWNER_MISSING" };
     const cur = bal.get(b.accountIndex) ?? { owner: b.owner, mint: b.mint, prog: b.programId, pre: 0n, post: 0n };
