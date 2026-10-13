@@ -97,7 +97,10 @@ export async function productionAiDeps(): Promise<import("./execute").AiDeps | n
   try { await parseKeyring(raw); } catch { return null; }
   return {
     getStatus: serviceByokStore.getStatus, loadActiveCredential: serviceByokStore.loadActiveCredential,
-    admit: serviceByokStore.admit, settle: serviceByokStore.settle, recordHealth: serviceByokStore.recordHealth,
+    admit: serviceByokStore.admit,
+    // Retention: ~2% of settlements also run one bounded 90-day purge batch (idempotent; never blocks the call).
+    async settle(...a) { const r = await serviceByokStore.settle(...a); if (Math.random() < 0.02) void serviceByokStore.purgeUsage(500).catch(() => {}); return r; },
+    recordHealth: serviceByokStore.recordHealth,
     keyring: () => parseKeyring(raw),
     async creatorWallet(creationId) {
       const db = await admin();
