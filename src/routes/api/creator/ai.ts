@@ -1,5 +1,5 @@
-// Creator BYOK management (cookie session only). Fails closed unless the operator switches it on
-// (MCPX_BYOK_ENABLED=1) and the server keyring is present. Every operation re-checks session wallet == verified
+// Creator BYOK management (cookie session only). On by default; MCPX_BYOK_DISABLED=1 is an emergency stop only.
+// Fails closed if the server keyring is missing/invalid. Every operation re-checks session wallet == verified
 // product creator inside runByok. Bearer/product keys never authenticate here. Responses never carry key material.
 import { createFileRoute } from "@tanstack/react-router";
 import { currentSession } from "@/lib/creator-auth/core";
@@ -8,8 +8,8 @@ import { readMutation, reply } from "@/lib/creator-auth/http.server";
 
 const KEYS = ["action", "creationId", "provider", "apiKey", "model", "idempotencyKey", "expectedRevision", "enabled", "limits"];
 
-async function availability(): Promise<"available" | "switched_off" | "not_configured"> {
-  if (process.env["MCPX_BYOK_ENABLED"] !== "1") return "switched_off";
+async function availability(): Promise<"available" | "emergency_stopped" | "not_configured"> {
+  if (process.env["MCPX_BYOK_DISABLED"] === "1") return "emergency_stopped";
   try {
     const { parseKeyring } = await import("@/lib/byok/crypto");
     await parseKeyring(process.env["MCPX_BYOK_KEYRING"]);

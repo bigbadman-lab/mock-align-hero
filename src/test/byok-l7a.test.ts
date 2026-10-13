@@ -241,8 +241,9 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
 });
 
 describe("L7-A isolation", () => {
-  it("the BYOK route fails closed behind the operator switch and no source file contains a key-like literal", () => {
-    expect(readFileSync("src/routes/api/creator/ai.ts", "utf8")).toContain(`process.env["MCPX_BYOK_ENABLED"] !== "1"`);
+  it("the BYOK route is on by default with only an emergency stop and no source file contains a key-like literal", () => {
+    expect(readFileSync("src/routes/api/creator/ai.ts", "utf8")).toContain(`process.env["MCPX_BYOK_DISABLED"] === "1"`);
+    expect(readFileSync("src/routes/api/creator/ai.ts", "utf8")).not.toContain("MCPX_BYOK_ENABLED");
     expect(readdirSync("src/routes/api/public").join(",")).not.toMatch(/byok|ai\.ts/);
     for (const f of readdirSync("src/lib/byok")) expect(readFileSync(`src/lib/byok/${f}`, "utf8")).not.toMatch(/sk-[A-Za-z0-9]{20,}/);
   });
