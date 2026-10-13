@@ -4,7 +4,7 @@ import type { Db } from "@/lib/rewards/store.pg";
 import type { ByokStatus, ByokStore, ByokUsage } from "./core";
 import type { Sealed } from "./crypto";
 
-const bytes = (b: unknown) => (ArrayBuffer.isView(b) ? new Uint8Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)) : null);
+const bytes = (b: unknown) => (ArrayBuffer.isView(b) ? new Uint8Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer) : null);
 
 export function pgByokStore(db: Db): ByokStore & {
   admit(creationId: string, credentialId: string, ref: string, inTok: number, outTok: number): Promise<string>;

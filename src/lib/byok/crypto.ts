@@ -4,7 +4,8 @@
 // AAD binds every ciphertext to its product + credential idempotency ref, so a row copied to another product fails to decrypt.
 
 export const ALG = "AES-256-GCM" as const;
-export interface Sealed { iv: Uint8Array; ciphertext: Uint8Array; kekVersion: string; alg: typeof ALG }
+type Bytes = Uint8Array<ArrayBuffer>;
+export interface Sealed { iv: Bytes; ciphertext: Bytes; kekVersion: string; alg: typeof ALG }
 export interface Keyring { active: string; keys: Map<string, CryptoKey> }
 
 export class ByokCryptoError extends Error {
@@ -30,7 +31,7 @@ export async function parseKeyring(raw: string | undefined | null): Promise<Keyr
 
 export const aadFor = (creationId: string, credentialRef: string) => new TextEncoder().encode(`mcpx-byok:${creationId}:${credentialRef}`);
 
-export async function seal(ring: Keyring, plaintext: string, aad: Uint8Array): Promise<Sealed> {
+export async function seal(ring: Keyring, plaintext: string, aad: Bytes): Promise<Sealed> {
   if (!plaintext || plaintext.length > 512) throw new ByokCryptoError("invalid_input");
   const key = ring.keys.get(ring.active);
   if (!key) throw new ByokCryptoError("keyring_missing");
@@ -40,7 +41,7 @@ export async function seal(ring: Keyring, plaintext: string, aad: Uint8Array): P
 }
 
 /** Fails closed: unknown key version, wrong AAD, tampered or malformed data all throw a generic error. */
-export async function open(ring: Keyring, s: Sealed, aad: Uint8Array): Promise<string> {
+export async function open(ring: Keyring, s: Sealed, aad: Bytes): Promise<string> {
   if (s.alg !== ALG || !(s.iv instanceof Uint8Array) || s.iv.length !== 12 || !(s.ciphertext instanceof Uint8Array) || s.ciphertext.length < 17) throw new ByokCryptoError("decrypt_failed");
   const key = ring.keys.get(s.kekVersion);
   if (!key) throw new ByokCryptoError("unknown_key_version");

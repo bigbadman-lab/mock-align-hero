@@ -34,7 +34,9 @@ const fromCode = (code: string, extra: Record<string, unknown> = {}): ByokResult
   code === "ok" || code === "replayed" ? ok({ result: code, ...extra }) : err(CODE_STATUS[code] ?? 400, code);
 const rev = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v > 0;
 
-export async function runByok(ctx: ByokCtx, creationId: unknown, action: unknown, input: Record<string, unknown>): Promise<ByokResult> {
+export interface ByokInput { provider?: unknown; apiKey?: unknown; model?: unknown; idempotencyKey?: unknown; expectedRevision?: unknown; enabled?: unknown; limits?: unknown }
+
+export async function runByok(ctx: ByokCtx, creationId: unknown, action: unknown, input: ByokInput): Promise<ByokResult> {
   if (!ctx.sessionWallet) return err(401, "unauthorized");
   if (typeof action !== "string" || !(BYOK_ACTIONS as readonly string[]).includes(action)) return err(400, "invalid_input");
   if (typeof creationId !== "string") return err(400, "invalid_input");
