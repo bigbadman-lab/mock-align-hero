@@ -14,8 +14,9 @@ export const Route = createFileRoute("/api/tools/token-scanner")({
         const mint = await readSingleField(request, "mint", 256);
         if (mint instanceof Response) return mint;
         if (!isValidSolanaAddress(mint)) return json(400, { error: "invalid_input" });
-        const lim = await takeShared(cfg, request);
+        const lim = await takeShared(cfg, request, "token_scanner");
         if (lim === "limited") return json(429, { error: "rate_limited" });
+        if (lim === "free_limit") return json(429, { error: "free_limit" });
         if (lim === "unavailable") return json(503, { error: "unavailable" }); // fail closed
         const r = await callWorker(cfg, JSON.stringify({ schema: TS_SCHEMA, toolId: TS_TOOL_ID, input: { mint } }), request);
         if (!r.ok) return json(r.status, { error: r.error });

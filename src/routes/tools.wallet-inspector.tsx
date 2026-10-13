@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { FreeLimitNotice } from "@/components/mcpx/FreeLimitNotice";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline, buttonPrimary } from "@/components/mcpx/primitives";
 import { useWallet } from "@/lib/wallet/context";
 import { explorerAccountUrl, shortAddress } from "@/lib/wallet/state";
@@ -32,6 +33,7 @@ const ERROR_TEXT: Record<ToolErrorKind, string> = {
   too_large: "This wallet has more token accounts than this tool can safely show (limit 500 per token program).",
   bad_response: "The data provider returned something we couldn't verify, so nothing is shown.",
   network: "Couldn't reach MCPX. Check your connection.",
+  free_limit: "You've used today's 3 free tests of this tool.",
 };
 
 class ToolError extends Error { constructor(public kind: ToolErrorKind) { super(kind); } }
@@ -118,6 +120,7 @@ function WalletInspectorPage() {
           {run.isError && (
             <StatusMessage tone="warning" title="Inspection failed">
               <p>{ERROR_TEXT[(run.error as ToolError).kind ?? "provider_error"]}</p>
+              {(run.error as ToolError).kind === "free_limit" && <FreeLimitNotice />}
               {run.variables && <button className="mt-2 underline" onClick={() => run.mutate(run.variables!)} disabled={run.isPending}>Retry</button>}
             </StatusMessage>
           )}

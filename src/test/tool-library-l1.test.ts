@@ -35,3 +35,17 @@ describe("template detail pages", () => {
     for (const t of LIBRARY) expect(t.id).toMatch(/^[a-z0-9-]+$/);
   });
 });
+
+import { FREE_TESTS_PER_DAY, freeTestBucket, bucketsFor } from "@/lib/tools/relay";
+describe("free tests", () => {
+  it("allows 3 free website tests per visitor, per tool, per day", () => {
+    expect(FREE_TESTS_PER_DAY).toBe(3);
+    const a = freeTestBucket("whale_watch", "v1");
+    expect([a.limit, a.window]).toEqual([3, 86_400]);
+    expect(a.bucket).not.toBe(freeTestBucket("token_scanner", "v1").bucket);
+    expect(a.bucket).not.toBe(freeTestBucket("whale_watch", "v2").bucket);
+  });
+  it("is separate from the shared rate-limit buckets", () => {
+    expect(bucketsFor("v1").map((b) => b.bucket)).not.toContain(freeTestBucket("whale_watch", "v1").bucket);
+  });
+});

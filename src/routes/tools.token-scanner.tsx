@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
+import { FreeLimitNotice } from "@/components/mcpx/FreeLimitNotice";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonPrimary } from "@/components/mcpx/primitives";
 import { explorerAccountUrl } from "@/lib/wallet/state";
 import { tokenScannerStatusQuery } from "@/lib/tools/status";
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/tools/token-scanner")({
   errorComponent: RouteError,
 });
 
-type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network";
+type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
 const ERROR_TEXT: Record<Kind, string> = {
   invalid_input: "That isn't a valid Solana public address.",
   rate_limited: "Too many requests right now. Wait a minute, then try again.",
@@ -36,6 +37,7 @@ const ERROR_TEXT: Record<Kind, string> = {
   too_large: "The provider's answer was larger than this tool can safely handle.",
   bad_response: "The data provider returned something we couldn't verify, so nothing is shown.",
   network: "Couldn't reach MCPX. Check your connection.",
+  free_limit: "You've used today's 3 free tests of this tool.",
 };
 class ToolError extends Error { constructor(public kind: Kind) { super(kind); } }
 
@@ -109,6 +111,7 @@ function TokenScannerPage() {
           {run.isError && (
             <StatusMessage tone="warning" title="Scan failed">
               <p>{ERROR_TEXT[(run.error as ToolError).kind ?? "provider_error"]}</p>
+              {(run.error as ToolError).kind === "free_limit" && <FreeLimitNotice />}
               {run.variables && <button className="mt-2 underline" onClick={() => run.mutate(run.variables!)} disabled={run.isPending}>Retry</button>}
             </StatusMessage>
           )}
