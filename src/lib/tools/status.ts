@@ -5,6 +5,8 @@ import { TS_ENDPOINT } from "./token-scanner";
 import { SM_ENDPOINT } from "./supply-monitor";
 import { WW_ENDPOINT } from "./whale-watch";
 import { AC_ENDPOINT } from "./account-checker";
+import { HI_ENDPOINT } from "./holder-intelligence";
+import { TRA_ENDPOINT } from "./token-risk-analyst";
 
 export interface ToolStatus { available: boolean; reason?: string; limits?: { perVisitorPerMinute: number; perVisitorPerHour: number; globalPerMinute: number } }
 
@@ -29,3 +31,5 @@ export const tokenScannerStatusQuery = statusQuery("token_scanner", TS_ENDPOINT)
 export const supplyMonitorStatusQuery = statusQuery("supply_monitor", SM_ENDPOINT);
 export const whaleWatchStatusQuery = statusQuery("whale_watch", WW_ENDPOINT);
 export const accountCheckerStatusQuery = statusQuery("account_checker", AC_ENDPOINT);
+export const holderIntelligenceStatusQuery = statusQuery("holder_intelligence", HI_ENDPOINT);
+export const tokenRiskAnalystStatusQuery = statusQuery("token_risk_analyst", TRA_ENDPOINT);
