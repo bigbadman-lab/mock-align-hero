@@ -20,6 +20,14 @@ const PB = "22222222-2222-4222-8222-222222222222";
 const SUSP = "33333333-3333-4333-8333-333333333333";
 
 describe("L7-A crypto", () => {
+  it("accepts a platform-generated alphanumeric secret as v1 and rejects short ones", async () => {
+    const gen = "a".repeat(30) + "B9".repeat(17);
+    const ring = await parseKeyring(gen);
+    expect(ring.active).toBe("v1");
+    const s = await seal(ring, API_KEY, aadFor(PA, "r"));
+    expect(await open(await parseKeyring(gen), s, aadFor(PA, "r"))).toBe(API_KEY);
+    await expect(parseKeyring("abc123")).rejects.toThrow("keyring_invalid");
+  });
   it("round-trips only with the right keyring, version and product binding", async () => {
     const ring = await parseKeyring(`v1:${K1}`);
     const s = await seal(ring, API_KEY, aadFor(PA, "idem_aaaaaaaaaaaaaaaa"));
