@@ -33,15 +33,15 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
       const dup = await db.query("select 1 from public.mcpx_rw_intents where idempotency_key=$1", [i.idempotencyKey]);
       if (dup.rows.length) return "DUPLICATE";
       const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [i.epoch])).rows[0];
-      if (!b || !b.evidence) return "NO_EVIDENCE";
-      if (BigInt(String(b.ops)) < i.opsCostLamports) return "NO_OPS_RESERVE";
+      if (!b || !b["evidence"]) return "NO_EVIDENCE";
+      if (BigInt(String(b["ops"])) < i.opsCostLamports) return "NO_OPS_RESERVE";
       return i.kind === "SOL_PAYOUT" ? "NO_SOL_BUDGET" : i.kind === "BUYBACK" ? "NO_BUYBACK_BUDGET" : "NO_TOKEN_BUDGET";
     },
     async cycleSpent(cycleId) {
       // Everything not provably un-spent counts against the cap (reserved, signed, landed, unknown).
       const r = await db.query(`select coalesce(sum(lamports),0)::text s from public.mcpx_rw_intents
         where cycle_id=$1 and state not in ('EXPIRED_NOT_LANDED','ABANDONED_UNSIGNED','FAILED_ON_CHAIN')`, [cycleId]);
-      return BigInt(String(r.rows[0]?.s ?? "0"));
+      return BigInt(String(r.rows[0]?.["s"] ?? "0"));
     },
     async recordSigned(key, signature) {
       const r = await db.query(`update public.mcpx_rw_intents set state='SIGNED', signature=$2
@@ -51,7 +51,7 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
     async open() {
       const r = await db.query(`select idempotency_key, state, signature, last_valid_block_height::text h from public.mcpx_rw_intents
         where state in ('RESERVED','SIGNED') order by created_at`);
-      return r.rows.map((x) => ({ idempotencyKey: String(x.idempotency_key), state: String(x.state), signature: (x.signature as string) ?? null, lastValidBlockHeight: Number(x.h) }));
+      return r.rows.map((x) => ({ idempotencyKey: String(x["idempotency_key"]), state: String(x["state"]), signature: (x["signature"] as string) ?? null, lastValidBlockHeight: Number(x["h"]) }));
     },
     async finalize(key, outcome, finalizedSlot, evidence) {
       const r = await db.query(`update public.mcpx_rw_intents set state=$2, finalized_slot=$3, evidence=$4::jsonb

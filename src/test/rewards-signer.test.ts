@@ -18,7 +18,7 @@ const BH = "11111111111111111111111111111111";
 // Default: a verified epoch budget large enough for the fixtures (as if derived from finalized fee records).
 const memStore = (b: Partial<EpochBudget> = {}) =>
   memoryBudgetStore(new Map([[EPOCH, { sol: 100_000_000n, buyback: 0n, ops: 50_000_000n, tokens: 10n ** 9n, ...b }]]));
-const msg = (ixs: Parameters<typeof TransactionMessage>[0]["instructions"], payer = kp.publicKey, cu = 200_000, price = 1000) =>
+const msg = (ixs: import("@solana/web3.js").TransactionInstruction[], payer = kp.publicKey, cu = 200_000, price = 1000) =>
   Buffer.from(new TransactionMessage({ payerKey: payer, recentBlockhash: BH, instructions: [
     ComputeBudgetProgram.setComputeUnitLimit({ units: cu }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: price }), ...ixs,
   ] }).compileToV0Message().serialize()).toString("base64");
