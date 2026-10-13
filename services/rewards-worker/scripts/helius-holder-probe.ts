@@ -2,7 +2,7 @@
 // against getProgramAccounts + getTokenSupply at the same finalized slot. Never signs or sends. Key read from env only.
 import { writeFileSync } from "node:fs";
 import { initIndex, applyTx, recordCoverage, repairGap, snapshotAt, type IndexState, type IndexedTx } from "../../../src/lib/rewards/holder-index";
-import { heliusRpc, fullHistory, signatures, stateAtSameSlot, credits, type Meter } from "../src/helius-history";
+import { heliusRpc, fullHistory, signatures, stateAtSameSlot, credits, toIndexed, type Meter } from "../src/helius-history";
 
 const KEY = process.env.MCPX_HELIUS_TEST_API_KEY; if (!KEY) throw new Error("key unset");
 const MINT = process.argv[2] ?? "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump";
@@ -37,10 +37,12 @@ const known = new Set(mintTxs.map((t) => t.signature));
 const sigLists = await pool([...accounts], 10, (acc) => signatures(rpc, meter, acc, C));
 const extraSigs = [...new Set(sigLists.flat().filter((s) => !known.has(s.signature)).map((s) => s.signature))];
 out.extraTxsNotReferencingMint = extraSigs.length;
-const extras = (await pool(extraSigs, 10, async (sig) => {
+const idx = new Map(sigLists.flat().map((s) => [s.signature, s.txIndex]));
+const fetched = await pool(extraSigs, 10, async (sig) => {
   const t = await rpc("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]);
-  return t ? { ...(await import("../src/helius-history")).toIndexed({ ...t, transactionIndex: sigLists.flat().find((s) => s.signature === sig)!.txIndex }, MINT) } : null;
-}))).filter(Boolean) as Tx[];
+  return t ? toIndexed({ ...t, transactionIndex: idx.get(sig)! }, MINT) : null;
+});
+const extras = fetched.filter((x): x is Tx => x !== null);
 const all = [...mintTxs, ...extras].sort(order);
 const b = replay(all, anchor); out.fullReplay = b.error ? { error: b.error, slot: b.slot } : "CLEAN";
 
