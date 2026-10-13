@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { accountCheckerStatusQuery, whaleWatchStatusQuery, supplyMonitorStatusQuery, tokenScannerStatusQuery, transactionVerifierStatusQuery, walletInspectorStatusQuery } from "@/lib/tools/status";
+import { holderIntelligenceStatusQuery, tokenRiskAnalystStatusQuery, accountCheckerStatusQuery, whaleWatchStatusQuery, supplyMonitorStatusQuery, tokenScannerStatusQuery, transactionVerifierStatusQuery, walletInspectorStatusQuery } from "@/lib/tools/status";
 import type { LibraryTemplate } from "@/lib/templates";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,8 @@ const STATUS = {
   supply_monitor: supplyMonitorStatusQuery,
   transaction_verifier: transactionVerifierStatusQuery,
   account_checker: accountCheckerStatusQuery,
+  holder_intelligence: holderIntelligenceStatusQuery,
+  token_risk_analyst: tokenRiskAnalystStatusQuery,
 } as const;
 
 export function CapabilityRow({ t }: { t: LibraryTemplate }) {
