@@ -163,6 +163,9 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
   it("admission: paused denies; atomic under concurrency; limits enforced; settle bounded", async () => {
     const cred = (await store.loadActiveCredential(PA))!;
     expect(await store.admit(PA, cred.credentialId, idem(100), 100, 100)).toBe("paused");
+    const s0 = (await store.getStatus(PA))!;
+    expect((await runByok(ctxOf(store, WA), PA, "set_enabled", { enabled: true, expectedRevision: s0.revision })).body).toEqual({ error: "needs_passing_test" });
+    expect(await store.recordHealth({ creationId: PA, wallet: WA, credentialVersion: cred.version, health: "ok" })).toBe("ok");
     let s = (await store.getStatus(PA))!;
     expect((await runByok(ctxOf(store, WA), PA, "set_enabled", { enabled: true, expectedRevision: s.revision })).status).toBe(200);
     expect((await runByok(ctxOf(store, WA), PA, "set_enabled", { enabled: false, expectedRevision: s.revision })).status).toBe(409); // stale
@@ -223,6 +226,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
 
   it("an unlaunched (inactive) product can be configured but never admitted", async () => {
     expect((await connect(WB, PB, 20)).status).toBe(200);
+    await store.recordHealth({ creationId: PB, wallet: WB, credentialVersion: (await store.loadActiveCredential(PB))!.version, health: "ok" });
     const s = (await store.getStatus(PB))!;
     await runByok(ctxOf(store, WB), PB, "set_enabled", { enabled: true, expectedRevision: s.revision });
     const cred = (await store.loadActiveCredential(PB))!;
