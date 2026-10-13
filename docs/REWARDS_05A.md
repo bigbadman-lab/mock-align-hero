@@ -133,3 +133,10 @@ fresh process → next window SEALED; stored SOL plan alice 225000 / bob 75000
 - ADOPTED: $MCP launched manually in Pump.fun UI; one deployer wallet receives creator fees; `native-single.ts` attributes only finalized 05-B single-recipient collect events to the deployer, requires the deployer to have created $MCP alone (otherwise BLOCKED), and splits 30/30/40 (floors to holders/buyback, remainder to ops). Receipts flow through the unchanged 05-E durable store/processor with `feeModel: "SINGLE_DEPLOYER"`.
 - Spend guard: finalized balance must cover rent + 40% ops reserve + unpaid SOL obligations + unspent buyback + costs; costs come from a bounded ops cost budget; emergency stop fails closed. Deposits are never revenue.
 - Status: curve collection PASS (real fixture); PumpSwap WSOL PARTIAL (logic + synthetic only); holder history BLOCKED; execution not implemented.
+
+## 05-G — unsigned assembly + holder index
+- `services/rewards-worker/src/assembly.ts` (pinned @pump-fun/pump-sdk 4.0.0, web3.js 1.98.4, spl-token 0.4.14): unsigned v0 messages only, program allowlist, deployer-only signer, 1232-byte and CU checks, blockhash expiry. Not imported by the worker entry; nothing signs or sends.
+- Collection = SDK `collectCoinCreatorFeeInstructions` (curve SOL vault + PumpSwap WSOL leg, SDK wraps/unwraps). Separate `wsolUnwrapPlan` closes the deployer WSOL ATA only when its balance equals the ledger-accounted amount.
+- Buyback = bonding-curve `buyInstructions` only; graduated coins → `CURVE_COMPLETE_AMM_BUY_ROUTE_NOT_IMPLEMENTED`.
+- Mainnet read-only simulation evidence: `docs/evidence/05g-assembly-probe.json`.
+- `src/lib/rewards/holder-index.ts` + tables `mcpx_rw_hix_*` (service-role only): anchor + finalized pre/post token balances, signature-idempotent, gaps block snapshots until a complete replay, supply must reconcile. Production source: BLOCKED (needs paid stream/token-account-history RPC from $MCP creation slot).

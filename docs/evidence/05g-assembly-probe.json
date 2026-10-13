@@ -1,0 +1,68 @@
+{
+  "createSig": "52TzWtVAYPwbrBzgoynFheocNnc1YvbLig2Lg9K8R1e3VqTbQoM4YsJAo8g9jYwkJbUNrQDaXhx5mdZjVwsmaQKQ",
+  "createSlot": 456390956,
+  "creator": "7CKQGG3Fzq4TMVfhVE5R8uydfck8gPCTiUWYhmkhqkVA",
+  "mint": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  "creatorBalance": 16360082258,
+  "collection": {
+    "bytes": 634,
+    "signers": [
+      "7CKQGG3Fzq4TMVfhVE5R8uydfck8gPCTiUWYhmkhqkVA"
+    ],
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "ixCount": 5,
+    "curveVault": "B4JnJkavjhL4H2dcxBKNwGsXaKTtwDTQYbTyKtAKjMkb",
+    "vaultLamports": 0,
+    "sim": {
+      "err": null,
+      "cu": 50166,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 149952 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  },
+  "buy": {
+    "bytes": 821,
+    "signers": [
+      "7CKQGG3Fzq4TMVfhVE5R8uydfck8gPCTiUWYhmkhqkVA"
+    ],
+    "expectedTokens": "8828494596",
+    "maxSolCost": "1030000",
+    "sim": {
+      "err": null,
+      "cu": 91807,
+      "logsTail": [
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 74391 of 282584 compute units",
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success"
+      ]
+    }
+  },
+  "tokenPayoutBatching": [
+    1167,
+    1167,
+    530
+  ],
+  "solPayoutBatching": [
+    1200,
+    1200
+  ],
+  "solPayoutSim": {
+    "err": null,
+    "cu": 3300,
+    "logsTail": [
+      "Program 11111111111111111111111111111111 success",
+      "Program 11111111111111111111111111111111 invoke [1]",
+      "Program 11111111111111111111111111111111 success"
+    ]
+  }
+}

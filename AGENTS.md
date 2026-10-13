@@ -28,5 +28,4 @@
 
 - services/transaction-builder has its own AGENTS.md — read it before changing launch/transaction code.
 - src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch never signs or sends; drafts/artwork/metadata rules live in src/lib/launch/AGENTS.md.
-- Native rewards use one deployer wallet (feeModel SINGLE_DEPLOYER, native-single.ts): ledger-enforced 30/30/40, no onchain sharing or extra treasuries — keeps MVP to one signer.
-- Native rewards (src/lib/rewards): pure integer economics/epochs/snapshot/ledger with injectable store; tables mcpx_rw_* are service-role only, append-only, carry-chained and conservation-checked in SQL; no execution paths — fee proof = Pump self-CPI events with event-authority check (pump-events.ts); the window processor (processor.ts) emits DRY_RUN plans only; durable state via store.pg.ts + SQL mcpx_rw_commit_window (DB re-derives totals, single lease, +1-window watermark); runs only in services/rewards-worker (Background Worker), never the MCP tool worker or a site request; see docs/REWARDS_05A.md.
+- src/lib/rewards has its own AGENTS.md (native rewards, single deployer, assembly, holder index).
