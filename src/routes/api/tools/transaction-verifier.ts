@@ -14,8 +14,9 @@ export const Route = createFileRoute("/api/tools/transaction-verifier")({
         const signature = await readSingleField(request, "signature", 256);
         if (signature instanceof Response) return signature;
         if (!isValidSignature(signature)) return json(400, { error: "invalid_input" });
-        const lim = await takeShared(cfg, request);
+        const lim = await takeShared(cfg, request, "transaction_verifier");
         if (lim === "limited") return json(429, { error: "rate_limited" });
+        if (lim === "free_limit") return json(429, { error: "free_limit" });
         if (lim === "unavailable") return json(503, { error: "unavailable" }); // fail closed
         const r = await callWorker(cfg, JSON.stringify({ schema: TV_SCHEMA, toolId: TV_TOOL_ID, input: { signature } }), request);
         if (!r.ok) return json(r.status, { error: r.error });

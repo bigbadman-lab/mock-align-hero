@@ -32,7 +32,7 @@ export interface WalletInspectorResult {
 }
 export type ToolErrorKind =
   | "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error"
-  | "unavailable" | "too_large" | "bad_response" | "network";
+  | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
 
 /** Real 32-byte Solana public key check (not a regex). */
 export function isValidSolanaAddress(s: string): boolean {

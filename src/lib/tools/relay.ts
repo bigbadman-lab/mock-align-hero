@@ -6,6 +6,9 @@ export const SHARED_BUCKET_PREFIX = "tools";
 const READY_TIMEOUT_MS = 4_000;
 const WORKER_TIMEOUT_MS = 25_000;
 export const MAX_RESPONSE_BYTES = 1_500_000;
+/** Free website test runs per visitor, per tool, per UTC day. MCP calls (bearer keys) do not use this allowance. */
+export const FREE_TESTS_PER_DAY = 3;
+export const freeTestBucket = (toolId: string, visitor: string) => ({ bucket: `${SHARED_BUCKET_PREFIX}:free:${toolId}:${visitor}`, window: 86_400, limit: FREE_TESTS_PER_DAY });
 
 export const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -38,7 +41,7 @@ export function bucketsFor(visitor: string) {
  * which is why the global bucket also applies to everyone.
  * Returns "ok", "limited", or "unavailable" (fail closed).
  */
-export async function takeShared(cfg: Cfg, request: Request): Promise<"ok" | "limited" | "unavailable"> {
+export async function takeShared(cfg: Cfg, request: Request, freeTestToolId?: string): Promise<"ok" | "limited" | "free_limit" | "unavailable"> {
   const ip = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const visitor = (await hmac(cfg.secret, `ip:${ip}`)).slice(0, 32); // raw IP never stored
   try {
@@ -47,6 +50,13 @@ export async function takeShared(cfg: Cfg, request: Request): Promise<"ok" | "li
       const { data, error } = await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: b.bucket, _window_seconds: b.window, _limit: b.limit });
       if (error) return "unavailable";
       if (data !== true) return "limited";
+    }
+    if (freeTestToolId) {
+      // Taken last so a run blocked by the shared limits does not use up a free test.
+      const f = freeTestBucket(freeTestToolId, visitor);
+      const { data, error } = await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: f.bucket, _window_seconds: f.window, _limit: f.limit });
+      if (error) return "unavailable";
+      if (data !== true) return "free_limit";
     }
     return "ok";
   } catch {

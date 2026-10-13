@@ -20,8 +20,9 @@ export const Route = createFileRoute("/api/tools/whale-watch")({
         if (!b || typeof b !== "object" || Array.isArray(b) || Object.keys(b).sort().join(",") !== "address,minLamports") return json(400, { error: "invalid_input" });
         const address = b["address"], minLamports = b["minLamports"];
         if (typeof address !== "string" || !isValidSolanaAddress(address) || !isValidThreshold(minLamports)) return json(400, { error: "invalid_input" });
-        const lim = await takeShared(cfg, request);
+        const lim = await takeShared(cfg, request, "whale_watch");
         if (lim === "limited") return json(429, { error: "rate_limited" });
+        if (lim === "free_limit") return json(429, { error: "free_limit" });
         if (lim === "unavailable") return json(503, { error: "unavailable" }); // fail closed
         const r = await callWorker(cfg, JSON.stringify({ schema: WW_SCHEMA, toolId: WW_TOOL_ID, input: { address, minLamports } }), request);
         if (!r.ok) return json(r.status, { error: r.error });

@@ -14,8 +14,9 @@ export const Route = createFileRoute("/api/tools/wallet-inspector")({
         const address = await readSingleField(request, "address", 256);
         if (address instanceof Response) return address;
         if (!isValidSolanaAddress(address)) return json(400, { error: "invalid_input" });
-        const lim = await takeShared(cfg, request);
+        const lim = await takeShared(cfg, request, "wallet_inspector");
         if (lim === "limited") return json(429, { error: "rate_limited" });
+        if (lim === "free_limit") return json(429, { error: "free_limit" });
         if (lim === "unavailable") return json(503, { error: "unavailable" }); // fail closed
         const r = await callWorker(cfg, JSON.stringify({ schema: WI_SCHEMA, toolId: WI_TOOL_ID, input: { address } }), request);
         if (!r.ok) return json(r.status, { error: r.error });
