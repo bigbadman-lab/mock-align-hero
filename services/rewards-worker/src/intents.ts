@@ -13,7 +13,7 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
 } {
   return {
     async reserve(i) {
-      // One sealed transaction: per-epoch advisory lock (serialises concurrent workers), then insert only if the key is
+      // One sealed transaction: config-row lock (serialises concurrent workers), then insert only if the key is
       // new AND the persisted fee-backed budget covers it. Budget is derived in SQL from finalized records only.
       const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports)
         select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric
@@ -24,10 +24,12 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
         returning idempotency_key`;
       const p = [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId, i.epoch, i.tokens.toString(), i.opsCostLamports.toString()];
       const r = await runTx(db as never, [
-        { sql: "select pg_advisory_xact_lock(hashtextextended('mcpx_rw_budget', 0))", params: [] },
+        // Row lock on the single config row serialises all budget reservations (pg_* calls are refused by the bridge guard).
+        { sql: "select id from public.mcpx_rw_config where id = 1 for update", params: [], abortIfEmpty: "NO_CONFIG" },
         { sql: ins, params: p, abortIfEmpty: "REFUSED" },
       ]);
       if (!r.aborted) return "NEW";
+      if (r.aborted === "NO_CONFIG") return "NO_EVIDENCE";
       const dup = await db.query("select 1 from public.mcpx_rw_intents where idempotency_key=$1", [i.idempotencyKey]);
       if (dup.rows.length) return "DUPLICATE";
       const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [i.epoch])).rows[0];
