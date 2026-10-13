@@ -6,7 +6,7 @@ const RPC = rpcArg ?? "https://api.mainnet-beta.solana.com", LOOK = Number(lookA
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let calls = 0, throttled = 0;
 async function rpc(method, params) {
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) {
     calls++;
     const r = await fetch(RPC, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(30000) }).catch(() => null);
     const j = r ? await r.json().catch(() => null) : null;
@@ -27,8 +27,10 @@ let sumNow = 0n; for (const a of accts) sumNow += BigInt(a.tokenAmount.amount);
 const res = { mint, program: program === T22 ? "Token-2022" : "SPL Token", rpc: RPC.replace(/\?.*$/, ""), gpaSlot: g.context.slot, finalizedSlot: now, S0, accountsNow: accts.length, supplyNow: String(supplyNow), sumNow: String(sumNow), currentReconciled: sumNow === supplyNow };
 // history
 let active = 0, createdAfter = 0, truncated = 0; let sumS0 = 0n; const pastOwners = new Map(); const gaps = [];
+let unknown = 0;
 const queue = [...accts]; const work = async () => {
-  for (let a; (a = queue.shift()); ) {
+  for (let a; (a = queue.shift()); ) { try {
+    await sleep(150);
     let before, earliest = null, done = false;
     for (let page = 0; page < 5 && !done; page++) {
       const sigs = await rpc("getSignaturesForAddress", [a.pubkey, { limit: 1000, commitment: "finalized", ...(before ? { before } : {}) }]);
@@ -46,10 +48,10 @@ const queue = [...accts]; const work = async () => {
       if (!pre) { createdAfter++; bal = 0n; } else { bal = BigInt(pre.uiTokenAmount.amount); owner = pre.owner ?? owner; }
     }
     if (bal > 0n) { sumS0 += bal; pastOwners.set(owner, (pastOwners.get(owner) ?? 0n) + bal); }
-  }
+  } catch { unknown++; gaps.push(a.pubkey); } }
 };
-await Promise.all(Array.from({ length: 4 }, work));
-Object.assign(res, { activeSinceS0: active, createdSinceS0: createdAfter, historyTruncated: truncated, reconstructedSumAtS0: String(sumS0), ownersAtS0: pastOwners.size,
+await Promise.all(Array.from({ length: 2 }, work));
+Object.assign(res, { activeSinceS0: active, createdSinceS0: createdAfter, historyTruncated: truncated, accountsUnknownRpcFailure: unknown, reconstructedSumAtS0: String(sumS0), ownersAtS0: pastOwners.size,
   unexplainedDeltaVsSupplyNow: String(sumS0 - supplyNow), rpcCalls: calls, throttledRetries: throttled,
-  verdict: sumS0 === supplyNow && truncated === 0 ? "RECONCILED_ASSUMING_NO_SUPPLY_CHANGE_AND_NO_CLOSED_ACCOUNTS" : "NOT_RECONCILED_CLOSED_ACCOUNTS_OR_SUPPLY_CHANGE_UNACCOUNTED" });
+  verdict: sumS0 === supplyNow && truncated === 0 && unknown === 0 ? "RECONCILED_ASSUMING_NO_SUPPLY_CHANGE_AND_NO_CLOSED_ACCOUNTS" : "NOT_RECONCILED_CLOSED_ACCOUNTS_OR_SUPPLY_CHANGE_UNACCOUNTED" });
 console.log(JSON.stringify(res, null, 1));
