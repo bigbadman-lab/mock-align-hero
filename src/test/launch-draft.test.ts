@@ -68,3 +68,18 @@ describe("builder bridge states (04-D)", () => {
     process.env["MCPX_TX_BUILDER_URL"] = prev ?? "";
   });
 });
+
+describe("optional tool description", () => {
+  const base = { templateId: "token-scanner", settings: {}, productName: "Scan", tokenName: "Scan", symbol: "SCN", description: "d", link: "", buyEnabled: false, buyAmount: "", slippageBps: "100" };
+  it("is optional and omitted by older clients", () => {
+    const r = validateDraft(base);
+    expect(r.ok && r.draft.toolDescription).toBe(null);
+  });
+  it("accepts up to 280 characters and trims", () => {
+    const r = validateDraft({ ...base, toolDescription: "  " + "a".repeat(280) + " " });
+    expect(r.ok && r.draft.toolDescription?.length).toBe(280);
+  });
+  it("rejects 281 characters", () => {
+    expect(validateDraft({ ...base, toolDescription: "a".repeat(281) }).ok).toBe(false);
+  });
+});
