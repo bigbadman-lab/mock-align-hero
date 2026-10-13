@@ -1,13 +1,13 @@
 // MCPX rewards worker (05-E). Render BACKGROUND WORKER — no HTTP listener, no public endpoint.
-// DRY-RUN PLANNING ONLY: there is no signing, sending, swapping or payout code in this bundle, and it refuses to
-// start in any other mode. Separate from the six-tool MCP worker, the transaction builder and the website.
+// DRY-RUN PLANNING + validated deployer signer (signer.ts). No sending, swapping or payout broadcast in this bundle;
+// refuses to start in any mode other than DRY_RUN. Separate from the six-tool MCP worker, the transaction builder and the website.
 import { remoteDb, sealedPost, type RemoteConfig } from "../../../src/lib/rewards/remote";
 import { deriveLaunch } from "./launch-derive";
 import { configBlockers, runPass, classify, type NativeConfig } from "../../../src/lib/rewards/processor";
 import { pgStore } from "../../../src/lib/rewards/store.pg";
 import { unavailableHistory } from "../../../src/lib/rewards/holder-history";
 import { EPOCH_SECONDS } from "../../../src/lib/rewards/epochs";
-import { signerStartupGate, SIGNER_SECRET_ENV } from "../../../src/lib/rewards/native-single";
+import { loadSigner, readLimits, executionReadiness } from "./signer";
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
@@ -58,8 +58,14 @@ async function finalizedBlockTime(rpc: string): Promise<number | null> {
 async function main() {
   const { mode, cfg, blockers } = readConfig();
   if (mode !== "DRY_RUN") { log({ level: "fatal", event: "refused_mode", mode }); process.exit(2); }
-  const gate = signerStartupGate(process.env[SIGNER_SECRET_ENV]); // value never logged
-  if (!gate.start) { log({ level: "fatal", event: "refused_signer_secret", reason: gate.reason }); process.exit(3); }
+  // Key presence never starts transactions: the signer is loaded, checked against MCPX_DEPLOYER_PUBLIC_KEY and only
+  // reported. There is no broadcast path in this bundle; readiness stays blocked until every real check passes.
+  const signer = loadSigner(process.env);
+  const limits = readLimits(process.env);
+  const readiness = executionReadiness({ signer: signer.state, mintVerified: false, eligibilityApproved: false, snapshotComplete: false,
+    feeOwnershipConfirmed: false, intentStoreReady: false, simulationsPassed: false, reservesSufficient: false, operatorAuthorized: false,
+    limitsSet: limits !== null, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" });
+  log({ event: "signer_status", ...signer.describe(), execution: readiness.state, executionBlockers: readiness.blockers });
   const workerId = `rw-${env("RENDER_INSTANCE_ID") ?? process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   const pollMs = Math.min(Math.max(Number(env("MCPX_REWARDS_POLL_SECONDS") ?? 300), 60), 900) * 1000; // 05-I: 5-minute default, no hot loop
   const maxWindows = Math.min(Math.max(Number(env("MCPX_REWARDS_MAX_WINDOWS_PER_PASS") ?? 12), 1), 288);
