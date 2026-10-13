@@ -1424,6 +1424,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_intents: {
+        Row: {
+          created_at: string
+          cycle_id: string
+          evidence: Json | null
+          finalized_slot: number | null
+          idempotency_key: string
+          kind: string
+          lamports: number
+          last_valid_block_height: number
+          message_sha256: string
+          reserved_by: string
+          signature: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_id: string
+          evidence?: Json | null
+          finalized_slot?: number | null
+          idempotency_key: string
+          kind: string
+          lamports: number
+          last_valid_block_height: number
+          message_sha256: string
+          reserved_by: string
+          signature?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cycle_id?: string
+          evidence?: Json | null
+          finalized_slot?: number | null
+          idempotency_key?: string
+          kind?: string
+          lamports?: number
+          last_valid_block_height?: number
+          message_sha256?: string
+          reserved_by?: string
+          signature?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_owner_carry: {
         Row: {
           lamports: number
