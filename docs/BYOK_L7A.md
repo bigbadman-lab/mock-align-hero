@@ -33,7 +33,7 @@ L7-B runtime: server --fixed https endpoint--> OpenAI      (Render worker never 
 | Logging leakage | responses carry last-4 hint only; `redact()` for logs/errors |
 | Provider outage | AI optional: tool result always returned; failures settle as `failed` |
 
-## Data model (pending `docs/pending-migrations/0014_mcpx_l7a_byok.sql`)
+## Data model (pending `drizzle/migrations/0014_mcpx_l7a_byok.sql`)
 - `mcpx_ai_integrations`: one per product (UNIQUE creation_id → mcp_creations), creator_wallet, provider (`openai`), model, status, enabled (default false), revision, limits with DB CHECK ceilings.
 - `mcpx_ai_credentials`: versioned; alg, kek_version, iv, ciphertext, last-4 hint; one active per integration (partial unique index); non-active rows must have NULL ciphertext.
 - `mcpx_ai_usage`: reservation rows (reserved/settled/failed/ambiguous/expired), token counts, cost estimate; indexes for window counts. Retention: 90 days proposed (cleanup job in L7-B).

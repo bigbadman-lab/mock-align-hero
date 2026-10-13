@@ -12,4 +12,5 @@
 - [x] Phase L6 — Smart Money Tracker + Report Builder (stopped before L7)
 - [ ] Redeploy Render mcp-worker (L5+L6 tools) — blocked on approval
 - [x] Phase L7-A — BYOK security foundation (code + pending migration 0014; stopped before L7-B)
-- [ ] Apply migration 0014 + add MCPX_BYOK_KEYRING secret — blocked on approval
+- [x] Migration 0014 applied
+- [ ] Add MCPX_BYOK_KEYRING secret — blocked on approval
