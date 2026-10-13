@@ -15,14 +15,14 @@ const fail = (e: unknown) => { if (e) throw new Error("launch_store_unavailable"
 export class Conflict extends Error { constructor(public code: string) { super(code); } }
 
 
-const COLS = "id, revision, status, chain_status, template_id, settings, product_name, token_name, symbol, description, link, buy_preference, artwork_id, metadata_id, updated_at";
-type Row = { id: string; revision: number; status: string; template_id: string; settings: unknown; product_name: string; token_name: string; symbol: string; description: string; link: string | null; buy_preference: unknown; artwork_id: string | null; metadata_id: string | null; updated_at: string };
+const COLS = "id, revision, status, chain_status, template_id, settings, product_name, tool_description, token_name, symbol, description, link, buy_preference, artwork_id, metadata_id, updated_at";
+type Row = { id: string; revision: number; status: string; template_id: string; settings: unknown; product_name: string; tool_description: string | null; token_name: string; symbol: string; description: string; link: string | null; buy_preference: unknown; artwork_id: string | null; metadata_id: string | null; updated_at: string };
 
 function rowDraft(r: Row): Draft {
   const t = TEMPLATES.find((x) => x.id === r.template_id);
   return {
     templateId: r.template_id, templateName: t?.name ?? r.template_id, settings: (r.settings ?? {}) as Record<string, string>,
-    productName: r.product_name, tokenName: r.token_name, symbol: r.symbol, description: r.description, link: r.link,
+    productName: r.product_name, toolDescription: r.tool_description || null, tokenName: r.token_name, symbol: r.symbol, description: r.description, link: r.link,
     initialBuy: (r.buy_preference ?? null) as Draft["initialBuy"],
   };
 }
@@ -49,7 +49,7 @@ async function view(rows: Row[]): Promise<DraftView[]> {
 }
 
 const fields = (d: Draft) => ({
-  template_id: d.templateId, template_version: 1, settings: d.settings, product_name: d.productName, token_name: d.tokenName,
+  template_id: d.templateId, template_version: 1, settings: d.settings, product_name: d.productName, tool_description: d.toolDescription ?? "", token_name: d.tokenName,
   symbol: d.symbol, description: d.description, link: d.link, buy_preference: d.initialBuy,
 });
 
