@@ -12,9 +12,9 @@ import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
 import { pipelineStatus } from "../../../src/lib/rewards/cutoff-snapshot";
 import { policyFor, policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
-import { PublicKey } from "@solana/web3.js";
+import { address, isOffCurveAddress } from "@solana/addresses"; // address-only; keeps web3.js (send/sign code) out of the bundle
 
-const ownerKind = (o: string) => { try { return PublicKey.isOnCurve(new PublicKey(o).toBytes()) ? ("WALLET" as const) : ("PROGRAM" as const); } catch { return "UNKNOWN" as const; } };
+const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? ("PROGRAM" as const) : ("WALLET" as const); } catch { return "UNKNOWN" as const; } };
 const SCHEMA_0010 = ["mcpx_rw_hix_window_cutoffs", "mcpx_rw_hix_frozen_snapshots", "mcpx_rw_hix_frozen_owners", "mcpx_rw_hix_holds", "mcpx_rw_eligibility_policies"];
 
 const env = (k: string) => process.env[k]?.trim() || null;

@@ -76,7 +76,7 @@ describe("05-I reconstruction at each cutoff", () => {
     expect(at25).toEqual({ A1: 600n, B1: 400n });
     expect(at35).toEqual({ A1: 500n, B1: 100n, A2: 300n, D1: 100n });
     expect(s.balances.has("B1")).toBe(false); // closed after both cutoffs; captures unaffected
-    expect(at35.B1).toBe(100n);
+    expect(at35['B1']).toBe(100n);
   });
   it("fails closed on a missing page, a conflicting same-slot position, and ignores duplicates", () => {
     const missing = replayCapturing(initIndex(MINT, { slot: 0, verified: true, accounts: [] }), T.filter((t) => t.signature !== "t1"), [35]);

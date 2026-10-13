@@ -1,4 +1,5 @@
 // Phase 05-I rehearsal: REAL Helius read-only data → THROWAWAY local Postgres (MCPX_TEST_PG_URL). Never production.
+// @ts-nocheck — operator rehearsal script run with bun (Bun/node globals), not part of the worker bundle
 // Modes: INIT | CUTOFFS | PASS [DIE=1 kills inside the commit] | REPORT | LATEHOLD
 import postgres from "postgres";
 import { readFileSync } from "node:fs";
