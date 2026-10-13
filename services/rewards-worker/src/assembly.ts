@@ -44,7 +44,8 @@ export function assemble(ixs: TransactionInstruction[], payer: PublicKey, bh: { 
   const extra = signers.find((s) => !opts.allowedSigners.includes(s));
   if (extra) return { kind: "BLOCKED", reason: `UNEXPECTED_SIGNER:${extra}` };
   const tx = new VersionedTransaction(msg); // signatures are zero-filled placeholders; nothing is signed
-  const bytes = tx.serialize().length;
+  let bytes: number;
+  try { bytes = tx.serialize().length; } catch { return { kind: "BLOCKED", reason: "TX_TOO_LARGE:overrun" }; }
   if (bytes > MAX_TX_BYTES) return { kind: "BLOCKED", reason: `TX_TOO_LARGE:${bytes}` };
   return { kind: "UNSIGNED", messageBase64: Buffer.from(msg.serialize()).toString("base64"), bytes, signers, programs,
     recentBlockhash: bh.blockhash, lastValidBlockHeight: bh.lastValidBlockHeight, computeUnitLimit: opts.cuLimit };
