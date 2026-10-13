@@ -62,8 +62,8 @@ d("0016 durable intents (real Postgres)", () => {
   });
   it("signed is never paid: LANDED needs finalized evidence; signing twice or re-signing is refused", async () => {
     const s = intentStore(db, "w1"); await s.reserve(base("sign-key-1"));
-    await s.recordSigned("sign-key-1", "sigA");
-    await expect(s.recordSigned("sign-key-1", "sigB")).rejects.toThrow();
+    await s.recordSigned("sign-key-1", "sigA", "QkFTRTY0");
+    await expect(s.recordSigned("sign-key-1", "sigB", "QkFTRTY0")).rejects.toThrow();
     const row = (await sql`select state from public.mcpx_rw_intents where idempotency_key='sign-key-1'`)[0]!;
     expect(row["state"]).toBe("SIGNED");
     await expect(sql`update public.mcpx_rw_intents set state='LANDED' where idempotency_key='sign-key-1'`).rejects.toThrow();
@@ -74,7 +74,7 @@ d("0016 durable intents (real Postgres)", () => {
     const s = intentStore(db, "w1"); await s.reserve(base("imm-key-1"));
     expect(await s.finalize("imm-key-1", "LANDED", 1, {})).toBe(false);
     await expect(sql`update public.mcpx_rw_intents set lamports=5 where idempotency_key='imm-key-1'`).rejects.toThrow(/immutable/);
-    await s.recordSigned("imm-key-1", "sigI");
+    await s.recordSigned("imm-key-1", "sigI", "QkFTRTY0");
     await expect(sql`update public.mcpx_rw_intents set signature='other' where idempotency_key='imm-key-1'`).rejects.toThrow(/immutable/);
     await expect(sql`delete from public.mcpx_rw_intents where idempotency_key='imm-key-1'`).rejects.toThrow(/append-only/);
     await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,state,signature) values ('ins-key-x','c','SOL_PAYOUT',${H},1,1,'w','SIGNED','s')`).rejects.toThrow(/RESERVED/);
@@ -85,7 +85,7 @@ d("0016 durable intents (real Postgres)", () => {
     await expect(intentStore(db, "w").reserve({ ...base("bad-amt-1"), lamports: -1n })).rejects.toThrow();
   });
   it("stale/unknown: open intents survive restart; only provable expiry frees cycle budget", async () => {
-    const s = intentStore(db, "w1"); await s.reserve({ ...base("stale-key-1"), cycleId: "cyc-2" }); await s.recordSigned("stale-key-1", "sigS");
+    const s = intentStore(db, "w1"); await s.reserve({ ...base("stale-key-1"), cycleId: "cyc-2" }); await s.recordSigned("stale-key-1", "sigS", "QkFTRTY0");
     const open = await intentStore(db, "w2").open();
     const o = open.find((x) => x.idempotencyKey === "stale-key-1")!;
     expect(o.state).toBe("SIGNED");

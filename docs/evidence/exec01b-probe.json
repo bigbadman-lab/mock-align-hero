@@ -1,0 +1,133 @@
+{
+  "at": "2026-10-13T16:48:08.284Z",
+  "network": "mainnet-beta",
+  "signedOrSent": 0,
+  "standInCurve": {
+    "mint": "zkkGVEtLLLoL5hgByGL5oSHuiacS3p1X7TFJTyopump",
+    "payer": "7W8SEZv79hk4445o56Fd6RzhbUsozkzGXi8vkc7vNRr8",
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+  },
+  "curveCollect": {
+    "bytes": 624,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "sim": {
+      "err": null,
+      "cu": 48753,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 151365 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  },
+  "curveBuyback": {
+    "expectedTokens": "16653914317",
+    "bytes": 821,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
+    ],
+    "sim": {
+      "err": null,
+      "cu": 93422,
+      "logsTail": [
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 71506 of 278084 compute units",
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success"
+      ]
+    }
+  },
+  "token2022PayoutSource": {
+    "wallet": "Gyq9iDGGwjMJ7HQuuaMLnKuYcRgth4upGxfDxDR7ZkEf",
+    "balance": "30287917285219"
+  },
+  "token2022Payout": {
+    "recipients": 30,
+    "batches": 4,
+    "bytes": [
+      1167,
+      1167,
+      1167,
+      621
+    ],
+    "firstBatchSim": {
+      "err": null,
+      "cu": 194802,
+      "logsTail": [
+        "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb success",
+        "Log truncated"
+      ]
+    },
+    "note": "source = real on-curve holder of a Token-2022 Pump coin; recipients are fresh keys needing ATA creation"
+  },
+  "solPayout": {
+    "recipients": 40,
+    "batches": 2,
+    "bytes": [
+      1200,
+      1200
+    ],
+    "firstBatchSim": {
+      "err": null,
+      "cu": 3300,
+      "logsTail": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success"
+      ]
+    }
+  },
+  "ammCreator": "ApsNk9SqcgFwFwhPKpCgNvHVwc14PA6qVef4RSyaqvpq",
+  "standInAmm": {
+    "mint": "3PQxZUJoVhQV4Q3fczafyJYvdMrXyHAPPcwwc3mopump",
+    "pool": "5E8CCdcK6jM3Lp4DBNTHEDBWY5FMVEsgtLpMP3KP2e8H",
+    "coinCreator": "ApsNk9SqcgFwFwhPKpCgNvHVwc14PA6qVef4RSyaqvpq",
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+  },
+  "ammCollect": {
+    "bytes": 512,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "sim": {
+      "err": null,
+      "cu": 35669,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 164449 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  },
+  "ammBuyback": {
+    "pool": "5E8CCdcK6jM3Lp4DBNTHEDBWY5FMVEsgtLpMP3KP2e8H",
+    "expectedTokens": "2855075",
+    "minOut": "2769422",
+    "bytes": 815,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "11111111111111111111111111111111",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+    ],
+    "sim": {
+      "err": null,
+      "cu": 80635,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 219483 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  }
+}

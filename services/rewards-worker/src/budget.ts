@@ -72,7 +72,7 @@ export function memoryBudgetStore(budgets: Map<number, EpochBudget>, opsCarry = 
       return "NEW";
     },
     async cycleSpent(c) { return live().filter((r) => r.cycleId === c).reduce((a, r) => a + r.lamports, 0n); },
-    async recordSigned(k, sig) { const r = rows.get(k); if (!r || r.state !== "RESERVED") throw new Error("intent_not_reserved"); r.state = "SIGNED"; r.signature = sig; },
+    async recordSigned(k, sig, _b64) { const r = rows.get(k); if (!r || r.state !== "RESERVED") throw new Error("intent_not_reserved"); r.state = "SIGNED"; r.signature = sig; },
   };
   return store;
 }

@@ -16,8 +16,6 @@ export type Sender = { send(signedBase64: string): Promise<void> };
 export type OpenIntent = { idempotencyKey: string; kind: string; signature: string; signedBase64: string; lastValidBlockHeight: number;
   rows: readonly { owner: string; amount: bigint }[]; mint?: string };
 export type ExecStore = {
-  /** SIGNED + signed bytes in one write. Must refuse if not RESERVED. */
-  recordSignedTx(key: string, signature: string, signedBase64: string): Promise<void>;
   markSent(key: string): Promise<void>;
   finalize(key: string, outcome: "LANDED" | "FAILED_ON_CHAIN" | "EXPIRED_NOT_LANDED", slot: number, evidence: Record<string, unknown>): Promise<boolean>;
   openSigned(): Promise<OpenIntent[]>;
@@ -34,9 +32,9 @@ export type ExecOutcome = { state: "REFUSED"; reason: string } | { state: "SIGNE
 
 export async function execute(sign: ((p: Plan, c: SignCtx) => Promise<SignResult>) | null, plan: Plan, ctx: SignCtx, store: ExecStore, sender: Sender | null): Promise<ExecOutcome> {
   if (!sign) return { state: "REFUSED", reason: "SIGNER_NOT_VALIDATED" };
-  const s = await sign(plan, ctx); // reserves durably BEFORE signing (signer.ts)
+  // signer.ts reserves durably BEFORE signing and persists SIGNED + exact bytes BEFORE returning (no bytes saved → refused)
+  const s = await sign(plan, ctx);
   if (!s.ok) return { state: "REFUSED", reason: s.reason };
-  await store.recordSignedTx(plan.idempotencyKey, s.signature, s.signedBase64); // persisted before any network call
   if (!sender) return { state: "SIGNED_HELD", reason: "BROADCAST_NOT_ENABLED", signature: s.signature };
   await store.markSent(plan.idempotencyKey);
   try { await sender.send(s.signedBase64); } catch { /* ambiguous: reconcile decides; never re-sign */ }
@@ -74,10 +72,10 @@ export async function reconcileOpen(store: ExecStore, chain: Chain, sender: Send
 /** Memory ExecStore for tests (mirrors the SQL guard rules). */
 export function memoryExecStore() {
   const rows = new Map<string, OpenIntent & { state: string; sent: number }>();
-  const store: ExecStore & { rows: typeof rows; seed(i: OpenIntent): void } = {
+  const store: ExecStore & { rows: typeof rows; seed(i: OpenIntent): void; recordSigned(k: string, sig: string, b64: string): Promise<void> } = {
     rows,
     seed(i) { rows.set(i.idempotencyKey, { ...i, signature: "", signedBase64: "", state: "RESERVED", sent: 0 }); },
-    async recordSignedTx(k, sig, b64) { const r = rows.get(k); if (!r || r.state !== "RESERVED") throw new Error("intent_not_reserved"); Object.assign(r, { state: "SIGNED", signature: sig, signedBase64: b64 }); },
+    async recordSigned(k, sig, b64) { const r = rows.get(k); if (!r || r.state !== "RESERVED") throw new Error("intent_not_reserved"); Object.assign(r, { state: "SIGNED", signature: sig, signedBase64: b64 }); },
     async markSent(k) { const r = rows.get(k); if (!r || r.state !== "SIGNED") throw new Error("not_signed"); r.sent++; },
     async finalize(k, o) { const r = rows.get(k); if (!r || r.state !== "SIGNED") return false; r.state = o; return true; },
     async openSigned() { return [...rows.values()].filter((r) => r.state === "SIGNED"); },

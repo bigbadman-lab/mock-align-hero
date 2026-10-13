@@ -6,40 +6,41 @@ import type { Plan, SignCtx } from "../../services/rewards-worker/src/signer";
 
 const plan = (k = "intent-0001"): Plan => ({ kind: "SOL_PAYOUT", idempotencyKey: k, cycleId: "c1", epoch: 300, messageBase64: "", lastValidBlockHeight: 100, rows: [{ owner: "A", amount: 5n }] });
 const ctx = {} as SignCtx;
-const okSign = async () => ({ ok: true as const, signature: "SIG1", signedBase64: "BYTES1" });
+let cur: ReturnType<typeof memoryExecStore> | null = null;
+const okSign = async (p: Plan) => { await cur!.recordSigned(p.idempotencyKey, "SIG1", "BYTES1"); return { ok: true as const, signature: "SIG1", signedBase64: "BYTES1" }; };
 const chain = (st: Chain["signatureStatus"] extends (s: string) => Promise<infer R> ? R : never, height: number | null, proof: Record<string, unknown> | null = { ok: 1 }): Chain =>
   ({ signatureStatus: async () => st, finalizedBlockHeight: async () => height, settlement: async () => proof });
 const spySender = () => { const sent: string[] = []; const s: Sender = { send: async (b) => { sent.push(b); } }; return { s, sent }; };
 
 describe("EXEC-01 executor", () => {
   it("broadcast disabled: signs, persists bytes, sends nothing", async () => {
-    const st = memoryExecStore(); st.seed({ ...plan(), signature: "", signedBase64: "" } as never);
+    const st = (cur = memoryExecStore()); st.seed({ ...plan(), signature: "", signedBase64: "" } as never);
     const r = await execute(okSign, plan(), ctx, st, null);
     expect(r.state).toBe("SIGNED_HELD");
     expect(st.rows.get("intent-0001")!.signedBase64).toBe("BYTES1");
     expect(st.rows.get("intent-0001")!.sent).toBe(0);
   });
   it("bytes are persisted before send; a failing send never re-signs", async () => {
-    const st = memoryExecStore(); st.seed({ ...plan() } as never);
-    let signs = 0; const sign = async () => { signs++; return okSign(); };
+    const st = (cur = memoryExecStore()); st.seed({ ...plan() } as never);
+    let signs = 0; const sign = async (p: Plan) => { signs++; return okSign(p); };
     const r = await execute(sign, plan(), ctx, st, { send: async () => { throw new Error("timeout"); } });
     expect(r.state).toBe("SENT"); expect(signs).toBe(1);
     await expect(execute(sign, plan(), ctx, st, null)).rejects.toThrow("intent_not_reserved");
   });
   it("crash after send: reconcile resends the SAME bytes while valid", async () => {
-    const st = memoryExecStore(); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
+    const st = (cur = memoryExecStore()); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
     const { s, sent } = spySender();
     const steps = await reconcileOpen(st, chain({ status: "NOT_FOUND", slot: null }, 50), s);
     expect(steps[0]!.action).toBe("RESENT_SAME_BYTES"); expect(sent).toEqual(["BYTES1"]);
   });
   it("expiry only with finalized height past last valid height", async () => {
-    const st = memoryExecStore(); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
+    const st = (cur = memoryExecStore()); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
     expect((await reconcileOpen(st, chain({ status: "UNKNOWN", slot: null }, 500), null))[0]!.action).toBe("WAIT");
     expect((await reconcileOpen(st, chain({ status: "NOT_FOUND", slot: null }, 100), null))[0]!.action).toBe("WAIT");
     expect((await reconcileOpen(st, chain({ status: "NOT_FOUND", slot: null }, 101), null))[0]!.action).toBe("EXPIRED_NOT_LANDED");
   });
   it("finalized ok without settlement proof is never LANDED", async () => {
-    const st = memoryExecStore(); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
+    const st = (cur = memoryExecStore()); st.seed({ ...plan() } as never); await execute(okSign, plan(), ctx, st, null);
     expect((await reconcileOpen(st, chain({ status: "FINALIZED_OK", slot: 9 }, 10, null), null))[0]!.action).toBe("HELD_NO_PROOF");
     expect((await reconcileOpen(st, chain({ status: "FINALIZED_OK", slot: 9 }, 10), null))[0]!.action).toBe("LANDED");
     expect(await reconcileOpen(st, chain({ status: "FINALIZED_OK", slot: 9 }, 10), null)).toEqual([]); // settled stays settled

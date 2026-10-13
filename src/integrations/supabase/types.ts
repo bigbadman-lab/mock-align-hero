@@ -1473,11 +1473,13 @@ export type Database = {
       }
       mcpx_rw_intents: {
         Row: {
+          batch_id: string | null
           created_at: string
           cycle_id: string
           epoch_start: string | null
           evidence: Json | null
           finalized_slot: number | null
+          first_sent_at: string | null
           idempotency_key: string
           kind: string
           lamports: number
@@ -1485,17 +1487,21 @@ export type Database = {
           message_sha256: string
           ops_cost_lamports: number
           reserved_by: string
+          send_count: number
           signature: string | null
+          signed_tx_base64: string | null
           state: string
           token_amount: number
           updated_at: string
         }
         Insert: {
+          batch_id?: string | null
           created_at?: string
           cycle_id: string
           epoch_start?: string | null
           evidence?: Json | null
           finalized_slot?: number | null
+          first_sent_at?: string | null
           idempotency_key: string
           kind: string
           lamports: number
@@ -1503,17 +1509,21 @@ export type Database = {
           message_sha256: string
           ops_cost_lamports?: number
           reserved_by: string
+          send_count?: number
           signature?: string | null
+          signed_tx_base64?: string | null
           state?: string
           token_amount?: number
           updated_at?: string
         }
         Update: {
+          batch_id?: string | null
           created_at?: string
           cycle_id?: string
           epoch_start?: string | null
           evidence?: Json | null
           finalized_slot?: number | null
+          first_sent_at?: string | null
           idempotency_key?: string
           kind?: string
           lamports?: number
@@ -1521,7 +1531,9 @@ export type Database = {
           message_sha256?: string
           ops_cost_lamports?: number
           reserved_by?: string
+          send_count?: number
           signature?: string | null
+          signed_tx_base64?: string | null
           state?: string
           token_amount?: number
           updated_at?: string

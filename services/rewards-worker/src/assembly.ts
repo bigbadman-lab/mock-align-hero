@@ -11,6 +11,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { OnlinePumpSdk, PUMP_SDK, getBuyTokenAmountFromSolAmount, creatorVaultPda, PUMP_PROGRAM_ID, PUMP_AMM_PROGRAM_ID } from "@pump-fun/pump-sdk";
+import { OnlinePumpAmmSdk, PUMP_AMM_SDK, canonicalPumpPoolPda } from "@pump-fun/pump-swap-sdk";
 import BN from "bn.js";
 
 export const MAX_TX_BYTES = 1232;
@@ -109,17 +110,24 @@ export function solPayoutIxs(from: PublicKey, rows: readonly { owner: string; la
   });
 }
 
-export function tokenPayoutIxs(from: PublicKey, mint: PublicKey, decimals: number, rows: readonly { owner: string; amount: bigint; ataExists: boolean }[]) {
-  const src = getAssociatedTokenAddressSync(mint, from, false, TOKEN_2022_PROGRAM_ID);
+/** Token program is DERIVED from the mint account owner (native $MCP = Token-2022 via create_v2); legacy SPL stays supported. */
+export async function mintTokenProgram(conn: Connection, mint: PublicKey) {
+  const a = await conn.getAccountInfo(mint, "finalized");
+  const o = a?.owner.toBase58();
+  return o === TOKEN_2022_PROGRAM_ID.toBase58() ? TOKEN_2022_PROGRAM_ID : o === TOKEN_PROGRAM_ID.toBase58() ? TOKEN_PROGRAM_ID : null;
+}
+
+export function tokenPayoutIxs(from: PublicKey, mint: PublicKey, decimals: number, rows: readonly { owner: string; amount: bigint; ataExists: boolean }[], tokenProgram: PublicKey = TOKEN_2022_PROGRAM_ID) {
+  const src = getAssociatedTokenAddressSync(mint, from, false, tokenProgram);
   const seen = new Set<string>(); const ixs: TransactionInstruction[] = []; let atasCreated = 0;
   for (const r of rows) {
     if (seen.has(r.owner)) throw new Error("duplicate_owner"); seen.add(r.owner);
     if (r.amount <= 0n) throw new Error("non_positive_amount");
     const owner = new PublicKey(r.owner);
     if (!PublicKey.isOnCurve(owner.toBytes())) throw new Error("off_curve_owner_requires_review"); // PDAs held, never paid blindly
-    const dst = getAssociatedTokenAddressSync(mint, owner, false, TOKEN_2022_PROGRAM_ID);
-    if (!r.ataExists) { ixs.push(createAssociatedTokenAccountIdempotentInstruction(from, dst, owner, mint, TOKEN_2022_PROGRAM_ID)); atasCreated++; }
-    ixs.push(createTransferCheckedInstruction(src, mint, dst, from, r.amount, decimals, [], TOKEN_2022_PROGRAM_ID));
+    const dst = getAssociatedTokenAddressSync(mint, owner, false, tokenProgram);
+    if (!r.ataExists) { ixs.push(createAssociatedTokenAccountIdempotentInstruction(from, dst, owner, mint, tokenProgram)); atasCreated++; }
+    ixs.push(createTransferCheckedInstruction(src, mint, dst, from, r.amount, decimals, [], tokenProgram));
   }
   return { ixs, atasCreated };
 }
@@ -135,4 +143,38 @@ export function batchBySize<T extends { owner: string }>(rows: readonly T[], bui
     out.push(got); i += n;
   }
   return { kind: "OK" as const, batches: out };
+}
+
+// ---------- EXEC-01B: PumpSwap (post-graduation) creator-fee collection + canonical-pool buyback ----------
+/** WSOL creator vault → deployer. The SDK unwraps by closing the deployer's WSOL ATA, so any pre-existing WSOL balance
+ *  (unaccounted funds) blocks: we never sweep unknown balances into "income". */
+export async function ammCollectInstructions(conn: Connection, deployer: PublicKey) {
+  const sdk = new OnlinePumpAmmSdk(conn);
+  const ata = getAssociatedTokenAddressSync(NATIVE_MINT, deployer, false, TOKEN_PROGRAM_ID);
+  const pre = await conn.getTokenAccountBalance(ata, "finalized").then((b) => BigInt(b.value.amount)).catch(() => 0n);
+  if (pre !== 0n) return { kind: "BLOCKED" as const, reason: "WSOL_UNACCOUNTED_BALANCE" };
+  const st = await sdk.collectCoinCreatorFeeSolanaState(deployer);
+  const ixs = await PUMP_AMM_SDK.collectCoinCreatorFee(st, deployer);
+  return { kind: "OK" as const, ixs };
+}
+
+/** Bounded SOL→mint buy on the CANONICAL PumpSwap pool only (no other venue). Fill is verified later from finalized balances. */
+export async function ammBuyInstructions(conn: Connection, mint: PublicKey, buyer: PublicKey, b: BuyBounds) {
+  if (b.budgetLamports <= 0n) return { kind: "BLOCKED" as const, reason: "ZERO_BUDGET" };
+  if (b.maxSlippageBps < 1 || b.maxSlippageBps > 500) return { kind: "BLOCKED" as const, reason: "SLIPPAGE_OUT_OF_RANGE" };
+  const pool = canonicalPumpPoolPda(mint);
+  const sdk = new OnlinePumpAmmSdk(conn);
+  const st = await sdk.swapSolanaState(pool, buyer).catch(() => null);
+  if (!st || !st.poolAccountInfo) return { kind: "BLOCKED" as const, reason: "CANONICAL_POOL_MISSING" };
+  if (!st.pool.baseMint.equals(mint) || !st.pool.quoteMint.equals(NATIVE_MINT)) return { kind: "BLOCKED" as const, reason: "POOL_MINT_MISMATCH" };
+  if (st.poolAccountInfo.owner.toBase58() !== PUMP_AMM_PROGRAM_ID.toBase58()) return { kind: "BLOCKED" as const, reason: "POOL_PROGRAM_MISMATCH" };
+  const base = BigInt(st.poolBaseAmount.toString()), quote = BigInt(st.poolQuoteAmount.toString());
+  if (base === 0n || quote === 0n) return { kind: "BLOCKED" as const, reason: "INSUFFICIENT_LIQUIDITY" };
+  if (b.budgetLamports * 20n > quote) return { kind: "BLOCKED" as const, reason: "PRICE_IMPACT_TOO_HIGH" }; // >5% of quote reserve
+  // constant-product estimate before fees, then slippage bound; real fill comes from finalized balances only
+  const est = (base * b.budgetLamports) / (quote + b.budgetLamports);
+  const minOut = (est * BigInt(10_000 - b.maxSlippageBps)) / 10_000n;
+  if (minOut < b.minOutTokens || minOut <= 0n) return { kind: "BLOCKED" as const, reason: "QUOTE_BELOW_MIN_OUT" };
+  const ixs = await PUMP_AMM_SDK.buyExactQuoteInV2Instructions(st, new BN(b.budgetLamports.toString()), new BN(minOut.toString()));
+  return { kind: "OK" as const, ixs, pool: pool.toBase58(), expectedTokens: est, minOutTokens: minOut, baseTokenProgram: st.baseTokenProgram.toBase58() };
 }

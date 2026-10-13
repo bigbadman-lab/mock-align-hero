@@ -8,6 +8,8 @@ import { pgStore } from "../../../src/lib/rewards/store.pg";
 import { unavailableHistory } from "../../../src/lib/rewards/holder-history";
 import { EPOCH_SECONDS } from "../../../src/lib/rewards/epochs";
 import { loadSigner, readLimits, executionReadiness } from "./signer";
+import { intentStore } from "./intents";
+import { reconcileOpen, type Chain } from "./executor";
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
@@ -53,6 +55,29 @@ async function finalizedBlockTime(rpc: string): Promise<number | null> {
     const t = await call("getBlockTime", [slot]);
     return typeof t === "number" ? t : null;
   } catch { return null; } // unknown, never "zero"
+}
+
+/** Read-only chain adapter for reconciliation. Settlement proof verification is not wired yet → null → HELD_NO_PROOF,
+ *  so nothing is ever marked LANDED without balance-delta proof. */
+function rpcChain(rpc: string): Chain {
+  const call = async (method: string, params: unknown[]) => {
+    const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(8000) });
+    const j = (await r.json()) as { result?: unknown; error?: unknown };
+    if (!r.ok || j.error !== undefined) throw new Error("rpc_error");
+    return j.result;
+  };
+  return {
+    async signatureStatus(sig) {
+      try {
+        const v = ((await call("getSignatureStatuses", [[sig], { searchTransactionHistory: true }])) as { value: ({ slot: number; err: unknown; confirmationStatus: string } | null)[] }).value[0];
+        if (!v) return { status: "NOT_FOUND", slot: null };
+        if (v.confirmationStatus !== "finalized") return { status: "UNKNOWN", slot: null };
+        return { status: v.err ? "FINALIZED_ERR" : "FINALIZED_OK", slot: v.slot };
+      } catch { return { status: "UNKNOWN", slot: null }; }
+    },
+    async finalizedBlockHeight() { try { return Number(await call("getBlockHeight", [{ commitment: "finalized" }])); } catch { return null; } },
+    async settlement() { return null; },
+  };
 }
 
 async function main() {
@@ -152,6 +177,10 @@ async function main() {
         if (w !== null) lastPlanned = w;
         log({ event: "pass", correlationId, outcome: r.kind, window: w, classes: classify(r) });
       }
+      // EXEC-01B: reconcile any persisted signed intents (no sender in this gate → never broadcasts). Execution of new
+      // collect/buy/pay plans runs only when executionReadiness reports READY, which it cannot in this bundle.
+      const rec = await reconcileOpen(intentStore(db, workerId), rpcChain(env("MCPX_REWARDS_RPC_URL")!), null);
+      log({ event: "execution", correlationId, readiness: readiness.state, blockers: readiness.blockers, reconciled: rec.length, actions: rec.map((x) => x.action) });
       backoff = pollMs;
     } catch (e) {
       backoff = Math.min(backoff * 2, 10 * 60_000);
