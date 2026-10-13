@@ -1,0 +1,65 @@
+{
+  "mint": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "finalizedSlot": 456395489,
+  "supply": "999999999999999",
+  "liveAccounts": 424,
+  "mintHistory": {
+    "txs": 7493,
+    "firstSlot": 456380697,
+    "firstHasEmptyPre": true
+  },
+  "mintOnlyReplay": "CLEAN",
+  "accountsEverSeen": 624,
+  "closedAccounts": 200,
+  "extraTxsNotReferencingMint": 144,
+  "fullReplay": "CLEAN",
+  "accountMismatches": 0,
+  "snapshot": {
+    "holders": 59,
+    "total": "999999999999999",
+    "supplyMatches": true
+  },
+  "restartRecovery": {
+    "checkpointAtTx": 3818,
+    "overlapReplayed": 3818,
+    "identical": true
+  },
+  "gap": {
+    "droppedTxs": 24,
+    "detectedBy": "PRE_BALANCE_MISMATCH:G56NTcQTHVHZu79rqVyQERcUaKWqynpHUrEpTdbHLiWe",
+    "snapshotWhileGap": "GAP_BEFORE_SLOT",
+    "repairedByReplay": true,
+    "snapshotAfterRepair": "SNAPSHOT"
+  },
+  "meter": {
+    "getProgramAccounts": {
+      "calls": 3,
+      "items": 0
+    },
+    "getTokenSupply": {
+      "calls": 3,
+      "items": 0
+    },
+    "getTransactionsForAddress": {
+      "calls": 1335,
+      "items": 0
+    },
+    "gTFA:full": {
+      "calls": 76,
+      "items": 7493
+    },
+    "gTFA:sigs": {
+      "calls": 1259,
+      "items": 18587
+    },
+    "getTransaction": {
+      "calls": 144,
+      "items": 0
+    }
+  },
+  "estCredits": {
+    "archival10": 14812.3,
+    "archival1": 13516.3
+  },
+  "seconds": 28
+}

@@ -140,3 +140,10 @@ fresh process → next window SEALED; stored SOL plan alice 225000 / bob 75000
 - Buyback = bonding-curve `buyInstructions` only; graduated coins → `CURVE_COMPLETE_AMM_BUY_ROUTE_NOT_IMPLEMENTED`.
 - Mainnet read-only simulation evidence: `docs/evidence/05g-assembly-probe.json`.
 - `src/lib/rewards/holder-index.ts` + tables `mcpx_rw_hix_*` (service-role only): anchor + finalized pre/post token balances, signature-idempotent, gaps block snapshots until a complete replay, supply must reconcile. Production source: BLOCKED (needs paid stream/token-account-history RPC from $MCP creation slot).
+
+## 05-H — Helius Developer holder history (real mainnet, read-only)
+- Source: `getTransactionsForAddress` (Developer plan) on the mint (discovers every token account, since creation instructions reference the mint) + per-account history (catches transitions that don't reference the mint) + `getProgramAccounts`/`getTokenSupply` at one finalized slot for reconciliation. Code: `services/rewards-worker/src/helius-history.ts`.
+- Proof on Token-2022 coin 8M6Wh…pump (created slot 456380697): 7,493 mint txs + 144 non-mint txs, 624 accounts ever (200 closed), replay clean, 0 account mismatches vs live state at slot 456395489, supply 999,999,999,999,999 reconciled, 59 non-zero owners. ~14.8k credits for full backfill. Evidence: docs/evidence/05h-*.json.
+- Per 5-min pass (`holder-sync.ts`, wired into the dry-run worker): mint feed since checkpoint + getMultipleAccounts verification of every known account at one finalized slot; mismatch → gap (snapshots blocked). Measured ~15–25 credits/pass for this coin.
+- LaserStream WSS `transactionSubscribe`: works intermittently (1 of 3 runs delivered; that run missed 14 txs vs history). Not a completeness source; optional latency hint only.
+- Persistence: mcpx_rw_hix_* via `src/lib/rewards/holder-index.pg.ts`; kill/resume and replay rehearsed on a throwaway embedded Postgres (not production).
