@@ -25,7 +25,7 @@ export const LIMIT_CEILINGS = Object.freeze({
   maxInputTokens: { min: 256, max: 8000 },
   maxOutputTokens: { min: 64, max: 1024 },
 });
-export type Limits = { [K in keyof typeof LIMIT_CEILINGS]: number };
+export type Limits = { -readonly [K in keyof typeof LIMIT_CEILINGS]: number };
 export const DEFAULT_LIMITS: Limits = { maxConcurrency: 1, maxPerMinute: 6, maxPerDay: 200, maxInputTokens: 4000, maxOutputTokens: 600 };
 
 export const getProvider = (id: unknown): ProviderSpec | null =>

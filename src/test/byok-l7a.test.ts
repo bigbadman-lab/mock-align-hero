@@ -26,7 +26,7 @@ describe("L7-A crypto", () => {
     expect(new TextDecoder().decode(s.ciphertext)).not.toContain(API_KEY);
     expect(await open(ring, s, aadFor(PA, "idem_aaaaaaaaaaaaaaaa"))).toBe(API_KEY);
     await expect(open(ring, s, aadFor(PB, "idem_aaaaaaaaaaaaaaaa"))).rejects.toThrow("decrypt_failed"); // copied to another product
-    const t = new Uint8Array(s.ciphertext); t[0] ^= 1;
+    const t = new Uint8Array(s.ciphertext); t[0] = t[0]! ^ 1;
     await expect(open(ring, { ...s, ciphertext: t }, aadFor(PA, "idem_aaaaaaaaaaaaaaaa"))).rejects.toThrow("decrypt_failed");
     await expect(open(ring, { ...s, ciphertext: new Uint8Array(3) }, aadFor(PA, "idem_aaaaaaaaaaaaaaaa"))).rejects.toThrow("decrypt_failed");
     await expect(open(await parseKeyring(`v2:${K2}`), s, aadFor(PA, "idem_aaaaaaaaaaaaaaaa"))).rejects.toThrow("unknown_key_version");
@@ -48,7 +48,7 @@ describe("L7-A crypto", () => {
 describe("L7-A providers and limits", () => {
   it("OpenAI only, fixed https endpoint, no user base URL", () => {
     expect(Object.keys(PROVIDERS)).toEqual(["openai"]);
-    expect(PROVIDERS.openai!.endpoint).toBe("https://api.openai.com/v1/chat/completions");
+    expect(PROVIDERS["openai"]!.endpoint).toBe("https://api.openai.com/v1/chat/completions");
     expect(getProvider("anthropic")).toBeNull();
     expect(getProvider("__proto__")).toBeNull();
   });
