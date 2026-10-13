@@ -81,20 +81,20 @@ export function wsolUnwrapPlan(deployer: PublicKey, ata: { exists: boolean; amou
 
 // ---------- G03: buyback on the bonding curve (only route the pinned SDK supports end-to-end here) ----------
 export type BuyBounds = { budgetLamports: bigint; maxSlippageBps: number; minOutTokens: bigint };
-export async function curveBuyInstructions(conn: Connection, mint: PublicKey, buyer: PublicKey, b: BuyBounds) {
+export async function curveBuyInstructions(conn: Connection, mint: PublicKey, buyer: PublicKey, b: BuyBounds, tokenProgram: PublicKey = TOKEN_2022_PROGRAM_ID) {
   if (b.budgetLamports <= 0n) return { kind: "BLOCKED" as const, reason: "ZERO_BUDGET" };
   if (b.maxSlippageBps < 1 || b.maxSlippageBps > 500) return { kind: "BLOCKED" as const, reason: "SLIPPAGE_OUT_OF_RANGE" };
   const sdk = new OnlinePumpSdk(conn);
   const global = await sdk.fetchGlobal();
   const feeConfig = await sdk.fetchFeeConfig().catch(() => null);
-  const st = await sdk.fetchBuyState(mint, buyer, TOKEN_2022_PROGRAM_ID);
+  const st = await sdk.fetchBuyState(mint, buyer, tokenProgram);
   if (st.bondingCurve.complete) return { kind: "BLOCKED" as const, reason: "CURVE_COMPLETE_AMM_BUY_ROUTE_NOT_IMPLEMENTED" };
   const sol = new BN(b.budgetLamports.toString());
   const out = getBuyTokenAmountFromSolAmount({ global, feeConfig, mintSupply: st.bondingCurve.tokenTotalSupply, bondingCurve: st.bondingCurve, amount: sol, quoteMint: st.quoteMint ?? NATIVE_MINT });
   const expected = BigInt(out.toString());
   if (expected < b.minOutTokens) return { kind: "BLOCKED" as const, reason: "QUOTE_BELOW_MIN_OUT" };
   const ixs = await PUMP_SDK.buyInstructions({ global, bondingCurveAccountInfo: st.bondingCurveAccountInfo, bondingCurve: st.bondingCurve,
-    associatedUserAccountInfo: st.associatedUserAccountInfo, mint, user: buyer, amount: out, solAmount: sol, slippage: b.maxSlippageBps / 100, tokenProgram: TOKEN_2022_PROGRAM_ID });
+    associatedUserAccountInfo: st.associatedUserAccountInfo, mint, user: buyer, amount: out, solAmount: sol, slippage: b.maxSlippageBps / 100, tokenProgram });
   return { kind: "OK" as const, ixs, expectedTokens: expected, maxSolCost: b.budgetLamports + (b.budgetLamports * BigInt(b.maxSlippageBps)) / 10_000n };
 }
 
