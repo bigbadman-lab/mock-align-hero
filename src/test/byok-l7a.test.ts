@@ -133,10 +133,10 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     const r = await connect(WA, PA, 1);
     expect(r.status).toBe(200);
     expect(JSON.stringify(r.body)).not.toContain(API_KEY.slice(3, 20));
-    expect((r.body.integration as any).keyHint).toBe("wxyz");
+    expect((r.body["integration"] as any).keyHint).toBe("wxyz");
     const raw = await a.unsafe("select encode(ciphertext,'escape') c from public.mcpx_ai_credentials");
     expect(JSON.stringify(raw)).not.toContain(API_KEY.slice(3, 20));
-    expect((await connect(WA, PA, 1)).body.result).toBe("replayed");
+    expect((await connect(WA, PA, 1)).body["result"]).toBe("replayed");
     // decrypts only via the backend keyring with the right binding
     const cred = (await store.loadActiveCredential(PA))!;
     expect(await open(await parseKeyring(`v1:${K1}`), cred.sealed, aadFor(PA, cred.idem))).toBe(API_KEY);
@@ -210,7 +210,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     expect(await store.loadActiveCredential(PA)).toBeNull();
     expect(await store.admit(PA, cred.credentialId, idem(500), 10, 10)).toBe("revoked");
     expect(await store.putCredential({ creationId: PA, wallet: WA, mode: "rotate", provider: "openai", sealed: cred.sealed, hint: "wxyz", model: "gpt-4o-mini", idem: idem(2), expectedRevision: final.revision })).not.toBe("ok");
-    expect((await a.unsafe("select count(*)::int n from public.mcpx_ai_credentials where ciphertext is not null"))[0].n).toBe(0);
+    expect((await a.unsafe("select count(*)::int n from public.mcpx_ai_credentials where ciphertext is not null"))[0]!["n"]).toBe(0);
     // explicit reconnect opens a fresh, paused configuration
     expect((await connect(WA, PA, 9)).status).toBe(200);
     expect((await store.getStatus(PA))!).toMatchObject({ status: "configured", enabled: false });
@@ -226,7 +226,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
 
   it("audit trail has actions but no secret material", async () => {
     const rows = await a.unsafe("select * from public.mcpx_ai_audit order by id");
-    expect(rows.map((r) => r.action)).toEqual(expect.arrayContaining(["connect", "enable", "rotate", "revoke"]));
+    expect(rows.map((r) => r["action"])).toEqual(expect.arrayContaining(["connect", "enable", "rotate", "revoke"]));
     expect(JSON.stringify(rows)).not.toContain(API_KEY.slice(3, 20));
   });
 });

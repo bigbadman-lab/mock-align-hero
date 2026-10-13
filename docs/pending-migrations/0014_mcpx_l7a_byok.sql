@@ -159,7 +159,7 @@ BEGIN
   IF NOT FOUND OR c.id <> _credential THEN RETURN 'credential_changed'; END IF;
   IF _in < 1 OR _in > i.max_input_tokens OR _out < 1 OR _out > i.max_output_tokens THEN RETURN 'too_large'; END IF;
   IF EXISTS (SELECT 1 FROM public.mcpx_ai_usage WHERE integration_id = i.id AND request_ref = _ref) THEN RETURN 'duplicate'; END IF;
-  UPDATE public.mcpx_ai_usage SET status = 'ambiguous', settled_at = now()
+  UPDATE public.mcpx_ai_usage SET status = 'ambiguous', used_input = reserved_input, used_output = reserved_output, settled_at = now()
     WHERE integration_id = i.id AND status = 'reserved' AND lease_until < now();
   IF (SELECT count(*) FROM public.mcpx_ai_usage WHERE integration_id = i.id AND status = 'reserved') >= i.max_concurrency THEN RETURN 'busy'; END IF;
   IF (SELECT count(*) FROM public.mcpx_ai_usage WHERE integration_id = i.id AND created_at > now() - interval '1 minute') >= i.max_per_minute THEN RETURN 'rate_limited'; END IF;
