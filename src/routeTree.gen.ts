@@ -30,6 +30,7 @@ import { Route as ToolsWhaleWatchRouteImport } from './routes/tools.whale-watch'
 import { Route as ApiAuthChallengeRouteImport } from './routes/api/auth/challenge'
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
+import { Route as ApiCreatorAiRouteImport } from './routes/api/creator/ai'
 import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creator/launch-artwork'
 import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
@@ -154,6 +155,11 @@ const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
   path: '/api/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCreatorAiRoute = ApiCreatorAiRouteImport.update({
+  id: '/api/creator/ai',
+  path: '/api/creator/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCreatorLaunchArtworkRoute = ApiCreatorLaunchArtworkRouteImport.update({
   id: '/api/creator/launch-artwork',
   path: '/api/creator/launch-artwork',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByTo {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/api/auth/challenge': typeof ApiAuthChallengeRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/ai'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/ai'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/auth/challenge'
     | '/api/auth/session'
     | '/api/auth/verify'
+    | '/api/creator/ai'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   ApiAuthChallengeRoute: typeof ApiAuthChallengeRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
+  ApiCreatorAiRoute: typeof ApiCreatorAiRoute
   ApiCreatorLaunchArtworkRoute: typeof ApiCreatorLaunchArtworkRoute
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
@@ -670,6 +683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/creator/ai': {
+      id: '/api/creator/ai'
+      path: '/api/creator/ai'
+      fullPath: '/api/creator/ai'
+      preLoaderRoute: typeof ApiCreatorAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/creator/launch-artwork': {
       id: '/api/creator/launch-artwork'
       path: '/api/creator/launch-artwork'
@@ -807,6 +827,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthChallengeRoute: ApiAuthChallengeRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
+  ApiCreatorAiRoute: ApiCreatorAiRoute,
   ApiCreatorLaunchArtworkRoute: ApiCreatorLaunchArtworkRoute,
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
