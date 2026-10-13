@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { buttonOutline } from "./primitives";
 import { CopyButton } from "./McpConnection";
+import { ProductAiKey } from "./ProductAiKey";
 
 type KeyMeta = { keyId: string; prefix: string; status: string; label: string | null; createdAt: string; expiresAt: string | null; revokedAt: string | null };
 const post = (body: unknown) =>
@@ -83,6 +84,7 @@ export function ProductKeys({ creationId, displayName, onSessionEnded }: { creat
           <button type="button" disabled={busy} onClick={() => void issue("issue", null)} className={buttonOutline}>Issue new key</button>
         </>
       )}
+      <ProductAiKey creationId={creationId} onSessionEnded={onSessionEnded} />
     </li>
   );
 }
