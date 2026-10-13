@@ -23,7 +23,15 @@ export async function selectPendingCutoffs(db: Db, o: PassOpts) {
   const todo = [...new Set([...held, ...Array.from({ length: o.maxCutoffsPerPass }, (_, i) => next + 300 * i)])].sort((a, b) => a - b).slice(0, o.maxCutoffsPerPass)
     .filter((w) => w + 300 + FINALITY_GUARD_SECONDS <= o.nowSec);
   const out: { window: number; result: string }[] = [];
-  for (const w of todo) { const r = await selectCutoff(w, o.deps); out.push({ window: w, result: `${await saveCutoff(db, o.mint, w, r)}${r.kind === "HOLD" ? ":" + r.reason : ""}` }); if (r.kind === "HOLD") break; }
+  const ck = (await db.query("select covered_to_slot from public.mcpx_rw_hix_checkpoints where mint=$1", [o.mint])).rows[0];
+  for (const w of todo) {
+    const r = await selectCutoff(w, o.deps); const saved = await saveCutoff(db, o.mint, w, r);
+    out.push({ window: w, result: `${saved}${r.kind === "HOLD" ? ":" + r.reason : ""}` });
+    // index already past this cutoff without a capture → only a controlled rebuild can produce this window
+    if (r.kind === "SELECTED" && saved === "SELECTED" && ck && Number(ck.covered_to_slot) >= r.evidence.cutoffSlot)
+      await db.query("insert into public.mcpx_rw_hix_holds (mint, window_start, reason) values ($1,$2,'CUTOFF_BEHIND_CHECKPOINT_REBUILD_REQUIRED') on conflict do nothing", [o.mint, new Date(w * 1000).toISOString()]);
+    if (r.kind === "HOLD") break;
+  }
   return out;
 }
 
@@ -38,6 +46,12 @@ export async function indexPass(db: Db, rpc: Rpc, meter: Meter, o: PassOpts & { 
   const cutoffsAll = await loadSelectedCutoffs(db, o.mint, from);
   // (2)+(3): fixed upper slot V from a consistent finalized read; history is fetched up to V only
   let V = (await rpc("getSlot", [{ commitment: "finalized" }])) as number;
+  // never advance the index past the end of a window whose cutoff is not selected yet (it could not be captured later)
+  const lastSel = (await db.query("select extract(epoch from max(window_start))::bigint w from public.mcpx_rw_hix_window_cutoffs where mint=$1 and status='SELECTED'", [o.mint])).rows[0]?.w;
+  const nextEnd = (lastSel === null || lastSel === undefined ? o.genesisWindow : Number(lastSel) + 300) + 300;
+  const vt = await o.deps.blockTime(V);
+  if (vt === undefined || vt === null) return { kind: "RETRY" as const, reason: "HEAD_TIME_UNKNOWN" };
+  if (vt >= nextEnd) return { kind: "RETRY" as const, reason: "AWAITING_CUTOFF_SELECTION", nextWindowEnd: nextEnd };
   const byKey = new Map<string, Tx>(); const add = (t: Tx) => byKey.set(t.signature, t);
   for (const t of await fullHistory(rpc, meter, o.mint, o.mint, V, from)) add(t); // paginates to exhaustion or throws
   const swept = new Set<string>();

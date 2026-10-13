@@ -74,7 +74,9 @@ CREATE TABLE public.mcpx_rw_hix_holds (
 -- Immutability: selected cutoffs, policies, frozen snapshots and owners can never be updated or deleted.
 CREATE OR REPLACE FUNCTION public.mcpx_rw_hix_immutable() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
 BEGIN
-  IF TG_TABLE_NAME = 'mcpx_rw_hix_window_cutoffs' AND TG_OP = 'UPDATE' AND OLD.status = 'ON_HOLD' THEN RETURN NEW; END IF;
+  IF TG_TABLE_NAME = 'mcpx_rw_hix_window_cutoffs' AND TG_OP = 'UPDATE' THEN
+    IF to_jsonb(OLD)->>'status' = 'ON_HOLD' THEN RETURN NEW; END IF; -- only a held window may later be selected
+  END IF;
   RAISE EXCEPTION 'mcpx_rw immutable row in %', TG_TABLE_NAME USING ERRCODE = 'P0001';
 END $$;
 CREATE TRIGGER mcpx_rw_hix_cutoffs_immutable BEFORE UPDATE OR DELETE ON public.mcpx_rw_hix_window_cutoffs FOR EACH ROW EXECUTE FUNCTION public.mcpx_rw_hix_immutable();
