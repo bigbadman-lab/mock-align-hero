@@ -18,25 +18,36 @@ export type PlanKind = "SOL_PAYOUT" | "TOKEN_PAYOUT" | "FEE_COLLECTION" | "BUYBA
 /** Only these paths may be signed. The others stay blocked until built, simulated and verified on chain. */
 export const SIGNABLE_KINDS: ReadonlySet<PlanKind> = new Set(["SOL_PAYOUT", "TOKEN_PAYOUT"]);
 
+/** Technical limits (always on) + OPTIONAL operator emergency ceilings (null = not configured). Payout size itself is
+ *  bounded by the verified fee-backed budget the intent store enforces, never by a fixed cap. */
 export type Limits = {
-  maxLamportsPerTx: bigint; maxLamportsPerCycle: bigint; maxTokensPerTx: bigint;
+  maxLamportsPerTx: bigint | null; maxLamportsPerCycle: bigint | null; maxTokensPerTx: bigint | null;
   maxComputeUnits: number; maxCuPriceMicroLamports: number; maxPriorityFeeLamports: bigint;
   blockhashMarginBlocks: number;
 };
+export const TECHNICAL_LIMITS = { maxComputeUnits: 400_000, maxCuPriceMicroLamports: 200_000, maxPriorityFeeLamports: 100_000n, blockhashMarginBlocks: 20 } as const;
+export const BASE_FEE_PER_SIGNATURE = 5000n;
 export type Plan = {
-  kind: PlanKind; idempotencyKey: string; cycleId: string; messageBase64: string; lastValidBlockHeight: number;
+  kind: PlanKind; idempotencyKey: string; cycleId: string;
+  /** Five-minute window (unix seconds) whose verified fee budget funds this batch. */
+  epoch: number; messageBase64: string; lastValidBlockHeight: number;
   /** Exact expected recipients: SOL owners+lamports, or token owners+amount. Anything else in the tx → refused. */
   rows: readonly { owner: string; amount: bigint }[];
   mint?: string; decimals?: number;
 };
 export type IntentStore = {
   /** Durable reservation BEFORE signing. Must atomically refuse a key it has seen before. */
-  reserve(i: { idempotencyKey: string; cycleId: string; kind: PlanKind; messageSha256: string; lamports: bigint; lastValidBlockHeight: number }): Promise<"NEW" | "DUPLICATE">;
+  /** Atomically: refuse a seen key, then check the epoch's verified fee-backed budget (SOL / buyback / token) and the
+   *  operations reserve (network fees + rent), and reserve. Budget comes only from persisted finalized records. */
+  reserve(i: { idempotencyKey: string; cycleId: string; kind: PlanKind; epoch: number; messageSha256: string; lamports: bigint; tokens: bigint; opsCostLamports: bigint; lastValidBlockHeight: number }): Promise<ReserveResult>;
   /** Committed + reserved spend in this cycle (lamports), excluding the plan being checked. */
   cycleSpent(cycleId: string): Promise<bigint>;
   recordSigned(idempotencyKey: string, signature: string): Promise<void>;
 };
-export type SignCtx = { limits: Limits | null; emergencyStop: boolean; currentBlockHeight: number | null; store: IntentStore | null };
+export type ReserveResult = "NEW" | "DUPLICATE" | "NO_SOL_BUDGET" | "NO_BUYBACK_BUDGET" | "NO_TOKEN_BUDGET" | "NO_OPS_RESERVE" | "NO_EVIDENCE";
+export type SignCtx = { limits: Limits | null; emergencyStop: boolean; currentBlockHeight: number | null; store: IntentStore | null;
+  /** Rent for one new associated token account (from getMinimumBalanceForRentExemption); required if the tx creates ATAs. */
+  ataRentLamports?: bigint | null };
 export type SignResult = { ok: true; signature: string; signedBase64: string } | { ok: false; reason: string };
 
 const B58 = /^[1-9A-HJ-NP-Za-km-z]+$/;
@@ -95,7 +106,7 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
   const expect = new Map<string, bigint>();
   for (const r of plan.rows) { if (expect.has(r.owner) || r.amount <= 0n) return no("PLAN_ROWS_INVALID"); expect.set(r.owner, r.amount); }
   const seen = new Map<string, bigint>();
-  let cuLimit: number | null = null, cuPrice = 0, lamports = 0n, tokens = 0n;
+  let cuLimit: number | null = null, cuPrice = 0, lamports = 0n, tokens = 0n, ataCreates = 0n;
   let mintPk: PublicKey | null = null, srcAta: string | null = null, tokenProg: string | null = null;
   if (plan.kind === "TOKEN_PAYOUT") {
     if (!plan.mint || plan.decimals === undefined) return no("MINT_UNSET");
@@ -121,7 +132,7 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
     if (prog === ata) {
       // CreateIdempotent (data [1]): payer, ata, owner, mint, system, tokenProgram
       if (d.length !== 1 || d[0] !== 1 || acc[0] !== me || !acc[2] || !expect.has(acc[2]) || acc[3] !== plan.mint) return no("ATA_IX_NOT_ALLOWED");
-      continue;
+      ataCreates += 1n; continue;
     }
     // token / token-2022: only TransferChecked (12): source, mint, dest, authority
     if (d.length !== 10 || d[0] !== 12 || acc.length !== 4) return no("TOKEN_IX_NOT_TRANSFER_CHECKED");
@@ -139,17 +150,25 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
   if (cuLimit === null || cuLimit <= 0 || cuLimit > L.maxComputeUnits) return no("CU_LIMIT_OUT_OF_RANGE");
   const priority = (BigInt(cuLimit) * BigInt(cuPrice) + 999_999n) / 1_000_000n;
   if (priority > L.maxPriorityFeeLamports) return no("PRIORITY_FEE_TOO_HIGH");
-  if (lamports > L.maxLamportsPerTx) return no("TX_SPEND_CAP");
-  if (tokens > L.maxTokensPerTx) return no("TX_TOKEN_CAP");
-  let spent: bigint;
-  try { spent = await ctx.store.cycleSpent(plan.cycleId); } catch { return no("INTENT_STORE_UNAVAILABLE"); }
-  if (spent + lamports > L.maxLamportsPerCycle) return no("CYCLE_SPEND_CAP");
+  // Operator emergency ceilings: only when configured; hitting one HOLDS the batch (entitlements kept, resumable).
+  if (L.maxLamportsPerTx !== null && lamports > L.maxLamportsPerTx) return no("OPERATOR_CEILING_REACHED:TX_LAMPORTS");
+  if (L.maxTokensPerTx !== null && tokens > L.maxTokensPerTx) return no("OPERATOR_CEILING_REACHED:TX_TOKENS");
+  if (L.maxLamportsPerCycle !== null) {
+    let spent: bigint;
+    try { spent = await ctx.store.cycleSpent(plan.cycleId); } catch { return no("INTENT_STORE_UNAVAILABLE"); }
+    if (spent + lamports > L.maxLamportsPerCycle) return no("OPERATOR_CEILING_REACHED:CYCLE_LAMPORTS");
+  }
+  if (!Number.isInteger(plan.epoch) || plan.epoch <= 0 || plan.epoch % 300 !== 0) return no("EPOCH_INVALID");
+  if (ataCreates > 0n && !(ctx.ataRentLamports && ctx.ataRentLamports > 0n)) return no("ATA_RENT_UNKNOWN");
+  // Network fee + priority fee + rent are charged to the operations reserve, never to holder amounts.
+  const opsCostLamports = BASE_FEE_PER_SIGNATURE + priority + ataCreates * (ctx.ataRentLamports ?? 0n);
 
   const messageSha256 = createHash("sha256").update(msgBytes).digest("hex");
-  let r: "NEW" | "DUPLICATE";
-  try { r = await ctx.store.reserve({ idempotencyKey: plan.idempotencyKey, cycleId: plan.cycleId, kind: plan.kind, messageSha256, lamports, lastValidBlockHeight: plan.lastValidBlockHeight }); }
+  let r: ReserveResult;
+  try { r = await ctx.store.reserve({ idempotencyKey: plan.idempotencyKey, cycleId: plan.cycleId, kind: plan.kind, epoch: plan.epoch, messageSha256, lamports, tokens, opsCostLamports, lastValidBlockHeight: plan.lastValidBlockHeight }); }
   catch { return no("INTENT_STORE_UNAVAILABLE"); }
-  if (r !== "NEW") return no("DUPLICATE_INTENT");
+  if (r === "DUPLICATE") return no("DUPLICATE_INTENT");
+  if (r !== "NEW") return no(r);
 
   const tx = new VersionedTransaction(msg);
   tx.sign([kp]);
@@ -168,16 +187,15 @@ export function reconcile(i: { signature: string | null; lastValidBlockHeight: n
   return chain.finalizedBlockHeight > i.lastValidBlockHeight ? ("EXPIRED_NOT_LANDED" as const) : ("WAIT" as const);
 }
 
-/** Strict caps from env. Any missing/invalid value → null → signing refused (fail closed). */
-export function readLimits(env: Record<string, string | undefined>): Limits | null {
-  const big = (k: string) => { const v = env[k]?.trim(); return v && /^\d+$/.test(v) && BigInt(v) > 0n ? BigInt(v) : null; };
-  const L = {
-    maxLamportsPerTx: big("MCPX_REWARDS_MAX_LAMPORTS_PER_TX"), maxLamportsPerCycle: big("MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE"),
-    maxTokensPerTx: big("MCPX_REWARDS_MAX_TOKENS_PER_TX"),
-  };
-  if (!L.maxLamportsPerTx || !L.maxLamportsPerCycle || !L.maxTokensPerTx || L.maxLamportsPerTx > L.maxLamportsPerCycle) return null;
-  return { maxLamportsPerTx: L.maxLamportsPerTx, maxLamportsPerCycle: L.maxLamportsPerCycle, maxTokensPerTx: L.maxTokensPerTx,
-    maxComputeUnits: 400_000, maxCuPriceMicroLamports: 200_000, maxPriorityFeeLamports: 100_000n, blockhashMarginBlocks: 20 };
+/** Optional operator emergency ceilings (raw units: lamports / token base units). Absent → null (budget still applies).
+ *  Present but invalid → { ok:false } so the worker blocks signing rather than silently ignoring it. */
+export function readLimits(env: Record<string, string | undefined>): { ok: true; limits: Limits } | { ok: false; invalid: string[] } {
+  const bad: string[] = [];
+  const opt = (k: string) => { const v = env[k]?.trim(); if (!v) return null; if (/^\d+$/.test(v) && BigInt(v) > 0n) return BigInt(v); bad.push(k); return null; };
+  const tx = opt("MCPX_REWARDS_MAX_LAMPORTS_PER_TX"), cyc = opt("MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE"), tok = opt("MCPX_REWARDS_MAX_TOKENS_PER_TX");
+  if (tx !== null && cyc !== null && tx > cyc) bad.push("MCPX_REWARDS_MAX_LAMPORTS_PER_TX>CYCLE");
+  if (bad.length) return { ok: false, invalid: bad };
+  return { ok: true, limits: { maxLamportsPerTx: tx, maxLamportsPerCycle: cyc, maxTokensPerTx: tok, ...TECHNICAL_LIMITS } };
 }
 
 export type ReadinessInput = {
@@ -191,7 +209,7 @@ export function executionReadiness(x: ReadinessInput) {
   if (x.signer === "SIGNER_INVALID") return { state: "EXECUTION_BLOCKED" as const, blockers: ["SIGNER_INVALID"] };
   const b: string[] = [];
   if (x.emergencyStop) b.push("EMERGENCY_STOP");
-  if (!x.limitsSet) b.push("SPEND_LIMITS_UNSET");
+  if (!x.limitsSet) b.push("OPERATOR_CEILING_INVALID");
   if (!x.mintVerified) b.push("MINT_NOT_VERIFIED");
   if (!x.eligibilityApproved) b.push("ELIGIBILITY_NOT_APPROVED");
   if (!x.snapshotComplete) b.push("SNAPSHOT_INCOMPLETE");
