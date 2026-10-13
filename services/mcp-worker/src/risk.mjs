@@ -57,7 +57,7 @@ export function buildChecklist(d, holders) {
 }
 
 export async function tokenRiskAnalyst({ mint, rpcUrl, executionId, fetchImpl = fetch, signal, now = () => new Date() }) {
-  const d = await collectHolderData({ mint, rpcUrl, fetchImpl, signal });
+  const d = await collectHolderData({ mint, rpcUrl, fetchImpl, signal, resolveOwners: false });
   return buildRiskResult(d, executionId, now);
 }
 

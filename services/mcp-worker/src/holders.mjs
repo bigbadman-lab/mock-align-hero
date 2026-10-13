@@ -35,7 +35,7 @@ export function metadataFrom(facts) {
  * Shared, bounded data collection used by Holder Intelligence AND Token Risk Analyst (one fetch set per run).
  * Returns facts + supply + largest accounts + owner resolution, each with its own slot and status.
  */
-export async function collectHolderData({ mint, rpcUrl, fetchImpl = fetch, signal }) {
+export async function collectHolderData({ mint, rpcUrl, fetchImpl = fetch, signal, resolveOwners = true }) {
   const addr = parseAddress(mint);
   if (!addr) throw new RpcError("invalid_input", "invalid mint");
   const c = { commitment: HI_COMMITMENT };
@@ -67,6 +67,7 @@ export async function collectHolderData({ mint, rpcUrl, fetchImpl = fetch, signa
     && new Set(list.map((x) => x.address)).size === list.length;
   if (!valid) { out.largest = { status: "unavailable", reason: "bad_response", slot: null, list: [] }; return out; }
   out.largest = { status: "ok", reason: null, slot: b.context.slot, list: list.map((x) => ({ address: x.address, raw: u64(x.amount) })) };
+  if (!resolveOwners) return out;
   if (list.length === 0) { out.owners = { status: "not_applicable", reason: null, slot: null, ownerSlot: null, byAccount: {}, ownerInfo: {} }; return out; }
 
   // Owner resolution: decode each listed token account; the token account's `owner` field is the owner authority.
