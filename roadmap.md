@@ -6,3 +6,4 @@
 - [x] Phase L1 — Tool Library V2 foundation (stopped before L2) (10 templates, registry, illustrations, filters)
 - [x] Phase L2 — template detail pages + 3 free tests/day (stopped before L3)
 - [x] Phase L3 — integrated launch form UX (stopped before L4)
+- [x] Phase L4 — sticky summary + optional tool description (stopped before L5)

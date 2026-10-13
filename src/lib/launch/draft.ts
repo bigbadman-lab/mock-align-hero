@@ -12,6 +12,7 @@ export const FEE_SPLIT = Object.freeze([
 
 export const LIMITS = {
   productNameMax: 48, // MCPX limit (characters)
+  toolDescriptionMax: 280, // optional MCP tool description (characters); DB CHECK matches
   tokenNameBytes: 32, // on-chain metadata name: builder allows ≤32 chars; we also cap UTF-8 bytes at 32
   symbolRe: /^[A-Za-z0-9]{1,10}$/, // builder rule
   descriptionBytes: 500, // MCPX limit for off-chain metadata description
@@ -25,6 +26,8 @@ export interface DraftInput {
   templateId: string;
   settings: Record<string, string>;
   productName: string;
+  /** Optional; older clients may omit it (treated as ""). */
+  toolDescription?: string;
   tokenName: string;
   symbol: string;
   description: string;
@@ -39,6 +42,7 @@ export interface Draft {
   templateName: string;
   settings: Record<string, string>;
   productName: string;
+  toolDescription: string | null;
   tokenName: string;
   symbol: string;
   description: string;
@@ -98,6 +102,10 @@ export function validateDraft(i: DraftInput): { ok: true; draft: Draft } | { ok:
   else if (CONTROL.test(pn)) e.productName = "Remove hidden or control characters.";
   else if ([...pn].length > LIMITS.productNameMax) e.productName = `Use ${LIMITS.productNameMax} characters or fewer.`;
 
+  const td = (i.toolDescription ?? "").trim();
+  if (CONTROL.test(td)) e.toolDescription = "Remove hidden or control characters (including line breaks).";
+  else if ([...td].length > LIMITS.toolDescriptionMax) e.toolDescription = `Use ${LIMITS.toolDescriptionMax} characters or fewer.`;
+
   const tn = i.tokenName;
   if (!tn.trim()) e.tokenName = "Enter a token name.";
   else if (tn !== tn.trim()) e.tokenName = "Remove spaces at the start or end.";
@@ -128,7 +136,7 @@ export function validateDraft(i: DraftInput): { ok: true; draft: Draft } | { ok:
   return {
     ok: true,
     draft: {
-      templateId: t.id, templateName: t.name, settings, productName: pn, tokenName: tn, symbol: i.symbol,
+      templateId: t.id, templateName: t.name, settings, productName: pn, toolDescription: td || null, tokenName: tn, symbol: i.symbol,
       description: d.trim(), link: typeof link === "string" ? link : null, initialBuy,
     },
   };
@@ -140,6 +148,7 @@ export function draftSummary(d: Draft, settingsText: string[], wallet: string | 
     `Template: ${d.templateName} (${d.templateId})`,
     ...settingsText.map((s) => `Setting: ${s}`),
     `Product: ${d.productName}`,
+    `Tool description: ${d.toolDescription ?? "none"}`,
     `Token: ${d.tokenName} (${d.symbol})`,
     `Description: ${d.description}`,
     `Link: ${d.link ?? "none"}`,

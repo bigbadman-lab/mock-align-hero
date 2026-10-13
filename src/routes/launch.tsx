@@ -32,7 +32,7 @@ export const Route = createFileRoute("/launch")({
   errorComponent: RouteError,
 });
 
-const EMPTY: DraftInput = { templateId: "", settings: {}, productName: "", tokenName: "", symbol: "", description: "", link: "", buyEnabled: false, buyAmount: "", slippageBps: "100" };
+const EMPTY: DraftInput = { templateId: "", settings: {}, productName: "", toolDescription: "", tokenName: "", symbol: "", description: "", link: "", buyEnabled: false, buyAmount: "", slippageBps: "100" };
 const STATE_STYLE: Record<ReadyState, string> = {
   READY: "text-primary border-primary/40",
   NOT_CONFIGURED: "text-muted-foreground border-border-strong",
@@ -173,7 +173,8 @@ function Launch() {
         {session.s === "signed_in" && <SavedDrafts drafts={drafts} current={saved?.id ?? null} onOpen={openDraft} onNew={() => { setSaved(null); setInput(EMPTY); setReview(null); }} onAbandoned={(id) => { if (saved?.id === id) { setSaved(null); setInput(EMPTY); setReview(null); } }} />}
 
         {!review ? (
-          <form onSubmit={onReview} noValidate className="space-y-8" aria-labelledby="draft">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <form onSubmit={onReview} noValidate className="min-w-0 space-y-8" aria-labelledby="draft">
             <SectionHeading label="Draft" title={<span id="draft">Your tool token</span>} />
             {errorCount > 0 && (
               <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-warning/40 bg-surface-2 p-4 text-sm text-foreground">
@@ -217,6 +218,12 @@ function Launch() {
                 <FieldError id="templateId" msg={errors.templateId} />
               </label>
               <TextField id="productName" label="Tool name" hint={toolNameTouched ? `Up to ${LIMITS.productNameMax} characters.` : `Follows the token name until you edit it. Up to ${LIMITS.productNameMax} characters.`} value={input.productName} onChange={(v) => { setToolNameTouched(true); set("productName", v); }} err={errors.productName} />
+              <label className="block text-sm">
+                <span className="text-foreground">Tool description (optional)</span>
+                <textarea id="toolDescription" rows={2} value={input.toolDescription ?? ""} onChange={(e) => set("toolDescription", e.target.value)} aria-invalid={!!errors.toolDescription} aria-describedby="toolDescription-hint toolDescription-err" className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground" />
+                <span id="toolDescription-hint" className="mt-1 block text-xs text-subtle">One or two sentences about what your tool is for. Saved with the draft; not part of token metadata. {[...(input.toolDescription ?? "").trim()].length}/{LIMITS.toolDescriptionMax}</span>
+                <FieldError id="toolDescription" msg={errors.toolDescription} />
+              </label>
               {input.templateId && (
                 <div className="rounded-md border border-border bg-card p-4 text-sm">
                   <p className="text-foreground">Tool settings</p>
@@ -280,6 +287,8 @@ function Launch() {
               {session.s !== "signed_in" ? "Sign in as a creator from the Dashboard to save drafts and artwork. Without sign-in, your draft stays on this page only." : drafts.message ?? (saved ? (dirty ? `Unsaved changes (saved revision ${saved.revision}).` : `Saved — revision ${saved.revision}.`) : "Not saved yet.")}
             </p>
           </form>
+          <DraftSummaryAside input={input} />
+          </div>
         ) : (
           <section aria-labelledby="review" className="space-y-6">
             <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Draft review — preparation only</h2>
@@ -329,5 +338,28 @@ function ToolPreview({ id }: { id: string }) {
         <p className="text-xs text-muted-foreground">{t.tagline} MCP: {t.mcpAdapter ? "adapter available" : "not available as an MCP product yet"}.</p>
       </div>
     </div>
+  );
+}
+
+// Live, read-only summary. Sticky beside the form on wide screens; stacks after it on small screens.
+function DraftSummaryAside({ input }: { input: DraftInput }) {
+  const t = LIBRARY.find((x) => x.id === input.templateId);
+  const row = (k: string, v: string) => (
+    <div className="flex justify-between gap-3 py-1.5"><dt className="text-subtle">{k}</dt><dd className="min-w-0 truncate text-right text-foreground">{v}</dd></div>
+  );
+  return (
+    <aside aria-label="Draft summary" className="rounded-lg border border-border bg-card p-5 text-sm lg:sticky lg:top-24">
+      <p className="label-mono text-xs text-primary">Summary</p>
+      {t && <img src={t.image} alt="" width={1024} height={640} loading="lazy" className="mt-3 aspect-[16/10] w-full rounded object-cover" />}
+      <dl className="mt-3 divide-y divide-border font-mono text-xs">
+        {row("Token", input.tokenName.trim() || "—")}
+        {row("Symbol", input.symbol || "—")}
+        {row("Tool", input.productName.trim() || "—")}
+        {row("Template", t?.name ?? "not chosen")}
+        {row("MCP", t ? (t.mcpAdapter ? "adapter available" : "not yet") : "—")}
+        {row("Initial buy", input.buyEnabled ? `${input.buyAmount || "?"} $MCP` : "none")}
+      </dl>
+      <p className="mt-4 rounded border border-warning/40 p-2 text-xs text-muted-foreground">Draft only. Token creation is unavailable — nothing is created, signed or sent.</p>
+    </aside>
   );
 }

@@ -19,7 +19,9 @@ export type Parsed =
 function input(v: unknown): DraftInput | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
   const o = v as Record<string, unknown>;
-  if (Object.keys(o).sort().join(",") !== INPUT_KEYS) return null;
+  const keys = Object.keys(o).filter((k) => k !== "toolDescription").sort().join(",");
+  if (keys !== INPUT_KEYS) return null;
+  if ("toolDescription" in o && (typeof o["toolDescription"] !== "string" || (o["toolDescription"] as string).length > 1000)) return null;
   for (const k of ["templateId", "productName", "tokenName", "symbol", "description", "link", "buyAmount", "slippageBps"]) if (typeof o[k] !== "string" || (o[k] as string).length > 1000) return null;
   if (typeof o["buyEnabled"] !== "boolean") return null;
   const s = o["settings"];
@@ -58,7 +60,7 @@ export function parseDraftBody(b: Record<string, unknown>): Parsed {
 /** Rebuild the editable form input from a stored, validated draft. */
 export function toInput(d: Draft): DraftInput {
   return {
-    templateId: d.templateId, settings: d.settings, productName: d.productName, tokenName: d.tokenName, symbol: d.symbol,
+    templateId: d.templateId, settings: d.settings, productName: d.productName, toolDescription: d.toolDescription ?? "", tokenName: d.tokenName, symbol: d.symbol,
     description: d.description, link: d.link ?? "", buyEnabled: !!d.initialBuy, buyAmount: d.initialBuy?.amountMcp ?? "",
     slippageBps: String(d.initialBuy?.slippageBps ?? 100),
   };
