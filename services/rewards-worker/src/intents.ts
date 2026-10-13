@@ -2,6 +2,7 @@
 // (remoteDb) so the Render worker never holds database credentials. Signed ≠ paid: only finalize() with finalized
 // chain evidence can move an intent to LANDED / FAILED_ON_CHAIN / EXPIRED_NOT_LANDED.
 import type { IntentStore } from "./signer";
+import { runTx } from "../../../src/lib/rewards/store.pg";
 
 type Q = { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> };
 
@@ -12,11 +13,27 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
 } {
   return {
     async reserve(i) {
-      const r = await db.query(
-        `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by)
-         values ($1,$2,$3,$4,$5,$6,$7) on conflict (idempotency_key) do nothing returning idempotency_key`,
-        [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId]);
-      return r.rows.length === 1 ? "NEW" : "DUPLICATE";
+      // One sealed transaction: per-epoch advisory lock (serialises concurrent workers), then insert only if the key is
+      // new AND the persisted fee-backed budget covers it. Budget is derived in SQL from finalized records only.
+      const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports)
+        select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric
+        where not exists (select 1 from public.mcpx_rw_intents where idempotency_key=$1)
+          and exists (select 1 from public.mcpx_rw_budget_remaining(to_timestamp($8)) b where b.evidence and b.ops >= $10::numeric and
+            case $3 when 'SOL_PAYOUT' then b.sol >= $5::numeric when 'BUYBACK' then b.buyback >= $5::numeric
+                    when 'TOKEN_PAYOUT' then $5::numeric = 0 and b.tokens >= $9::numeric else false end)
+        returning idempotency_key`;
+      const p = [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId, i.epoch, i.tokens.toString(), i.opsCostLamports.toString()];
+      const r = await runTx(db as never, [
+        { sql: "select pg_advisory_xact_lock(hashtextextended('mcpx_rw_budget', 0))", params: [] },
+        { sql: ins, params: p, abortIfEmpty: "REFUSED" },
+      ]);
+      if (!r.aborted) return "NEW";
+      const dup = await db.query("select 1 from public.mcpx_rw_intents where idempotency_key=$1", [i.idempotencyKey]);
+      if (dup.rows.length) return "DUPLICATE";
+      const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [i.epoch])).rows[0];
+      if (!b || !b.evidence) return "NO_EVIDENCE";
+      if (BigInt(String(b.ops)) < i.opsCostLamports) return "NO_OPS_RESERVE";
+      return i.kind === "SOL_PAYOUT" ? "NO_SOL_BUDGET" : i.kind === "BUYBACK" ? "NO_BUYBACK_BUDGET" : "NO_TOKEN_BUDGET";
     },
     async cycleSpent(cycleId) {
       // Everything not provably un-spent counts against the cap (reserved, signed, landed, unknown).
