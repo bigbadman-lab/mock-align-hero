@@ -792,6 +792,53 @@ export type Database = {
           },
         ]
       }
+      mcpx_rw_buyback_fills: {
+        Row: {
+          created_at: string
+          decimals: number
+          epoch_start: string
+          evidence: Json
+          finalized_slot: number
+          intent_key: string
+          mint: string
+          signature: string
+          sol_spent: number
+          token_amount: number
+        }
+        Insert: {
+          created_at?: string
+          decimals: number
+          epoch_start: string
+          evidence: Json
+          finalized_slot: number
+          intent_key: string
+          mint: string
+          signature: string
+          sol_spent: number
+          token_amount: number
+        }
+        Update: {
+          created_at?: string
+          decimals?: number
+          epoch_start?: string
+          evidence?: Json
+          finalized_slot?: number
+          intent_key?: string
+          mint?: string
+          signature?: string
+          sol_spent?: number
+          token_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_buyback_fills_intent_key_fkey"
+            columns: ["intent_key"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_intents"
+            referencedColumns: ["idempotency_key"]
+          },
+        ]
+      }
       mcpx_rw_config: {
         Row: {
           anchor_slot: number | null
@@ -1428,6 +1475,7 @@ export type Database = {
         Row: {
           created_at: string
           cycle_id: string
+          epoch_start: string | null
           evidence: Json | null
           finalized_slot: number | null
           idempotency_key: string
@@ -1435,14 +1483,17 @@ export type Database = {
           lamports: number
           last_valid_block_height: number
           message_sha256: string
+          ops_cost_lamports: number
           reserved_by: string
           signature: string | null
           state: string
+          token_amount: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           cycle_id: string
+          epoch_start?: string | null
           evidence?: Json | null
           finalized_slot?: number | null
           idempotency_key: string
@@ -1450,14 +1501,17 @@ export type Database = {
           lamports: number
           last_valid_block_height: number
           message_sha256: string
+          ops_cost_lamports?: number
           reserved_by: string
           signature?: string | null
           state?: string
+          token_amount?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           cycle_id?: string
+          epoch_start?: string | null
           evidence?: Json | null
           finalized_slot?: number | null
           idempotency_key?: string
@@ -1465,9 +1519,11 @@ export type Database = {
           lamports?: number
           last_valid_block_height?: number
           message_sha256?: string
+          ops_cost_lamports?: number
           reserved_by?: string
           signature?: string | null
           state?: string
+          token_amount?: number
           updated_at?: string
         }
         Relationships: []
@@ -2045,6 +2101,16 @@ export type Database = {
       mcpx_rw_acquire_lease: {
         Args: { _owner: string; _ttl_seconds: number }
         Returns: boolean
+      }
+      mcpx_rw_budget_remaining: {
+        Args: { p_epoch: string }
+        Returns: {
+          buyback: number
+          evidence: boolean
+          ops: number
+          sol: number
+          tokens: number
+        }[]
       }
       mcpx_rw_commit_window: {
         Args: {
