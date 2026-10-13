@@ -55,7 +55,7 @@ export function loadSigner(env: Record<string, string | undefined>) {
   if (legacy) return out("SIGNER_INVALID", "LEGACY_KEY_ENV_PRESENT", null, null);
   if (!raw) return out("MONITOR_ONLY", pubRaw ? "PRIVATE_KEY_UNSET" : "SIGNER_UNCONFIGURED", null, null);
   let expected: PublicKey;
-  try { expected = new PublicKey(pubRaw); if (!pubRaw) throw 0; } catch { return out("SIGNER_INVALID", "PUBLIC_KEY_INVALID", null, null); }
+  try { if (!pubRaw) throw 0; expected = new PublicKey(pubRaw); } catch { return out("SIGNER_INVALID", "PUBLIC_KEY_INVALID", null, null); }
   if (raw.startsWith("[") || !B58.test(raw)) return out("SIGNER_INVALID", "PRIVATE_KEY_FORMAT", null, null);
   let bytes: Uint8Array;
   try { bytes = bs58.decode(raw); } catch { return out("SIGNER_INVALID", "PRIVATE_KEY_FORMAT", null, null); }
@@ -200,5 +200,6 @@ export function executionReadiness(x: ReadinessInput) {
   if (!x.simulationsPassed) b.push("SIMULATIONS_NOT_PASSED");
   if (!x.reservesSufficient) b.push("RESERVES_UNVERIFIED");
   if (!x.operatorAuthorized) b.push("OPERATOR_NOT_AUTHORIZED");
+  if (x.emergencyStop) return { state: "EXECUTION_BLOCKED" as const, blockers: b };
   return b.length ? { state: "SIGNER_VALIDATED" as const, blockers: b } : { state: "EXECUTION_READY" as const, blockers: [] };
 }
