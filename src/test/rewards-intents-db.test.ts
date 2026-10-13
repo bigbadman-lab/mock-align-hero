@@ -85,7 +85,7 @@ d("0016 durable intents (real Postgres)", () => {
     await expect(intentStore(db, "w").reserve({ ...base("bad-amt-1"), lamports: -1n })).rejects.toThrow();
   });
   it("stale/unknown: open intents survive restart; only provable expiry frees cycle budget", async () => {
-    const s = intentStore(db, "w1"); await s.reserve({ ...base("stale-key-1"), cycleId: "cyc-2" }); await s.recordSigned("stale-key-1", "sigS");
+    const s = intentStore(db, "w1"); await s.reserve({ ...base("stale-key-1"), cycleId: "cyc-2" }); await s.recordSigned("stale-key-1", "sigS", "QkFTRTY0");
     const open = await intentStore(db, "w2").open();
     const o = open.find((x) => x.idempotencyKey === "stale-key-1")!;
     expect(o.state).toBe("SIGNED");
