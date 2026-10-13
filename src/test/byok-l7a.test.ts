@@ -99,10 +99,6 @@ describe("L7-A authorization", () => {
     expect((await runByok(ctxOf(store, WA), PA, "delete_everything", {})).status).toBe(400);
     expect(calls).toEqual([]);
   });
-  it("test_connection never reports success in L7-A", async () => {
-    const { store } = spyStore();
-    expect(await runByok(ctxOf(store, WA), PA, "test_connection", {})).toEqual({ status: 501, body: { error: "not_implemented" } });
-  });
   it("rejects bad keys, unknown providers/models and missing idempotency", async () => {
     const { store } = spyStore();
     const base = { provider: "openai", apiKey: API_KEY, model: "gpt-4o-mini", idempotencyKey: "idem_aaaaaaaaaaaaaaaa", expectedRevision: 1 };
@@ -126,7 +122,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     a = postgres(URL_!, { max: 1, onnotice: () => {} }); conns.push(a); A = wrap(a); store = pgByokStore(A);
     await a.unsafe("drop schema if exists public cascade; create schema public; grant usage on schema public to public;");
     await a.unsafe("do $$ begin create role anon; exception when others then null; end $$; do $$ begin create role authenticated; exception when others then null; end $$; do $$ begin create role service_role; exception when others then null; end $$;");
-    for (const f of ["drizzle/migrations/0000_mcpx_01b_registry_outbox.sql", "drizzle/migrations/0002_mcpx_03b_product_configs.sql", "drizzle/migrations/0014_mcpx_l7a_byok.sql"])
+    for (const f of ["drizzle/migrations/0000_mcpx_01b_registry_outbox.sql", "drizzle/migrations/0002_mcpx_03b_product_configs.sql", "drizzle/migrations/0014_mcpx_l7a_byok.sql", "docs/pending-migrations/0015_mcpx_l7b_byok_health.sql"])
       await a.unsafe(readFileSync(f, "utf8").replace(/--> statement-breakpoint/g, ""));
     for (const [id, w, life, n] of [[PA, WA, "active", 1], [PB, WB, "inactive", 2]] as const) {
       await a.unsafe(`insert into public.mcp_creations (id, slug, template_id, template_version, display_name, ticker, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
@@ -141,7 +137,8 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     const r = await connect(WA, PA, 1);
     expect(r.status).toBe(200);
     expect(JSON.stringify(r.body)).not.toContain(API_KEY.slice(3, 20));
-    expect((r.body["integration"] as any).keyHint).toBe("wxyz");
+    expect((r.body["integration"] as any).hasKey).toBe(true);
+    expect(JSON.stringify(r.body)).not.toContain("wxyz");
     const raw = await a.unsafe("select encode(ciphertext,'escape') c from public.mcpx_ai_credentials");
     expect(JSON.stringify(raw)).not.toContain(API_KEY.slice(3, 20));
     expect((await connect(WA, PA, 1)).body["result"]).toBe("replayed");
@@ -214,7 +211,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     const final = (await store.getStatus(PA))!;
     // Either rotate ran first (then revoke shredded it) or rotate saw 'revoked'. Both end revoked with no active key.
     expect(["ok", "revoked", "stale_revision"]).toContain(rt);
-    expect(final).toMatchObject({ status: "revoked", enabled: false, keyHint: null });
+    expect(final).toMatchObject({ status: "revoked", enabled: false, hasKey: false });
     expect(await store.loadActiveCredential(PA)).toBeNull();
     expect(await store.admit(PA, cred.credentialId, idem(500), 10, 10)).toBe("revoked");
     expect(await store.putCredential({ creationId: PA, wallet: WA, mode: "rotate", provider: "openai", sealed: cred.sealed, hint: "wxyz", model: "gpt-4o-mini", idem: idem(2), expectedRevision: final.revision })).not.toBe("ok");
