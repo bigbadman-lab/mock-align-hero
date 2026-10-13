@@ -19,7 +19,7 @@ describe("05-F treasury config", () => {
   });
   it("even a fully filled, approved config stays non-executable in 05-F; shared roles, child-wallet reuse and hot treasury keys flagged", () => {
     const addresses = Object.fromEntries(ROLES.map((r, i) => [r, A(i)])) as TreasuryConfig["addresses"];
-    addresses.MCP_DISTRIBUTOR = addresses.MCP_CUSTODY!;
+    addresses.MCP_DISTRIBUTOR = A(5);
     const c: TreasuryConfig = { ...DEFAULT_CONFIG, addresses, limits: { perTxLamports: 10n, perWindowLamports: 100n, perDayLamports: 1000n, perTxTokenUnits: 5n, maxRecipientsPerBatch: 10 },
       allowlist: { programs: ["P"], mints: ["M"] }, signing: { mode: "HOT_KEY_CAPPED" }, reserves: { operationsMinLamports: 1n }, expiresAt: "2027-01-01T00:00:00Z", paused: false, approval: { by: ["x", "y"], at: "t", digest: "d" } };
     const v = validateTreasury(c, { now, childFeeWallets: [A(1)] });
