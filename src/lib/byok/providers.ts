@@ -46,5 +46,3 @@ export function validateLimits(x: unknown): Limits | null {
   return out;
 }
 
-/** Only the last 4 characters are ever kept for display. */
-export const keyHint = (k: string) => k.slice(-4);
