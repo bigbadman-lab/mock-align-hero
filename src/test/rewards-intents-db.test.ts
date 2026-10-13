@@ -5,7 +5,7 @@ import postgres from "postgres";
 import { intentStore } from "../../services/rewards-worker/src/intents";
 import { reconcile } from "../../services/rewards-worker/src/signer";
 
-const URL = process.env.MCPX_TEST_PG_URL;
+const URL = process.env["MCPX_TEST_PG_URL"];
 const d = URL ? describe : describe.skip;
 const H = "a".repeat(64);
 const E1 = 1_800_000_000 - (1_800_000_000 % 300), E2 = E1 + 300, E3 = E1 + 600;
@@ -65,7 +65,7 @@ d("0016 durable intents (real Postgres)", () => {
     await s.recordSigned("sign-key-1", "sigA");
     await expect(s.recordSigned("sign-key-1", "sigB")).rejects.toThrow();
     const row = (await sql`select state from public.mcpx_rw_intents where idempotency_key='sign-key-1'`)[0]!;
-    expect(row.state).toBe("SIGNED");
+    expect(row["state"]).toBe("SIGNED");
     await expect(sql`update public.mcpx_rw_intents set state='LANDED' where idempotency_key='sign-key-1'`).rejects.toThrow();
     expect(await s.finalize("sign-key-1", "LANDED", 123, { sig: "sigA" })).toBe(true);
     await expect(sql`update public.mcpx_rw_intents set state='EXPIRED_NOT_LANDED' where idempotency_key='sign-key-1'`).rejects.toThrow(/final/);
