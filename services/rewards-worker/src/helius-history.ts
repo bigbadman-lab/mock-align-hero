@@ -7,6 +7,8 @@
 //  3. Replay of the union in (slot, transactionIndex) order must hit zero pre-balance mismatches and end equal to
 //     getProgramAccounts + getTokenSupply read at the same finalized context slot C. Anything else = BLOCKED.
 import type { IndexedTx, TokenBal } from "../../../src/lib/rewards/holder-index";
+import { supplyDelta, type RawTx } from "../../../src/lib/rewards/supply-proof";
+import type { CutoffDeps } from "../../../src/lib/rewards/cutoff";
 
 export type Meter = Record<string, { calls: number; items: number }>;
 export type Rpc = (method: string, params: unknown[]) => Promise<any>;
@@ -29,24 +31,27 @@ export function heliusRpc(url: string, meter: Meter): Rpc {
 export function credits(m: Meter, archivalCost = 10) {
   const g = (k: string) => m[k] ?? { calls: 0, items: 0 };
   return g("gTFA:full").items / 100 * 10 + g("gTFA:full").calls * 0 + g("gTFA:sigs").calls * 10
-    + g("getTransaction").calls * archivalCost + g("getProgramAccounts").calls * 10 + g("getTokenSupply").calls * 1 + g("getSlot").calls;
+    + g("getTransaction").calls * archivalCost + g("getProgramAccounts").calls * 10
+    // every other standard RPC method (getSlot, getBlocks, getBlockTime, getMultipleAccounts, getTokenSupply…) = 1 credit/call
+    + Object.entries(m).filter(([k]) => !["gTFA:full", "gTFA:sigs", "getTransactionsForAddress", "getTransaction", "getProgramAccounts"].includes(k)).reduce((x, [, v]) => x + v.calls, 0);
 }
 
 type FullTx = { slot: number; transactionIndex: number; blockTime: number | null; transaction: { signatures: string[]; message: { accountKeys: string[] } };
   meta: { err: unknown; preTokenBalances?: any[]; postTokenBalances?: any[]; loadedAddresses?: { writable: string[]; readonly: string[] } } };
 
-export function toIndexed(t: FullTx, mint: string): IndexedTx & { txIndex: number } {
+export function toIndexed(t: FullTx, mint: string): IndexedTx & { txIndex: number; supplyDelta: bigint | { unknown: string } } {
   const keys = [...t.transaction.message.accountKeys, ...(t.meta.loadedAddresses?.writable ?? []), ...(t.meta.loadedAddresses?.readonly ?? [])];
   const conv = (bs: any[] | undefined): TokenBal[] => (bs ?? []).filter((b) => b.mint === mint)
     .map((b) => ({ account: keys[b.accountIndex]!, owner: b.owner ?? null, mint, amount: BigInt(b.uiTokenAmount.amount) }));
   return { signature: t.transaction.signatures[0]!, slot: t.slot, txIndex: t.transactionIndex, blockTime: t.blockTime, finalized: true,
-    failed: t.meta.err !== null, pre: conv(t.meta.preTokenBalances), post: conv(t.meta.postTokenBalances) };
+    failed: t.meta.err !== null, pre: conv(t.meta.preTokenBalances), post: conv(t.meta.postTokenBalances),
+    supplyDelta: (t.transaction.message as any).instructions ? supplyDelta(t as unknown as RawTx, mint) : { unknown: "no_instructions" } };
 }
 
 const OPTS = { sortOrder: "asc", commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 } as const;
 
 export async function fullHistory(rpc: Rpc, meter: Meter, address: string, mint: string, lteSlot: number, gtSlot?: number) {
-  const out: (IndexedTx & { txIndex: number })[] = []; let token: string | undefined;
+  const out: ReturnType<typeof toIndexed>[] = []; let token: string | undefined;
   do {
     const r = await rpc("getTransactionsForAddress", [address, { ...OPTS, transactionDetails: "full", limit: 100, filters: { slot: { lte: lteSlot, ...(gtSlot !== undefined ? { gt: gtSlot } : {}) } }, ...(token ? { paginationToken: token } : {}) }]);
     (meter["gTFA:full"] ??= { calls: 0, items: 0 }).calls++; meter["gTFA:full"]!.items += r.data.length;
@@ -96,8 +101,19 @@ export async function verifyKnownAccounts(rpc: Rpc, accounts: string[]) {
     const rs = await Promise.all(parts.map((p) => rpc("getMultipleAccounts", [p, { commitment: "finalized", encoding: "jsonParsed" }])));
     const slot = rs[0].context.slot as number;
     if (!rs.every((r: any) => r.context.slot === slot)) continue;
-    rs.forEach((r: any, i: number) => r.value.forEach((v: any, k: number) => out.set(parts[i]![k]!, v ? { owner: v.data.parsed.info.owner, amount: BigInt(v.data.parsed.info.tokenAmount.amount) } : null)));
+    rs.forEach((r: any, i: number) => r.value.forEach((v: any, k: number) => out.set(parts[i]![k]!, !v ? null
+      : v.data?.parsed?.type === "mint" ? { owner: "__MINT_SUPPLY__", amount: BigInt(v.data.parsed.info.supply) } // 05-I: supply at the same slot
+      : { owner: v.data.parsed.info.owner, amount: BigInt(v.data.parsed.info.tokenAmount.amount) })));
     return { slot, accounts: out };
   }
   return null;
+}
+
+/** 05-I: finalized-only cutoff RPC adapter. undefined = RPC failure (→ HOLD), null = genuinely absent block time. */
+export function cutoffDeps(rpc: Rpc): CutoffDeps {
+  return {
+    finalizedHead: async () => { try { return (await rpc("getSlot", [{ commitment: "finalized" }])) as number; } catch { return null; } },
+    produced: async (from, to) => { try { return (await rpc("getBlocks", [from, to, { commitment: "finalized" }])) as number[]; } catch { return null; } },
+    blockTime: async (slot) => { try { return (await rpc("getBlockTime", [slot])) as number | null; } catch (e) { return /not available|skipped|-32009|-32004/i.test(String(e)) ? null : undefined; } },
+  };
 }

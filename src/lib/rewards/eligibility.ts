@@ -11,7 +11,7 @@ import { proRata } from "./economics";
 export const TOKEN_PROGRAMS = { spl: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", token2022: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" } as const;
 export const BURN_ADDRESSES = ["1nc1nerator11111111111111111111111111111111"] as const;
 
-export type ExclusionConfig = { version: string; approved: boolean; poolVaults: string[]; treasuries: string[]; reserves: string[]; resolvedOwners: Record<string, "ELIGIBLE" | "EXCLUDED"> };
+export type ExclusionConfig = { version: string; approved: boolean; poolVaults: string[]; treasuries: string[]; reserves: string[]; deployer?: string[]; extraBurn?: string[]; resolvedOwners: Record<string, "ELIGIBLE" | "EXCLUDED"> };
 
 export type HolderAccount = {
   account: string; mint: string; tokenProgram: string; owner: string; amount: bigint; slot: number;
@@ -53,6 +53,8 @@ export function buildEligibility(input: SnapshotInput, cfg: ExclusionConfig): El
   for (const x of cfg.treasuries) excludedSet.set(x, "mcpx_treasury");
   for (const x of cfg.reserves) excludedSet.set(x, "mcpx_reserve");
   for (const x of BURN_ADDRESSES) excludedSet.set(x, "burn");
+  for (const x of cfg.extraBurn ?? []) excludedSet.set(x, "burn");
+  for (const x of cfg.deployer ?? []) excludedSet.set(x, "native_deployer");
 
   const sum = (m: Map<string, bigint>, k: string, v: bigint) => m.set(k, (m.get(k) ?? 0n) + v);
   const elig = new Map<string, bigint>(), excl = new Map<string, bigint>(), amb = new Map<string, bigint>();
