@@ -7,9 +7,12 @@
 // The token-balance replay (pre/postTokenBalances) is a different data path; equality of the two is the check.
 // Any token instruction we cannot classify → UNKNOWN → the snapshot is held (never assumed zero).
 export const TOKEN_PROGRAM_IDS = new Set(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"]);
-const SUPPLY_NEUTRAL = new Set([0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 44]);
-// 8-byte interface discriminators (sha256("spl_token_metadata_interface:*") / group interface) — supply neutral.
-const IFACE = new Set(["d2e11ea258b84d8d", "82442a6d3412ceff", "7558f544d6ab9218", "7f5fb8473f234d51", "7c700be0442515a9", "580dd555ceb6532e", "6c25ab8ff81e126e", "a1695801edddd8cb", "9820deb0dfed7486"]);
+// Token-2022 TokenInstruction tags that never change supply (0..44 minus MintTo 7, Burn 8, MintToChecked 14, BurnChecked 15,
+// and minus 42 ConfidentialMintBurnExtension, which changes supply in a way we cannot value → UNKNOWN).
+const SUPPLY_NEUTRAL = new Set([0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44]);
+// 8-byte interface discriminators: sha256("spl_token_metadata_interface:{initialize_account,update_field,remove_key,update_the_authority,emit}")
+// and sha256("spl_token_group_interface:{initialize_group,update_group_max_size,update_group_authority,initialize_member}") — supply neutral.
+const IFACE = new Set(["d2e11ea258b84d8d", "82442a6d3412ceff", "7558f544d6ab9218", "d7e4a6e45464567b", "7c700be0442515a9", "580dd555ceb6532e", "6c25ab8ff81e126e", "4396f4c851252337", "9820deb0dfed7486"]);
 
 const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 export function b58decode(s: string): Uint8Array {
@@ -26,13 +29,17 @@ export type RawTx = { slot: number; transaction: { message: { accountKeys: strin
   meta: { err: unknown; innerInstructions?: { instructions: RawIx[] }[] | null; loadedAddresses?: { writable: string[]; readonly: string[] } } };
 
 /** Net change in `mint` supply caused by one finalized tx. Failed txs change nothing. */
-export function supplyDelta(tx: RawTx, mint: string): bigint | { unknown: string } {
+/**
+ * Only instructions of the mint's OWN token program can change its supply (a mint account is owned by exactly one
+ * program), so other token programs' instructions (e.g. legacy-SPL p-token tags on wSOL accounts) are ignored.
+ */
+export function supplyDelta(tx: RawTx, mint: string, mintProgram = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"): bigint | { unknown: string } {
   if (tx.meta.err !== null) return 0n;
   const keys = [...tx.transaction.message.accountKeys, ...(tx.meta.loadedAddresses?.writable ?? []), ...(tx.meta.loadedAddresses?.readonly ?? [])];
   const all = [...tx.transaction.message.instructions, ...(tx.meta.innerInstructions ?? []).flatMap((g) => g.instructions)];
   let delta = 0n;
   for (const ix of all) {
-    if (!TOKEN_PROGRAM_IDS.has(keys[ix.programIdIndex]!)) continue;
+    if (keys[ix.programIdIndex] !== mintProgram) continue;
     const d = b58decode(ix.data); const tag = d[0];
     if (tag === undefined) return { unknown: "empty_token_ix" };
     if (d.length >= 8 && IFACE.has(hex8(d))) continue;
