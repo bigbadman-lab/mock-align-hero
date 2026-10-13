@@ -10,6 +10,7 @@ import { signerStartupGate, SIGNER_SECRET_ENV } from "../../../src/lib/rewards/n
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
+import { windowPayableForPlanning } from "../../../src/lib/rewards/recovery.pg";
 import { pipelineStatus } from "../../../src/lib/rewards/cutoff-snapshot";
 import { policyFor, policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
 import { address, isOffCurveAddress } from "@solana/addresses"; // address-only; keeps web3.js (send/sign code) out of the bundle
@@ -107,6 +108,7 @@ async function main() {
         // frozen window snapshot only (never current balances); live payouts stay impossible in DRY_RUN
         snapshot: async (windowEnd: number) => { const w = windowEnd - 300;
           if (!cfg.mint || blockers.includes("SCHEMA_0010_NOT_APPLIED")) return null;
+          if (!(await windowPayableForPlanning(db, cfg.mint, w))) return null; // 05-I.1: any open hold blocks planning
           const f = await loadFrozen(db, cfg.mint, w); if (!f || f.completeness !== "COMPLETE") return null;
           const holders = f.owners.filter((o) => o.class === "ELIGIBLE").map((o) => ({ owner: o.owner, amount: o.amount }));
           const excluded = f.owners.filter((o) => o.class === "EXCLUDED").map((o) => ({ owner: o.owner, amount: o.amount, why: o.reason ?? "" }));
