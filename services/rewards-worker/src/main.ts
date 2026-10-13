@@ -7,6 +7,8 @@ import { pgStore, type Db } from "../../../src/lib/rewards/store.pg";
 import { unavailableHistory } from "../../../src/lib/rewards/holder-history";
 import { EPOCH_SECONDS } from "../../../src/lib/rewards/epochs";
 import { signerStartupGate, SIGNER_SECRET_ENV } from "../../../src/lib/rewards/native-single";
+import { syncHolders } from "./holder-sync";
+import { heliusRpc, type Meter } from "./helius-history";
 
 const env = (k: string) => process.env[k]?.trim() || null;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "mcpx-rewards-worker", at: new Date().toISOString(), ...o }));
@@ -70,6 +72,13 @@ async function main() {
   while (!stopping) {
     const correlationId = crypto.randomUUID();
     try {
+      // 05-H: read-only holder-index sync (writes only mcpx_rw_hix_*). Gaps keep snapshots blocked.
+      if (cfg.mint) {
+        const meter: Meter = {};
+        const anchor = env("MCPX_NATIVE_ANCHOR_SLOT");
+        const h = await syncHolders(db, heliusRpc(env("MCPX_REWARDS_RPC_URL")!, meter), meter, cfg.mint, anchor === null ? null : Number(anchor));
+        log({ event: "holder_sync", correlationId, ...h, meter });
+      }
       const out = await runPass(store, cfg, {
         workerId, now: Math.floor(Date.now() / 1000), leaseSeconds: 60, genesisWindow: genesis,
         finalizedBlockTime: await finalizedBlockTime(env("MCPX_REWARDS_RPC_URL")!),

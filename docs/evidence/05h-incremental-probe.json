@@ -1,0 +1,25 @@
+{
+  "fromSlot": 456395489,
+  "toSlot": 456397928,
+  "newMintTxs": 51,
+  "replayError": null,
+  "knownAccounts": 424,
+  "diffsAfterMintFeed": 0,
+  "targetedTxsFetched": 0,
+  "diffsAfterRepair": 0,
+  "meter": {
+    "getMultipleAccounts": {
+      "calls": 5,
+      "items": 0
+    },
+    "getTransactionsForAddress": {
+      "calls": 77,
+      "items": 0
+    },
+    "gTFA:full": {
+      "calls": 77,
+      "items": 7544
+    }
+  },
+  "note": "full-history probe re-queried; a production worker only fetches slot > checkpoint (fullHistory here re-reads from creation)"
+}

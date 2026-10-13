@@ -1,0 +1,11 @@
+{
+  "watchedAddresses": 1,
+  "seconds": 90,
+  "messages": 0,
+  "bytes": 41,
+  "credits": 0.00082,
+  "slotRange": null,
+  "startSlot": 456397272,
+  "endSlot": 456397780,
+  "inHistoryButNotStreamed": 1
+}
