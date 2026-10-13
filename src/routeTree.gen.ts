@@ -16,6 +16,7 @@ import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as PairedRouteImport } from './routes/paired'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
+import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
@@ -71,6 +72,11 @@ const McpIndexRoute = McpIndexRouteImport.update({
 const McpSlugRoute = McpSlugRouteImport.update({
   id: '/mcp/$slug',
   path: '/mcp/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
+  id: '/templates/$templateId',
+  path: '/templates/$templateId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsAccountCheckerRoute = ToolsAccountCheckerRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/mcp/$slug'
+    | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/mcp/$slug'
+    | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/mcp/$slug'
+    | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/supply-monitor'
     | '/tools/token-scanner'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   PairedRoute: typeof PairedRoute
   McpSlugRoute: typeof McpSlugRoute
+  TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
@@ -448,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp/$slug'
       fullPath: '/mcp/$slug'
       preLoaderRoute: typeof McpSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/$templateId': {
+      id: '/templates/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof TemplatesTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/account-checker': {
@@ -607,6 +627,7 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   PairedRoute: PairedRoute,
   McpSlugRoute: McpSlugRoute,
+  TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,
