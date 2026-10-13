@@ -127,6 +127,13 @@
       "when": 1791906340369,
       "tag": "0017_mcpx_rw_intents",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791908091086,
+      "tag": "0018_mcpx_rw_fee_backed_budget",
+      "breakpoints": true
     }
   ]
 }
