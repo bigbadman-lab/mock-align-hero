@@ -27,3 +27,5 @@
 - Product profiles: /mcp/$slug resolves slug → canonical mcp_creations.id via a server function (src/lib/product-profile.ts, injectable deps; production in product-profile.server.ts) that returns only an allowlisted profile — adapter describeSettings() text, never raw tool_config — and an endpoint URL only when the product is active and its adapter resolves, so public pages can never advertise an unusable MCP endpoint.
 
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (src/lib/templates.ts, explicit aliases); it fills an empty form once and never overrides a restored draft — URLs are hints, not draft data.
+- Launch: /launch never signs or sends.
+- Subdirectories with their own AGENTS.md (read before editing): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch.
