@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageContainer, PageHeader, StatusMessage, SectionHeading, RouteError, buttonOutline, buttonPrimary } from "@/components/mcpx/primitives";
-import { TEMPLATES } from "@/lib/templates";
+import { LIBRARY, TEMPLATES, resolveTemplateParam } from "@/lib/templates";
 import { ADAPTERS } from "@/lib/mcp-gateway/registry";
 import { WW_THRESHOLDS, WW_DEFAULT_THRESHOLD } from "@/lib/tools/whale-watch";
 import { useWallet } from "@/lib/wallet/context";
@@ -12,6 +12,8 @@ import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
 import { ArtworkPanel, MetadataPanel, SavedDrafts, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
 
 export const Route = createFileRoute("/launch")({
+  // ?template= is a hint only; it is resolved through resolveTemplateParam and never trusted as a draft field.
+  validateSearch: (s: Record<string, unknown>): { template?: string } => (typeof s["template"] === "string" ? { template: s["template"] as string } : {}),
   head: () => ({
     meta: [
       { title: "Launch preparation — MCPX" },
@@ -72,11 +74,21 @@ function Launch() {
   const [review, setReview] = useState<{ draft: Draft; wallet: string | null } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
+  const search = Route.useSearch();
+  const param = useMemo(() => resolveTemplateParam(search.template), [search.template]);
+  // Precedence: a restored draft or the user's own choice always wins; the URL only fills an untouched, empty form once.
+  const urlApplied = useRef(false);
+  const [toolNameTouched, setToolNameTouched] = useState(false);
+  useEffect(() => {
+    if (urlApplied.current || param.kind !== "launchable") return;
+    urlApplied.current = true;
+    setInput((p) => (p.templateId ? p : { ...p, templateId: param.id, settings: param.id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {} }));
+  }, [param]);
   const drafts = useDrafts(session.s === "signed_in" ? session.wallet : null);
   const [saved, setSaved] = useState<DraftView | null>(null);
   const savedJson = saved ? JSON.stringify(saved.input) : null;
   const dirty = savedJson !== JSON.stringify(input);
-  const openDraft = (d: DraftView) => { setSaved(d); setInput(d.input); setErrors({}); setReview(null); setNotice(null); };
+  const openDraft = (d: DraftView) => { urlApplied.current = true; setToolNameTouched(!!d.input.productName); setSaved(d); setInput(d.input); setErrors({}); setReview(null); setNotice(null); };
   const onSave = async () => {
     const r = validateDraft(input);
     if (!r.ok) { setErrors(r.errors); requestAnimationFrame(() => errorRef.current?.focus()); return; }
@@ -100,6 +112,10 @@ function Launch() {
   const set = <K extends keyof DraftInput>(k: K, v: DraftInput[K]) => {
     setInput((p) => ({ ...p, [k]: v }));
     setErrors((p) => ({ ...p, [k]: undefined }));
+  };
+  const setTokenName = (v: string) => {
+    setInput((p) => ({ ...p, tokenName: v, productName: toolNameTouched ? p.productName : v.slice(0, LIMITS.productNameMax) }));
+    setErrors((p) => ({ ...p, tokenName: undefined, productName: toolNameTouched ? p.productName : undefined }));
   };
   const pickTemplate = (id: string) => {
     setInput((p) => ({ ...p, templateId: id, settings: id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {} }));
@@ -165,50 +181,66 @@ function Launch() {
               </div>
             )}
 
-            <fieldset>
-              <legend className="text-sm font-medium text-foreground">Template</legend>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {TEMPLATES.map((t) => (
-                  <label key={t.id} className={`cursor-pointer rounded-lg border p-4 text-sm focus-within:ring-2 focus-within:ring-ring ${input.templateId === t.id ? "border-primary bg-surface-2" : "border-border bg-card"}`}>
-                    <input type="radio" name="template" value={t.id} checked={input.templateId === t.id} onChange={() => pickTemplate(t.id)} className="sr-only" />
-                    <span className="block text-foreground">{t.name}</span>
-                    <span className="mt-1 block text-muted-foreground">{t.purpose}</span>
-                  </label>
-                ))}
-              </div>
-              <FieldError id="templateId" msg={errors.templateId} />
-            </fieldset>
-
-            {input.templateId && (
-              <div className="rounded-lg border border-border bg-card p-4 text-sm">
-                <p className="text-foreground">Template settings</p>
-                {templateSettingsMode(input.templateId) === "fixed" && input.templateId === "whale-watch" ? (
-                  <label className="mt-3 block">
-                    <span className="text-muted-foreground">Minimum transfer reported (fixed for every caller)</span>
-                    <select className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground" value={input.settings["minLamports"] ?? ""} onChange={(e) => set("settings", { minLamports: e.target.value })} aria-describedby="settings-err">
-                      {WW_THRESHOLDS.map((t) => <option key={t.lamports} value={t.lamports}>{t.label}</option>)}
-                    </select>
-                  </label>
-                ) : (
-                  <p className="mt-1 text-muted-foreground">{templateSettingsMode(input.templateId) === "none" ? "No configurable settings: every caller gets the same read." : "No product settings yet — this template isn't available as an MCP product today."}</p>
-                )}
-                <FieldError id="settings" msg={errors.settings} />
-              </div>
+            {param.kind === "unknown" && !saved && (
+              <StatusMessage tone="warning" title="Template link not recognised">The link asked for a template that doesn't exist. Choose one of the templates below.</StatusMessage>
+            )}
+            {param.kind === "not_launchable" && !saved && (
+              <StatusMessage tone="warning" title={`${param.name} can't be launched yet`}>This template is planned and has no working tool, so it can't be paired with a token. Choose an available template below.</StatusMessage>
             )}
 
-            <div className="grid gap-6 sm:grid-cols-2">
-              <TextField id="productName" label="Product name" hint={`Up to ${LIMITS.productNameMax} characters.`} value={input.productName} onChange={(v) => set("productName", v)} err={errors.productName} />
-              <TextField id="tokenName" label="Token name" hint={`Up to ${LIMITS.tokenNameBytes} bytes. ${new TextEncoder().encode(input.tokenName).length}/${LIMITS.tokenNameBytes}`} value={input.tokenName} onChange={(v) => set("tokenName", v)} err={errors.tokenName} />
-              <TextField id="symbol" label="Token symbol" hint="1–10 letters or numbers." value={input.symbol} onChange={(v) => set("symbol", v.toUpperCase())} err={errors.symbol} mono />
+            <section aria-labelledby="sec-token" className="space-y-6 rounded-lg border border-border p-5">
+              <h3 id="sec-token" className="label-mono text-xs text-primary">1 · Token identity</h3>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <TextField id="tokenName" label="Token name" hint={`Up to ${LIMITS.tokenNameBytes} bytes. ${new TextEncoder().encode(input.tokenName).length}/${LIMITS.tokenNameBytes}`} value={input.tokenName} onChange={setTokenName} err={errors.tokenName} />
+                <TextField id="symbol" label="Token symbol" hint="1–10 letters or numbers." value={input.symbol} onChange={(v) => set("symbol", v.toUpperCase())} err={errors.symbol} mono />
+              </div>
+              <label className="block text-sm">
+                <span className="text-foreground">Description</span>
+                <textarea id="description" rows={4} value={input.description} onChange={(e) => set("description", e.target.value)} aria-invalid={!!errors.description} aria-describedby="description-hint description-err" className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground" />
+                <span id="description-hint" className="mt-1 block text-xs text-subtle">Up to {LIMITS.descriptionBytes} bytes. {new TextEncoder().encode(input.description.trim()).length}/{LIMITS.descriptionBytes}</span>
+                <FieldError id="description" msg={errors.description} />
+              </label>
               <TextField id="link" label="Project link (optional)" hint="One https:// link. MCPX never opens or fetches it." value={input.link} onChange={(v) => set("link", v)} err={errors.link} />
-            </div>
-            <label className="block text-sm">
-              <span className="text-foreground">Description</span>
-              <textarea id="description" rows={4} value={input.description} onChange={(e) => set("description", e.target.value)} aria-invalid={!!errors.description} aria-describedby="description-hint description-err" className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground" />
-              <span id="description-hint" className="mt-1 block text-xs text-subtle">Up to {LIMITS.descriptionBytes} bytes. {new TextEncoder().encode(input.description.trim()).length}/{LIMITS.descriptionBytes}</span>
-              <FieldError id="description" msg={errors.description} />
-            </label>
+            </section>
 
+            <section aria-labelledby="sec-tool" className="space-y-5 rounded-lg border border-border p-5">
+              <h3 id="sec-tool" className="label-mono text-xs text-primary">2 · MCP tool</h3>
+              <ToolPreview id={input.templateId} />
+              <label className="block text-sm">
+                <span className="text-foreground">{input.templateId ? "Change template" : "Template"}</span>
+                <select id="templateId" value={input.templateId} onChange={(e) => pickTemplate(e.target.value)} aria-invalid={!!errors.templateId} aria-describedby="templateId-hint templateId-err"
+                  className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground">
+                  <option value="" disabled>Choose a template…</option>
+                  {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{LIBRARY.find((x) => x.id === t.id)?.name ?? t.name}</option>)}
+                </select>
+                <span id="templateId-hint" className="mt-1 block text-xs text-subtle">Only templates with a working tool are listed. Changing template resets its settings.</span>
+                <FieldError id="templateId" msg={errors.templateId} />
+              </label>
+              <TextField id="productName" label="Tool name" hint={toolNameTouched ? `Up to ${LIMITS.productNameMax} characters.` : `Follows the token name until you edit it. Up to ${LIMITS.productNameMax} characters.`} value={input.productName} onChange={(v) => { setToolNameTouched(true); set("productName", v); }} err={errors.productName} />
+              {input.templateId && (
+                <div className="rounded-md border border-border bg-card p-4 text-sm">
+                  <p className="text-foreground">Tool settings</p>
+                  {templateSettingsMode(input.templateId) === "fixed" && input.templateId === "whale-watch" ? (
+                    <label className="mt-3 block">
+                      <span className="text-muted-foreground">Minimum transfer reported (fixed for every caller)</span>
+                      <select className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground" value={input.settings["minLamports"] ?? ""} onChange={(e) => set("settings", { minLamports: e.target.value })} aria-describedby="settings-err">
+                        {WW_THRESHOLDS.map((t) => <option key={t.lamports} value={t.lamports}>{t.label}</option>)}
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="mt-1 text-muted-foreground">{templateSettingsMode(input.templateId) === "none" ? "No configurable settings: every caller gets the same read." : "No product settings yet — this template isn't available as an MCP product today."}</p>
+                  )}
+                  <FieldError id="settings" msg={errors.settings} />
+                </div>
+              )}
+            </section>
+
+            <section aria-labelledby="sec-ai" className="rounded-lg border border-dashed border-border p-5 text-sm">
+              <h3 id="sec-ai" className="label-mono text-xs text-subtle">3 · AI enhancement · coming later</h3>
+              <p className="mt-2 text-muted-foreground">Optional creator-funded AI using your own provider key is planned. It isn't available yet and nothing here is collected.</p>
+            </section>
+
+            <h3 className="label-mono text-xs text-primary">4 · Artwork, wallet and fees</h3>
             <ArtworkPanel signedIn={session.s === "signed_in"} saved={saved} dirty={dirty} drafts={drafts} onSaved={(d) => { setSaved(d); setReview(null); }} />
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
@@ -283,5 +315,19 @@ function TextField(p: { id: string; label: string; hint: string; value: string; 
       <span id={`${p.id}-hint`} className="mt-1 block text-xs text-subtle">{p.hint}</span>
       <FieldError id={p.id} msg={p.err} />
     </label>
+  );
+}
+
+function ToolPreview({ id }: { id: string }) {
+  const t = LIBRARY.find((x) => x.id === id);
+  if (!t) return <p className="text-sm text-muted-foreground">No template selected yet.</p>;
+  return (
+    <div className="flex items-center gap-4 rounded-md border border-border bg-card p-3">
+      <img src={t.image} alt="" width={1024} height={640} loading="lazy" className="h-14 w-24 shrink-0 rounded object-cover" />
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{t.name} <span className="ml-1 font-mono text-[11px] text-subtle">{t.category}</span></p>
+        <p className="text-xs text-muted-foreground">{t.tagline} MCP: {t.mcpAdapter ? "adapter available" : "not available as an MCP product yet"}.</p>
+      </div>
+    </div>
   );
 }

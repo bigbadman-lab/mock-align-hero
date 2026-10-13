@@ -49,3 +49,27 @@ describe("free tests", () => {
     expect(bucketsFor("v1").map((b) => b.bucket)).not.toContain(freeTestBucket("whale_watch", "v1").bucket);
   });
 });
+
+import { resolveTemplateParam } from "@/lib/templates";
+describe("launch deep links", () => {
+  it("no or empty param means no preselection", () => {
+    expect(resolveTemplateParam(undefined)).toEqual({ kind: "none" });
+    expect(resolveTemplateParam("  ")).toEqual({ kind: "none" });
+    expect(resolveTemplateParam(42)).toEqual({ kind: "none" });
+  });
+  it("canonical ids preselect", () => {
+    expect(resolveTemplateParam("whale-watch")).toEqual({ kind: "launchable", id: "whale-watch" });
+  });
+  it("legacy transaction verifier spellings map to tx-verifier", () => {
+    for (const v of ["tx-verifier", "transaction-verifier", "transaction_verifier", "TX_VERIFIER"]) expect(resolveTemplateParam(v)).toEqual({ kind: "launchable", id: "tx-verifier" });
+  });
+  it("relay ids map to canonical ids", () => {
+    expect(resolveTemplateParam("wallet_inspector")).toEqual({ kind: "launchable", id: "wallet-inspector" });
+  });
+  it("planned templates are never launchable", () => {
+    expect(resolveTemplateParam("holder-intelligence").kind).toBe("not_launchable");
+  });
+  it("unknown values are reported, not guessed", () => {
+    expect(resolveTemplateParam("../etc").kind).toBe("unknown");
+  });
+});

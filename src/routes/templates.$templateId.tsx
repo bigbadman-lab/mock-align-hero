@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PageContainer, RouteError } from "@/components/mcpx/primitives";
-import { CapabilityRow, TemplateAction } from "@/components/mcpx/TemplateAvailability";
+import { CapabilityRow, LaunchLink, TemplateAction } from "@/components/mcpx/TemplateAvailability";
 import { LIBRARY, TEMPLATES } from "@/lib/templates";
 
 export const Route = createFileRoute("/templates/$templateId")({
@@ -57,7 +57,8 @@ function TemplatePage() {
           <section aria-label="Availability" className="mt-8 rounded-lg border border-border bg-card p-5">
             <h2 className="label-mono text-xs text-subtle">Available today</h2>
             <div className="mt-4"><CapabilityRow t={t} /></div>
-            <div className="mt-5 border-t border-border pt-4"><TemplateAction t={t} /></div>
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><TemplateAction t={t} /><LaunchLink t={t} /></div>
+            {t.tokenLaunch && <p className="mt-3 text-xs text-subtle">Launching opens a draft. Token creation is not available yet — nothing is created or signed.</p>}
           </section>
           <p className="mt-4 font-mono text-xs text-subtle">Template id: {t.id}</p>
         </div>
