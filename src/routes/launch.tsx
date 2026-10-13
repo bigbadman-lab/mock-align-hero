@@ -207,16 +207,25 @@ function Launch() {
             <section aria-labelledby="sec-tool" className="space-y-5 rounded-lg border border-border p-5">
               <h3 id="sec-tool" className="label-mono text-xs text-primary">2 · MCP tool</h3>
               <ToolPreview id={input.templateId} />
-              <label className="block text-sm">
-                <span className="text-foreground">{input.templateId ? "Change template" : "Template"}</span>
-                <select id="templateId" value={input.templateId} onChange={(e) => pickTemplate(e.target.value)} aria-invalid={!!errors.templateId} aria-describedby="templateId-hint templateId-err"
-                  className="mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-foreground">
-                  <option value="" disabled>Choose a template…</option>
-                  {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{LIBRARY.find((x) => x.id === t.id)?.name ?? t.name}</option>)}
-                </select>
-                <span id="templateId-hint" className="mt-1 block text-xs text-subtle">Only templates with a working tool are listed. Changing template resets its settings.</span>
+              <fieldset aria-describedby="templateId-hint templateId-err">
+                <legend className="text-sm text-foreground">{input.templateId ? "Change template" : "Template"}</legend>
+                <div role="radiogroup" aria-label="Template" className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {TEMPLATES.map((t) => {
+                    const lib = LIBRARY.find((x) => x.id === t.id);
+                    const selected = input.templateId === t.id;
+                    return (
+                      <button key={t.id} type="button" role="radio" aria-checked={selected} onClick={() => pickTemplate(t.id)}
+                        className={`group rounded-md border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selected ? "border-primary bg-primary/10" : "border-border bg-card hover:border-border-strong"}`}>
+                        <img src={lib?.image} alt="" width={1024} height={640} loading="lazy" className="aspect-[16/10] w-full rounded object-cover" />
+                        <span className={`mt-2 block truncate text-xs font-medium ${selected ? "text-primary" : "text-foreground"}`}>{lib?.name ?? t.name}</span>
+                        <span className="block font-mono text-[10px] text-subtle">{lib?.category}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <span id="templateId-hint" className="mt-2 block text-xs text-subtle">Only templates with a working tool are listed. Changing template resets its settings.</span>
                 <FieldError id="templateId" msg={errors.templateId} />
-              </label>
+              </fieldset>
               <TextField id="productName" label="Tool name" hint={toolNameTouched ? `Up to ${LIMITS.productNameMax} characters.` : `Follows the token name until you edit it. Up to ${LIMITS.productNameMax} characters.`} value={input.productName} onChange={(v) => { setToolNameTouched(true); set("productName", v); }} err={errors.productName} />
               <label className="block text-sm">
                 <span className="text-foreground">Tool description (optional)</span>
