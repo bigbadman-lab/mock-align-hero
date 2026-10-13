@@ -231,6 +231,225 @@ export type Database = {
           },
         ]
       }
+      mcpx_ai_audit: {
+        Row: {
+          action: string
+          actor_ref: string
+          at: string
+          id: number
+          integration_id: string
+          revision: number
+        }
+        Insert: {
+          action: string
+          actor_ref: string
+          at?: string
+          id?: never
+          integration_id: string
+          revision: number
+        }
+        Update: {
+          action?: string
+          actor_ref?: string
+          at?: string
+          id?: never
+          integration_id?: string
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_ai_audit_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_ai_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_ai_credentials: {
+        Row: {
+          alg: string
+          ciphertext: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          integration_id: string
+          iv: string | null
+          kek_version: string
+          key_hint: string
+          retired_at: string | null
+          status: string
+          version: number
+        }
+        Insert: {
+          alg: string
+          ciphertext?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          integration_id: string
+          iv?: string | null
+          kek_version: string
+          key_hint: string
+          retired_at?: string | null
+          status?: string
+          version: number
+        }
+        Update: {
+          alg?: string
+          ciphertext?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          integration_id?: string
+          iv?: string | null
+          kek_version?: string
+          key_hint?: string
+          retired_at?: string | null
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_ai_credentials_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_ai_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_ai_integrations: {
+        Row: {
+          created_at: string
+          creation_id: string
+          creator_wallet: string
+          enabled: boolean
+          id: string
+          max_concurrency: number
+          max_input_tokens: number
+          max_output_tokens: number
+          max_per_day: number
+          max_per_minute: number
+          model: string
+          provider: string
+          revision: number
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creation_id: string
+          creator_wallet: string
+          enabled?: boolean
+          id?: string
+          max_concurrency?: number
+          max_input_tokens?: number
+          max_output_tokens?: number
+          max_per_day?: number
+          max_per_minute?: number
+          model: string
+          provider: string
+          revision?: number
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creation_id?: string
+          creator_wallet?: string
+          enabled?: boolean
+          id?: string
+          max_concurrency?: number
+          max_input_tokens?: number
+          max_output_tokens?: number
+          max_per_day?: number
+          max_per_minute?: number
+          model?: string
+          provider?: string
+          revision?: number
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_ai_integrations_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: true
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_ai_usage: {
+        Row: {
+          created_at: string
+          credential_id: string
+          est_cost_micros: number | null
+          id: string
+          integration_id: string
+          lease_until: string
+          model: string
+          request_ref: string
+          reserved_input: number
+          reserved_output: number
+          settled_at: string | null
+          status: string
+          used_input: number | null
+          used_output: number | null
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          est_cost_micros?: number | null
+          id?: string
+          integration_id: string
+          lease_until: string
+          model: string
+          request_ref: string
+          reserved_input: number
+          reserved_output: number
+          settled_at?: string | null
+          status?: string
+          used_input?: number | null
+          used_output?: number | null
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          est_cost_micros?: number | null
+          id?: string
+          integration_id?: string
+          lease_until?: string
+          model?: string
+          request_ref?: string
+          reserved_input?: number
+          reserved_output?: number
+          settled_at?: string | null
+          status?: string
+          used_input?: number | null
+          used_output?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_ai_usage_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_ai_credentials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcpx_ai_usage_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_ai_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcpx_auth_challenges: {
         Row: {
           consumed_at: string | null
@@ -1617,6 +1836,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      mcpx_ai_admit: {
+        Args: {
+          _creation: string
+          _credential: string
+          _in: number
+          _out: number
+          _ref: string
+        }
+        Returns: string
+      }
+      mcpx_ai_put_credential: {
+        Args: {
+          _creation: string
+          _ct: string
+          _expected_rev: number
+          _hint: string
+          _idem: string
+          _iv: string
+          _kek: string
+          _mode: string
+          _model: string
+          _provider: string
+          _wallet: string
+        }
+        Returns: string
+      }
+      mcpx_ai_revoke: {
+        Args: { _creation: string; _expected_rev: number; _wallet: string }
+        Returns: string
+      }
+      mcpx_ai_settle: {
+        Args: {
+          _cost: number
+          _in: number
+          _out: number
+          _status: string
+          _usage: string
+        }
+        Returns: boolean
+      }
       mcpx_free_test_take: {
         Args: { _bucket: string; _limit: number }
         Returns: boolean
