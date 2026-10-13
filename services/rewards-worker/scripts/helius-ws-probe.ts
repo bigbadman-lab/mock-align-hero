@@ -5,9 +5,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { heliusRpc, signatures, type Meter } from "../src/helius-history";
 const KEY = process.env.MCPX_HELIUS_TEST_API_KEY!; const MINT = process.argv[2] ?? "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump";
 const SECS = Number(process.argv[3] ?? 90);
-const st = JSON.parse(readFileSync("/tmp/h/state.json", "utf8"));
-const bal = new Map<string, bigint>(); for (const t of st.txs) for (const b of t.post) bal.set(b.account, BigInt(b.amount));
-const watch = [MINT, ...[...bal].filter(([, v]) => v > 0n).map(([k]) => k)];
+const meter0: Meter = {}; const rpc0 = heliusRpc(`https://mainnet.helius-rpc.com/?api-key=${KEY}`, meter0);
+let watch = [MINT];
+try { const st = JSON.parse(readFileSync("/tmp/h/state.json", "utf8")); if (process.argv[4] !== "mintonly") { const bal = new Map<string, bigint>(); for (const t of st.txs) for (const b of t.post) bal.set(b.account, BigInt(b.amount)); watch = [MINT, ...[...bal].filter(([, v]) => v > 0n).map(([k]) => k)]; } } catch {}
+const startSlot: number = await rpc0("getSlot", [{ commitment: "finalized" }]);
 const seen = new Map<string, number>(); let bytes = 0, msgs = 0, minSlot = Infinity, maxSlot = 0;
 const ws = new WebSocket(`wss://mainnet.helius-rpc.com/?api-key=${KEY}`);
 const done = new Promise<void>((res) => {
@@ -23,12 +24,13 @@ await done;
 const meter: Meter = {}; const rpc = heliusRpc(`https://mainnet.helius-rpc.com/?api-key=${KEY}`, meter);
 await new Promise((r) => setTimeout(r, 20_000)); // let the range finalize everywhere
 let missing: string[] = [];
-if (msgs) {
-  const lo = minSlot, hi = maxSlot;
+const endSlot: number = await rpc0("getSlot", [{ commitment: "finalized" }]);
+{
+  const lo = startSlot + 1, hi = Math.min(endSlot - 40, msgs ? maxSlot : endSlot - 40);
   const ref = new Set<string>();
   for (const a of watch) for (const s of await signatures(rpc, meter, a, hi)) if (s.slot >= lo) ref.add(s.signature);
   missing = [...ref].filter((s) => !seen.has(s));
 }
-const out = { watchedAddresses: watch.length, seconds: SECS, messages: msgs, bytes, credits: (bytes / 100_000) * 2, slotRange: msgs ? [minSlot, maxSlot] : null,
+const out = { watchedAddresses: watch.length, seconds: SECS, messages: msgs, bytes, credits: (bytes / 100_000) * 2, slotRange: msgs ? [minSlot, maxSlot] : null, startSlot, endSlot,
   inHistoryButNotStreamed: missing.length };
 writeFileSync("/tmp/h/ws.json", JSON.stringify(out, null, 2)); console.log(JSON.stringify(out, null, 2));
