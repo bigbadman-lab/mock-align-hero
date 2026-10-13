@@ -1,11 +1,11 @@
 // Shared form + status + error shell for single-mint tools (Holder Intelligence, Token Risk Analyst).
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState, type ReactNode } from "react";
 import { FreeLimitNotice } from "@/components/mcpx/FreeLimitNotice";
 import { PageContainer, PageHeader, StatusMessage, buttonPrimary } from "@/components/mcpx/primitives";
 import { isValidSolanaAddress } from "@/lib/tools/wallet-inspector";
-import type { ToolStatus } from "@/lib/tools/status";
+import type { holderIntelligenceStatusQuery } from "@/lib/tools/status";
 
 type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
 const ERROR_TEXT: Record<Kind, string> = {
@@ -32,7 +32,7 @@ export const NOT_MINT: Record<string, string> = {
 
 export function MintToolShell<R>({ id, name, label, intro, note, buttonText, endpoint, timeoutMs, statusQuery, render }: {
   id: string; name: string; label: string; intro: string; note: ReactNode; buttonText: string; endpoint: string; timeoutMs: number;
-  statusQuery: UseQueryOptions<ToolStatus, Error, ToolStatus, readonly unknown[]>; render: (r: R) => ReactNode;
+  statusQuery: typeof holderIntelligenceStatusQuery; render: (r: R) => ReactNode;
 }) {
   const status = useQuery(statusQuery);
   const [mint, setMint] = useState("");
