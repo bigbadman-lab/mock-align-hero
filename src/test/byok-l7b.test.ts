@@ -186,8 +186,8 @@ d("L7-B BYOK management (throwaway Postgres, mocked OpenAI)", () => {
     const [{ id }] = await a.unsafe("select id from public.mcpx_ai_integrations where creation_id = $1", [PA]);
     const [{ cid }] = await a.unsafe("select id as cid from public.mcpx_ai_credentials where integration_id = $1 limit 1", [id]);
     const ins = (age: string, st: string, ref: string) => a.unsafe(
-      `insert into public.mcpx_ai_usage (integration_id, credential_id, request_ref, status, reserved_input, reserved_output, created_at, lease_until)
-       values ($1, $2, $3, $4, 1, 1, now() - $5::interval, now())`, [id, cid, ref, st, age]);
+      `insert into public.mcpx_ai_usage (integration_id, credential_id, request_ref, model, status, reserved_input, reserved_output, created_at, lease_until)
+       values ($1, $2, $3, 'gpt-4o-mini', $4, 1, 1, now() - $5::interval, now())`, [id, cid, ref, st, age]);
     for (let n = 0; n < 5; n++) await ins("91 days", "settled", `old_${n}`.padEnd(16, "x"));
     await ins("120 days", "reserved", "old_reserved_xxxxx");
     await ins("89 days", "settled", "recent_xxxxxxxxxx");
