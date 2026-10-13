@@ -430,6 +430,7 @@ export type Database = {
           template_id: string
           template_version: number
           token_name: string
+          tool_description: string
           updated_at: string
         }
         Insert: {
@@ -452,6 +453,7 @@ export type Database = {
           template_id: string
           template_version?: number
           token_name: string
+          tool_description?: string
           updated_at?: string
         }
         Update: {
@@ -474,6 +476,7 @@ export type Database = {
           template_id?: string
           template_version?: number
           token_name?: string
+          tool_description?: string
           updated_at?: string
         }
         Relationships: []
