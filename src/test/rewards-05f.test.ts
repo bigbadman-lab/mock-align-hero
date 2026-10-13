@@ -7,7 +7,7 @@ import { decodeFeeEvents } from "@/lib/rewards/pump-events";
 import { decodeSharing } from "@/lib/rewards/pump-sharing";
 import big from "./fixtures/pump-sharing/sh_4S2UVibM.json";
 
-const A = (n: number) => ("FX" + String(n).padStart(3, "0")).padEnd(32, "1");
+const A = (n: number) => ("FXq" + "abcdefghjk"[n]).padEnd(32, "1"); // fixture labels, not real addresses
 const now = new Date("2026-10-13T00:00:00Z");
 
 describe("05-F treasury config", () => {
