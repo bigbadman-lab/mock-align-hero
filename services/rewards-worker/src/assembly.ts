@@ -90,7 +90,7 @@ export async function curveBuyInstructions(conn: Connection, mint: PublicKey, bu
   const st = await sdk.fetchBuyState(mint, buyer, TOKEN_2022_PROGRAM_ID);
   if (st.bondingCurve.complete) return { kind: "BLOCKED" as const, reason: "CURVE_COMPLETE_AMM_BUY_ROUTE_NOT_IMPLEMENTED" };
   const sol = new BN(b.budgetLamports.toString());
-  const out = getBuyTokenAmountFromSolAmount({ global, feeConfig, mintSupply: st.bondingCurve.tokenTotalSupply, bondingCurve: st.bondingCurve, amount: sol });
+  const out = getBuyTokenAmountFromSolAmount({ global, feeConfig, mintSupply: st.bondingCurve.tokenTotalSupply, bondingCurve: st.bondingCurve, amount: sol, quoteMint: st.quoteMint ?? NATIVE_MINT });
   const expected = BigInt(out.toString());
   if (expected < b.minOutTokens) return { kind: "BLOCKED" as const, reason: "QUOTE_BELOW_MIN_OUT" };
   const ixs = await PUMP_SDK.buyInstructions({ global, bondingCurveAccountInfo: st.bondingCurveAccountInfo, bondingCurve: st.bondingCurve,
