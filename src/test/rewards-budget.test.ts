@@ -55,7 +55,7 @@ describe("fee-backed budgets", () => {
     expect(await r("s1", "SOL_PAYOUT", 3000n)).toBe("NEW");
     expect(await r("s2", "SOL_PAYOUT", 1n)).toBe("NO_SOL_BUDGET"); // buyback budget not borrowed
     expect(await r("b1", "BUYBACK", 3000n, 4000n)).toBe("NEW");
-    expect(await r("b2", "BUYBACK", 0n, 1n)).toBe("NO_BUYBACK_BUDGET");
+    expect(await r("b2", "BUYBACK", 1n)).toBe("NO_BUYBACK_BUDGET");
     st.setState("s1", "EXPIRED_NOT_LANDED"); // provably expired frees budget, nothing else does
     expect(await r("s3", "SOL_PAYOUT", 3000n, 1n)).toBe("NO_OPS_RESERVE");
     expect(await r("s4", "SOL_PAYOUT", 3000n)).toBe("NEW");
