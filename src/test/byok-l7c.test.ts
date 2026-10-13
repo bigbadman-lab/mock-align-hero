@@ -82,7 +82,7 @@ d("L7-C product AI execution (throwaway Postgres, mocked OpenAI)", () => {
     for (const [i, id] of [PA, PB, PC].entries()) { const n = i + 1;
       await a.unsafe(`insert into public.mcp_creations (id, slug, template_id, template_version, display_name, ticker, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
         values ($1, $2, 'wallet-inspector', 1, 'P', 'P', $3, $4, 'So11111111111111111111111111111111111111112', 'solana-mainnet', $5, 1, now())`,
-        [id, `prod-${n}`, WALLETS[id], `${"M".repeat(42)}${n}x`.slice(0, 44), `${"S".repeat(87)}${n}`]);
+        [id, `prod-${n}`, WALLETS[id]!, `${"M".repeat(42)}${n}x`.slice(0, 44), `${"S".repeat(87)}${n}`]);
       await a.unsafe(`insert into public.mcp_product_configs (creation_id, template_id, template_version, lifecycle_state, activated_at) values ($1, 'wallet-inspector', '1.0.0', 'active', now())`, [id]);
     }
     await activate(PA, WA, KEY_A, 1);
