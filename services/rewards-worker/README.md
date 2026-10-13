@@ -6,6 +6,7 @@ Dry-run reward **planner** for native $MCP. No signing, sending, swapping, payou
 
 Build (Render root = repo root, because it bundles `src/lib/rewards`):
 `cd services/rewards-worker && npm ci && npm run build` · Start: `cd services/rewards-worker && npm start`
+The build script sets `NODE_PATH=./node_modules` so bundled site files' package imports (bs58, @solana/addresses) resolve from this package's own node_modules — the repo-root install is absent on Render.
 
 Environment (names only): `MCPX_REWARDS_MODE` (DRY_RUN), `MCPX_REWARDS_DB_URL`, `MCPX_REWARDS_RPC_URL`, `MCPX_NATIVE_MINT`, `MCPX_NATIVE_DEPLOYER_WALLET` (public address), `MCPX_NATIVE_ANCHOR_SLOT` (slot before $MCP creation; holder index starts empty there), `MCPX_REWARDS_EMERGENCY_STOP` (1 = no passes), `MCPX_REWARDS_GENESIS_WINDOW`, `MCPX_REWARDS_FINALITY_LAG_SECONDS` (30–3600, default 60), `MCPX_REWARDS_MIN_PAYABLE_LAMPORTS`, `MCPX_REWARDS_POLL_SECONDS` (10–300), `MCPX_REWARDS_MAX_WINDOWS_PER_PASS` (1–288).
 
