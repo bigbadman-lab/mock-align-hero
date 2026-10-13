@@ -79,7 +79,7 @@ d("L7-C product AI execution (throwaway Postgres, mocked OpenAI)", () => {
     await a.unsafe("do $$ begin create role anon; exception when others then null; end $$; do $$ begin create role authenticated; exception when others then null; end $$; do $$ begin create role service_role; exception when others then null; end $$;");
     for (const f of ["drizzle/migrations/0000_mcpx_01b_registry_outbox.sql", "drizzle/migrations/0002_mcpx_03b_product_configs.sql", "drizzle/migrations/0014_mcpx_l7a_byok.sql", "docs/pending-migrations/0015_mcpx_l7b_byok_health.sql"])
       await a.unsafe(readFileSync(f, "utf8").replace(/--> statement-breakpoint/g, ""));
-    for (const [n, id] of [PA, PB, PC].entries()) {
+    for (const [i, id] of [PA, PB, PC].entries()) { const n = i + 1;
       await a.unsafe(`insert into public.mcp_creations (id, slug, template_id, template_version, display_name, ticker, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
         values ($1, $2, 'wallet-inspector', 1, 'P', 'P', $3, $4, 'So11111111111111111111111111111111111111112', 'solana-mainnet', $5, 1, now())`,
         [id, `prod-${n}`, WALLETS[id], `${"M".repeat(42)}${n}x`.slice(0, 44), `${"S".repeat(87)}${n}`]);
