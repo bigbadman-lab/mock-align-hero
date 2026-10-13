@@ -81,3 +81,20 @@ export async function stateAtSameSlot(rpc: Rpc, mint: string, tokenProgram: stri
   }
   return null; // could not read both at one consistent finalized position
 }
+
+/**
+ * Cheap per-window completeness check: read every known open token account at one finalized context slot with
+ * getMultipleAccounts (1 credit / 100 accounts) and compare amount+owner with the replayed index at that slot.
+ * Any transition missed by the mint-referenced feed (plain Transfer, SetAuthority, Close) changes a known account
+ * and shows up here; only those accounts then need a per-account history fetch.
+ */
+export async function verifyKnownAccounts(rpc: Rpc, accounts: string[]) {
+  const out = new Map<string, { owner: string; amount: bigint } | null>(); let slot: number | null = null;
+  for (let i = 0; i < accounts.length; i += 100) {
+    const part = accounts.slice(i, i + 100);
+    const r = await rpc("getMultipleAccounts", [part, { commitment: "finalized", encoding: "jsonParsed", ...(slot ? { minContextSlot: slot } : {}) }]);
+    if (slot === null) slot = r.context.slot; else if (r.context.slot !== slot) return null; // inconsistent position → retry caller
+    r.value.forEach((v: any, k: number) => out.set(part[k]!, v ? { owner: v.data.parsed.info.owner, amount: BigInt(v.data.parsed.info.tokenAmount.amount) } : null));
+  }
+  return { slot: slot!, accounts: out };
+}
