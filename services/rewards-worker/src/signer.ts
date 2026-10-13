@@ -42,7 +42,8 @@ export type IntentStore = {
   reserve(i: { idempotencyKey: string; cycleId: string; kind: PlanKind; epoch: number; messageSha256: string; lamports: bigint; tokens: bigint; opsCostLamports: bigint; lastValidBlockHeight: number }): Promise<ReserveResult>;
   /** Committed + reserved spend in this cycle (lamports), excluding the plan being checked. */
   cycleSpent(cycleId: string): Promise<bigint>;
-  recordSigned(idempotencyKey: string, signature: string): Promise<void>;
+  /** SIGNED + exact signed bytes in ONE write, before any network call (migration 0019). */
+  recordSigned(idempotencyKey: string, signature: string, signedBase64: string): Promise<void>;
 };
 export type ReserveResult = "NEW" | "DUPLICATE" | "NO_SOL_BUDGET" | "NO_BUYBACK_BUDGET" | "NO_TOKEN_BUDGET" | "NO_OPS_RESERVE" | "NO_EVIDENCE";
 export type SignCtx = { limits: Limits | null; emergencyStop: boolean; currentBlockHeight: number | null; store: IntentStore | null;
@@ -173,8 +174,9 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
   const tx = new VersionedTransaction(msg);
   tx.sign([kp]);
   const signature = bs58.encode(tx.signatures[0]!);
-  try { await ctx.store.recordSigned(plan.idempotencyKey, signature); } catch { return no("SIGNATURE_NOT_RECORDED"); } // unrecorded → never send
-  return { ok: true, signature, signedBase64: Buffer.from(tx.serialize()).toString("base64") };
+  const signedBase64 = Buffer.from(tx.serialize()).toString("base64");
+  try { await ctx.store.recordSigned(plan.idempotencyKey, signature, signedBase64); } catch { return no("SIGNATURE_NOT_RECORDED"); } // unrecorded → never send
+  return { ok: true, signature, signedBase64 };
 }
 
 /** After a crash/timeout: what may happen to a signed intent. Only EXPIRED_NOT_LANDED allows a NEW plan (new key). */

@@ -2,11 +2,12 @@
 // (remoteDb) so the Render worker never holds database credentials. Signed ≠ paid: only finalize() with finalized
 // chain evidence can move an intent to LANDED / FAILED_ON_CHAIN / EXPIRED_NOT_LANDED.
 import type { IntentStore } from "./signer";
+import type { ExecStore, OpenIntent } from "./executor";
 import { runTx } from "../../../src/lib/rewards/store.pg";
 
 type Q = { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> };
 
-export function intentStore(db: Q, workerId: string): IntentStore & {
+export function intentStore(db: Q, workerId: string): IntentStore & Omit<ExecStore, "finalize"> & {
   open(): Promise<{ idempotencyKey: string; state: string; signature: string | null; lastValidBlockHeight: number }[]>;
   finalize(key: string, outcome: "LANDED" | "FAILED_ON_CHAIN" | "EXPIRED_NOT_LANDED", finalizedSlot: number, evidence: Record<string, unknown>): Promise<boolean>;
   abandonUnsigned(key: string): Promise<boolean>;
@@ -43,9 +44,9 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
         where cycle_id=$1 and state not in ('EXPIRED_NOT_LANDED','ABANDONED_UNSIGNED','FAILED_ON_CHAIN')`, [cycleId]);
       return BigInt(String(r.rows[0]?.["s"] ?? "0"));
     },
-    async recordSigned(key, signature) {
-      const r = await db.query(`update public.mcpx_rw_intents set state='SIGNED', signature=$2
-        where idempotency_key=$1 and state='RESERVED' and signature is null returning idempotency_key`, [key, signature]);
+    async recordSigned(key, signature, signedBase64) {
+      const r = await db.query(`update public.mcpx_rw_intents set state='SIGNED', signature=$2, signed_tx_base64=$3
+        where idempotency_key=$1 and state='RESERVED' and signature is null returning idempotency_key`, [key, signature, signedBase64]);
       if (r.rows.length !== 1) throw new Error("intent_not_reserved");
     },
     async open() {
@@ -57,6 +58,19 @@ export function intentStore(db: Q, workerId: string): IntentStore & {
       const r = await db.query(`update public.mcpx_rw_intents set state=$2, finalized_slot=$3, evidence=$4::jsonb
         where idempotency_key=$1 and state='SIGNED' returning idempotency_key`, [key, outcome, finalizedSlot, JSON.stringify(evidence)]);
       return r.rows.length === 1;
+    },
+    async markSent(key) {
+      const r = await db.query(`update public.mcpx_rw_intents set first_sent_at=coalesce(first_sent_at, now()), send_count=send_count+1
+        where idempotency_key=$1 and state='SIGNED' and signed_tx_base64 is not null returning idempotency_key`, [key]);
+      if (r.rows.length !== 1) throw new Error("intent_not_signed");
+    },
+    async openSigned(): Promise<OpenIntent[]> {
+      // Rows (recipients) are re-checked from the persisted plan fingerprint by the settlement verifier; the executor
+      // needs identity + exact bytes only.
+      const r = await db.query(`select idempotency_key, kind, signature, signed_tx_base64, last_valid_block_height::text h
+        from public.mcpx_rw_intents where state='SIGNED' and signed_tx_base64 is not null order by created_at`);
+      return r.rows.map((x) => ({ idempotencyKey: String(x["idempotency_key"]), kind: String(x["kind"]), signature: String(x["signature"]),
+        signedBase64: String(x["signed_tx_base64"]), lastValidBlockHeight: Number(x["h"]), rows: [] }));
     },
     async abandonUnsigned(key) {
       const r = await db.query(`update public.mcpx_rw_intents set state='ABANDONED_UNSIGNED'
