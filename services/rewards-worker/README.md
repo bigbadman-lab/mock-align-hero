@@ -31,3 +31,10 @@ Render environment now: `MCPX_REWARDS_MODE=DRY_RUN`, `MCPX_SITE_URL=https://mcpx
 lives in the site's `mcpx_rw_config` row; anchor slot, genesis window and deployer are derived from the mint's creation
 transaction unless set there. Setting the mint is the only go-live step. Operator recovery scripts still need a direct
 connection and are not part of the Render service.
+
+## Deployer signer (pre-launch, signing only — no sending)
+- `MCPX_DEPLOYER_PUBLIC_KEY` — deployer wallet address (public).
+- `MCPX_DEPLOYER_PRIVATE_KEY` — Render secret only. One base58 string (Phantom / Pump.fun "Export private key"). JSON byte arrays are rejected.
+- `MCPX_REWARDS_MAX_LAMPORTS_PER_TX`, `MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE`, `MCPX_REWARDS_MAX_TOKENS_PER_TX` — spend caps; missing → signing refused.
+- Remove `MCPX_NATIVE_DEPLOYER_PRIVATE_KEY` if present (old name; blocks the signer).
+- Startup logs `signer_status` with state MONITOR_ONLY / SIGNER_VALIDATED / EXECUTION_BLOCKED and the derived address only.
