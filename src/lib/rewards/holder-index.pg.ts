@@ -1,7 +1,7 @@
 // 05-H durable holder-index persistence (mcpx_rw_hix_* tables, service-role only). Worker/server only.
 // Each batch is one transaction: applied-tx rows (PK mint+signature) make replay idempotent; balances are only
 // written from a state whose applyTx succeeded; the checkpoint can only move forward.
-import type { Db } from "./store.pg";
+import { runTx, type Db, type Step } from "./store.pg";
 import { initIndex, type IndexState } from "./holder-index";
 
 export async function loadIndex(db: Db, mint: string): Promise<IndexState | null> {
@@ -19,26 +19,23 @@ export async function loadIndex(db: Db, mint: string): Promise<IndexState | null
 
 /** Persist a successfully applied batch. `txs` = the signatures applied since last save, `touched` = changed accounts. */
 export async function saveBatch(db: Db, s: IndexState, source: string, txs: { signature: string; slot: number; blockTime: number | null; failed: boolean }[], touched: Set<string>) {
-  await db.query("begin");
-  try {
-    await db.query(`insert into public.mcpx_rw_hix_checkpoints (mint, anchor_slot, covered_to_slot, source) values ($1,$2,$3,$4)
+  const steps: Step[] = [{ sql: `insert into public.mcpx_rw_hix_checkpoints (mint, anchor_slot, covered_to_slot, source) values ($1,$2,$3,$4)
       on conflict (mint) do update set covered_to_slot = greatest(public.mcpx_rw_hix_checkpoints.covered_to_slot, excluded.covered_to_slot), source = excluded.source, updated_at = now()`,
-      [s.mint, s.anchorSlot, s.coveredTo, source]);
-    for (const t of txs)
-      await db.query("insert into public.mcpx_rw_hix_applied_txs (mint, signature, slot, block_time, failed) values ($1,$2,$3,$4,$5) on conflict do nothing",
-        [s.mint, t.signature, t.slot, t.blockTime === null ? null : new Date(t.blockTime * 1000).toISOString(), t.failed]);
-    const last = txs[txs.length - 1];
-    for (const a of touched) {
-      const b = s.balances.get(a);
-      if (!b) await db.query("delete from public.mcpx_rw_hix_balances where mint=$1 and token_account=$2", [s.mint, a]);
-      else await db.query(`insert into public.mcpx_rw_hix_balances (mint, token_account, owner, amount, last_signature, last_slot) values ($1,$2,$3,$4,$5,$6)
-        on conflict (mint, token_account) do update set owner=excluded.owner, amount=excluded.amount, last_signature=excluded.last_signature, last_slot=excluded.last_slot`,
-        [s.mint, a, b.owner, b.amount.toString(), last?.signature ?? "anchor", last?.slot ?? s.anchorSlot]);
-    }
-    for (const g of s.gaps)
-      await db.query("insert into public.mcpx_rw_hix_gaps (mint, from_slot, to_slot, reason) values ($1,$2,$3,$4) on conflict do nothing", [s.mint, g.fromSlot, g.toSlot, g.reason]);
-    await db.query("commit");
-  } catch (e) { await db.query("rollback"); throw e; }
+    params: [s.mint, s.anchorSlot, s.coveredTo, source] }];
+  for (const t of txs)
+    steps.push({ sql: "insert into public.mcpx_rw_hix_applied_txs (mint, signature, slot, block_time, failed) values ($1,$2,$3,$4,$5) on conflict do nothing",
+      params: [s.mint, t.signature, t.slot, t.blockTime === null ? null : new Date(t.blockTime * 1000).toISOString(), t.failed] });
+  const last = txs[txs.length - 1];
+  for (const a of touched) {
+    const b = s.balances.get(a);
+    if (!b) steps.push({ sql: "delete from public.mcpx_rw_hix_balances where mint=$1 and token_account=$2", params: [s.mint, a] });
+    else steps.push({ sql: `insert into public.mcpx_rw_hix_balances (mint, token_account, owner, amount, last_signature, last_slot) values ($1,$2,$3,$4,$5,$6)
+      on conflict (mint, token_account) do update set owner=excluded.owner, amount=excluded.amount, last_signature=excluded.last_signature, last_slot=excluded.last_slot`,
+      params: [s.mint, a, b.owner, b.amount.toString(), last?.signature ?? "anchor", last?.slot ?? s.anchorSlot] });
+  }
+  for (const g of s.gaps)
+    steps.push({ sql: "insert into public.mcpx_rw_hix_gaps (mint, from_slot, to_slot, reason) values ($1,$2,$3,$4) on conflict do nothing", params: [s.mint, g.fromSlot, g.toSlot, g.reason] });
+  await runTx(db, steps);
 }
 
 export async function markGapRepaired(db: Db, mint: string, g: { fromSlot: number; toSlot: number }, source: string) {

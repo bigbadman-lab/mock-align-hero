@@ -46,6 +46,8 @@ import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
 import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/public/launch-assets.$'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
+import { Route as ApiPublicRewardsExecRouteImport } from './routes/api/public/rewards/exec'
+import { Route as ApiPublicRewardsStateRouteImport } from './routes/api/public/rewards/state'
 import { Route as ApiPublicMcpProductsCreationIdRouteImport } from './routes/api/public/mcp/products.$creationId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -242,6 +244,16 @@ const ApiPublicMcpPlatformDemoRoute =
     path: '/api/public/mcp/platform-demo',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicRewardsExecRoute = ApiPublicRewardsExecRouteImport.update({
+  id: '/api/public/rewards/exec',
+  path: '/api/public/rewards/exec',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicRewardsStateRoute = ApiPublicRewardsStateRouteImport.update({
+  id: '/api/public/rewards/state',
+  path: '/api/public/rewards/state',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMcpProductsCreationIdRoute =
   ApiPublicMcpProductsCreationIdRouteImport.update({
     id: '/api/public/mcp/products/$creationId',
@@ -287,6 +299,8 @@ export interface FileRoutesByFullPath {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesByTo {
@@ -327,6 +341,8 @@ export interface FileRoutesByTo {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesById {
@@ -368,6 +384,8 @@ export interface FileRoutesById {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
+  '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRouteTypes {
@@ -410,6 +428,8 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/rewards/exec'
+    | '/api/public/rewards/state'
     | '/api/public/mcp/products/$creationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -450,6 +470,8 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/rewards/exec'
+    | '/api/public/rewards/state'
     | '/api/public/mcp/products/$creationId'
   id:
     | '__root__'
@@ -490,6 +512,8 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
+    | '/api/public/rewards/exec'
+    | '/api/public/rewards/state'
     | '/api/public/mcp/products/$creationId'
   fileRoutesById: FileRoutesById
 }
@@ -531,6 +555,8 @@ export interface RootRouteChildren {
   ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
   ApiPublicLaunchAssetsSplatRoute: typeof ApiPublicLaunchAssetsSplatRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
+  ApiPublicRewardsExecRoute: typeof ApiPublicRewardsExecRoute
+  ApiPublicRewardsStateRoute: typeof ApiPublicRewardsStateRoute
   ApiPublicMcpProductsCreationIdRoute: typeof ApiPublicMcpProductsCreationIdRoute
 }
 
@@ -795,6 +821,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMcpPlatformDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rewards/exec': {
+      id: '/api/public/rewards/exec'
+      path: '/api/public/rewards/exec'
+      fullPath: '/api/public/rewards/exec'
+      preLoaderRoute: typeof ApiPublicRewardsExecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/rewards/state': {
+      id: '/api/public/rewards/state'
+      path: '/api/public/rewards/state'
+      fullPath: '/api/public/rewards/state'
+      preLoaderRoute: typeof ApiPublicRewardsStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mcp/products/$creationId': {
       id: '/api/public/mcp/products/$creationId'
       path: '/api/public/mcp/products/$creationId'
@@ -843,6 +883,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
   ApiPublicLaunchAssetsSplatRoute: ApiPublicLaunchAssetsSplatRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
+  ApiPublicRewardsExecRoute: ApiPublicRewardsExecRoute,
+  ApiPublicRewardsStateRoute: ApiPublicRewardsStateRoute,
   ApiPublicMcpProductsCreationIdRoute: ApiPublicMcpProductsCreationIdRoute,
 }
 export const routeTree = rootRouteImport
