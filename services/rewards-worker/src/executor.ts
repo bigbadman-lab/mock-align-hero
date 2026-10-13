@@ -10,7 +10,7 @@ export type Chain = {
   signatureStatus(sig: string): Promise<ChainStatus>;
   finalizedBlockHeight(): Promise<number | null>;
   /** Exact settlement proof from the finalized tx (balance deltas). Null = cannot prove → never LANDED. */
-  settlement(sig: string, plan: { kind: string; rows: readonly { owner: string; amount: bigint }[]; mint?: string }): Promise<Record<string, unknown> | null>;
+  settlement(sig: string, plan: { kind: string; idempotencyKey?: string; rows: readonly { owner: string; amount: bigint }[]; mint?: string }): Promise<Record<string, unknown> | null>;
 };
 export type Sender = { send(signedBase64: string): Promise<void> };
 export type OpenIntent = { idempotencyKey: string; kind: string; signature: string; signedBase64: string; lastValidBlockHeight: number;

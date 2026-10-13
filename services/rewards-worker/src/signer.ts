@@ -39,7 +39,9 @@ export type IntentStore = {
   /** Durable reservation BEFORE signing. Must atomically refuse a key it has seen before. */
   /** Atomically: refuse a seen key, then check the epoch's verified fee-backed budget (SOL / buyback / token) and the
    *  operations reserve (network fees + rent), and reserve. Budget comes only from persisted finalized records. */
-  reserve(i: { idempotencyKey: string; cycleId: string; kind: PlanKind; epoch: number; messageSha256: string; lamports: bigint; tokens: bigint; opsCostLamports: bigint; lastValidBlockHeight: number }): Promise<ReserveResult>;
+  reserve(i: { idempotencyKey: string; cycleId: string; kind: PlanKind; epoch: number; messageSha256: string; lamports: bigint; tokens: bigint; opsCostLamports: bigint; lastValidBlockHeight: number;
+    /** 0020: exact immutable plan persisted with the reservation (required for payouts by the DB guard). */
+    plan?: { rows: readonly { owner: string; amount: bigint }[]; mint: string | null; tokenProgram: string | null; messageBase64: string } }): Promise<ReserveResult>;
   /** Committed + reserved spend in this cycle (lamports), excluding the plan being checked. */
   cycleSpent(cycleId: string): Promise<bigint>;
   /** SIGNED + exact signed bytes in ONE write, before any network call (migration 0019). */
@@ -166,7 +168,8 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
 
   const messageSha256 = createHash("sha256").update(msgBytes).digest("hex");
   let r: ReserveResult;
-  try { r = await ctx.store.reserve({ idempotencyKey: plan.idempotencyKey, cycleId: plan.cycleId, kind: plan.kind, epoch: plan.epoch, messageSha256, lamports, tokens, opsCostLamports, lastValidBlockHeight: plan.lastValidBlockHeight }); }
+  try { r = await ctx.store.reserve({ idempotencyKey: plan.idempotencyKey, cycleId: plan.cycleId, kind: plan.kind, epoch: plan.epoch, messageSha256, lamports, tokens, opsCostLamports, lastValidBlockHeight: plan.lastValidBlockHeight,
+    plan: { rows: plan.rows, mint: plan.mint ?? null, tokenProgram: tokenProg ?? null, messageBase64: plan.messageBase64 } }); }
   catch { return no("INTENT_STORE_UNAVAILABLE"); }
   if (r === "DUPLICATE") return no("DUPLICATE_INTENT");
   if (r !== "NEW") return no(r);
