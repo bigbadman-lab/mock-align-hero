@@ -9,4 +9,5 @@
 - [x] Phase L4 — sticky summary + optional tool description (stopped before L5)
 - [x] Phase L5 — Holder Intelligence + Token Risk Analyst (stopped before L6)
 - [x] Free-test daily counter fix applied
-- [ ] Redeploy Render mcp-worker with holders.mjs/risk.mjs — blocked on approval
+- [x] Phase L6 — Smart Money Tracker + Report Builder (stopped before L7)
+- [ ] Redeploy Render mcp-worker (L5+L6 tools) — blocked on approval

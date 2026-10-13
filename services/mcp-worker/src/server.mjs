@@ -9,6 +9,8 @@ import { monitorSupply, SM_TOOL_ID, SM_SCHEMA } from "./supply.mjs";
 import { checkAccount, AC_TOOL_ID, AC_SCHEMA } from "./account.mjs";
 import { holderIntelligence, HI_TOOL_ID, HI_SCHEMA } from "./holders.mjs";
 import { tokenRiskAnalyst, TRA_TOOL_ID, TRA_SCHEMA } from "./risk.mjs";
+import { trackWallets, validInput as smtValid, SMT_TOOL_ID, SMT_SCHEMA } from "./tracker.mjs";
+import { buildReport, validInput as orbValid, ORB_TOOL_ID, ORB_SCHEMA } from "./report.mjs";
 import { watchWhales, validInput as wwValid, WW_TOOL_ID, WW_SCHEMA } from "./whale.mjs";
 
 const PORT = Number(process.env.PORT ?? 10000);
@@ -30,6 +32,8 @@ const TOOLS = {
   [TRA_TOOL_ID]: { schema: TRA_SCHEMA, key: "mint", valid: parseAddress, run: (v, o) => tokenRiskAnalyst({ mint: v, ...o }), summary: (out) => ({ status: out.status, unknown: out.summary?.unknown ?? null, calls: out.rpcCalls }) },
   // Multi-field input: `whole` validates the entire input object (exact keys) instead of one key.
   [WW_TOOL_ID]: { schema: WW_SCHEMA, whole: wwValid, run: (i, o) => watchWhales({ ...i, ...o }), summary: (out) => ({ complete: out.complete, transfers: out.transfers.length, attempted: out.coverage.transactionsAttempted }) },
+  [SMT_TOOL_ID]: { schema: SMT_SCHEMA, whole: smtValid, run: (i, o) => trackWallets({ ...i, ...o }), summary: (out) => ({ complete: out.complete, wallets: out.wallets.length, calls: out.rpcCalls }) },
+  [ORB_TOOL_ID]: { schema: ORB_SCHEMA, whole: orbValid, run: (i, o) => buildReport({ ...i, ...o }), summary: (out) => ({ status: out.status, targetType: out.targetType, calls: out.usage.rpcCalls }) },
   [AC_TOOL_ID]: { schema: AC_SCHEMA, key: "address", valid: parseAddress, run: (v, o) => checkAccount({ address: v, ...o }), summary: (out) => ({ exists: out.exists, classification: out.classification }) },
 };
 
