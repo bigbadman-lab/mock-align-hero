@@ -54,7 +54,7 @@ export async function takeShared(cfg: Cfg, request: Request, freeTestToolId?: st
     if (freeTestToolId) {
       // Taken last so a run blocked by the shared limits does not use up a free test.
       const f = freeTestBucket(freeTestToolId, visitor);
-      const { data, error } = await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: f.bucket, _window_seconds: f.window, _limit: f.limit });
+      const { data, error } = await supabaseAdmin.rpc("mcpx_free_test_take", { _bucket: f.bucket, _limit: f.limit }); // per-UTC-day counter, resets 00:00 UTC
       if (error) return "unavailable";
       if (data !== true) return "free_limit";
     }

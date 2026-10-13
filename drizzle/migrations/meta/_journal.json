@@ -92,6 +92,13 @@
       "when": 1791892350173,
       "tag": "0012_launch_draft_tool_description",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791893575902,
+      "tag": "0013_mcpx_free_test_daily",
+      "breakpoints": true
     }
   ]
 }

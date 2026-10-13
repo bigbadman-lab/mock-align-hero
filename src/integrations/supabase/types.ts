@@ -288,6 +288,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_free_test_counts: {
+        Row: {
+          bucket: string
+          day: string
+          hits: number
+        }
+        Insert: {
+          bucket: string
+          day: string
+          hits?: number
+        }
+        Update: {
+          bucket?: string
+          day?: string
+          hits?: number
+        }
+        Relationships: []
+      }
       mcpx_launch_artifacts: {
         Row: {
           bytes: number
@@ -1599,6 +1617,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      mcpx_free_test_take: {
+        Args: { _bucket: string; _limit: number }
+        Returns: boolean
+      }
       mcpx_issue_product_key: {
         Args: {
           _actor_kind: string
