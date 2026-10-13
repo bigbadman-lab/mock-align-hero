@@ -1,5 +1,5 @@
 // READ-ONLY mainnet probe: builds unsigned txs and runs simulateTransaction(sigVerify:false). Never signs or sends.
-import { Connection, PublicKey, VersionedTransaction, VersionedMessage } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, VersionedTransaction, VersionedMessage } from "@solana/web3.js";
 import { assemble, collectionInstructions, curveBuyInstructions, solPayoutIxs, tokenPayoutIxs, batchBySize } from "../src/assembly";
 const conn = new Connection(process.env.RPC ?? "https://api.mainnet-beta.solana.com", "finalized");
 let CREATOR = new PublicKey("6Vf3QXGdPm7os7p3UisqxVUVgSZswVK1wUDuVNikNK2x");
@@ -28,7 +28,7 @@ if (mint) {
     out.buy = u.kind === "UNSIGNED" ? { bytes: u.bytes, signers: u.signers, expectedTokens: String(b.expectedTokens), maxSolCost: String(b.maxSolCost), sim: await sim(u.messageBase64) } : u;
   } else out.buy = b;
   // token payout sizing (Token-2022) for N recipients needing ATA creation; fixture recipients
-  const rows = Array.from({ length: 20 }, () => ({ owner: PublicKey.unique().toBase58(), amount: 1000n, ataExists: false }));
+  const rows = Array.from({ length: 20 }, () => ({ owner: Keypair.generate().publicKey.toBase58(), amount: 1000n, ataExists: false }));
   const tb = batchBySize(rows, (p) => assemble(tokenPayoutIxs(CREATOR, new PublicKey(mint!), 6, p).ixs, CREATOR, bh, { cuLimit: 400_000, cuPriceMicroLamports: 1000, allowedSigners: [CREATOR.toBase58()] }));
   out.tokenPayoutBatching = tb.kind === "OK" ? tb.batches.map((x) => x.bytes) : tb;
 }
