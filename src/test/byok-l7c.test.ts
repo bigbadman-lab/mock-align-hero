@@ -99,7 +99,7 @@ d("L7-C product AI execution (throwaway Postgres, mocked OpenAI)", () => {
   });
 
   it("invocation uses THIS product's key via the fixed endpoint; usage is settled; no key in output", async () => {
-    const r = await (await client(PA)).callTool({ name: "inspect_wallet", arguments: { address: ADDR, ai_summary: true } });
+    const r = await (await client(PA)).callTool({ name: "wallet_inspector", arguments: { address: ADDR, ai_summary: true } });
     const out = r.structuredContent as Record<string, any>;
     expect(out["aiSummary"]).toEqual({ status: "ok", model: "gpt-4o-mini", text: "This wallet holds 5 lamports.", source: "creator_openai_key" });
     expect(seen).toHaveLength(1);
@@ -113,8 +113,8 @@ d("L7-C product AI execution (throwaway Postgres, mocked OpenAI)", () => {
 
   it("non-AI tools work without a key; ai_summary is rejected where not offered", async () => {
     const c = await client(PC);
-    expect((await c.callTool({ name: "inspect_wallet", arguments: { address: ADDR } })).isError).toBeFalsy();
-    expect((await c.callTool({ name: "inspect_wallet", arguments: { address: ADDR, ai_summary: true } })).isError).toBe(true);
+    expect((await c.callTool({ name: "wallet_inspector", arguments: { address: ADDR } })).isError).toBeFalsy();
+    expect((await c.callTool({ name: "wallet_inspector", arguments: { address: ADDR, ai_summary: true } })).isError).toBe(true);
     expect(seen).toHaveLength(0);
   });
 
