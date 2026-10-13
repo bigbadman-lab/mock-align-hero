@@ -3,31 +3,27 @@ import { describe, it, expect } from "vitest";
 import { Keypair, PublicKey, SystemProgram, ComputeBudgetProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import bs58 from "bs58";
-import { loadSigner, readLimits, reconcile, executionReadiness, type IntentStore, type Plan, type Limits } from "../../services/rewards-worker/src/signer";
+import { loadSigner, readLimits, reconcile, executionReadiness, TECHNICAL_LIMITS, type Plan, type Limits } from "../../services/rewards-worker/src/signer";
+import { memoryBudgetStore, type EpochBudget } from "../../services/rewards-worker/src/budget";
 
 // Disposable fixture keys generated per run — never a real deployer key.
 const kp = Keypair.generate();
 const other = Keypair.generate();
 const secret = bs58.encode(kp.secretKey);
 const env = { MCPX_DEPLOYER_PRIVATE_KEY: secret, MCPX_DEPLOYER_PUBLIC_KEY: kp.publicKey.toBase58() };
-const LIMITS: Limits = { maxLamportsPerTx: 5_000_000n, maxLamportsPerCycle: 8_000_000n, maxTokensPerTx: 10n ** 12n,
-  maxComputeUnits: 400_000, maxCuPriceMicroLamports: 200_000, maxPriorityFeeLamports: 100_000n, blockhashMarginBlocks: 20 };
+const LIMITS: Limits = { maxLamportsPerTx: null, maxLamportsPerCycle: null, maxTokensPerTx: null, ...TECHNICAL_LIMITS };
+const EPOCH = 1_800_000_000 - (1_800_000_000 % 300);
 const BH = "11111111111111111111111111111111";
 
-function memStore(): IntentStore & { rows: Map<string, { lamports: bigint; cycleId: string; signature?: string }> } {
-  const rows = new Map<string, { lamports: bigint; cycleId: string; signature?: string }>();
-  return { rows,
-    async reserve(i) { if (rows.has(i.idempotencyKey)) return "DUPLICATE"; rows.set(i.idempotencyKey, { lamports: i.lamports, cycleId: i.cycleId }); return "NEW"; },
-    async cycleSpent(c) { let s = 0n; for (const r of rows.values()) if (r.cycleId === c) s += r.lamports; return s; },
-    async recordSigned(k, sig) { rows.get(k)!.signature = sig; },
-  };
-}
+// Default: a verified epoch budget large enough for the fixtures (as if derived from finalized fee records).
+const memStore = (b: Partial<EpochBudget> = {}) =>
+  memoryBudgetStore(new Map([[EPOCH, { sol: 100_000_000n, buyback: 0n, ops: 50_000_000n, tokens: 10n ** 9n, ...b }]]));
 const msg = (ixs: Parameters<typeof TransactionMessage>[0]["instructions"], payer = kp.publicKey, cu = 200_000, price = 1000) =>
   Buffer.from(new TransactionMessage({ payerKey: payer, recentBlockhash: BH, instructions: [
     ComputeBudgetProgram.setComputeUnitLimit({ units: cu }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: price }), ...ixs,
   ] }).compileToV0Message().serialize()).toString("base64");
 const a = Keypair.generate().publicKey, b = Keypair.generate().publicKey;
-const solPlan = (over: Partial<Plan> = {}): Plan => ({ kind: "SOL_PAYOUT", idempotencyKey: crypto.randomUUID(), cycleId: "c1", lastValidBlockHeight: 1000,
+const solPlan = (over: Partial<Plan> = {}): Plan => ({ kind: "SOL_PAYOUT", idempotencyKey: crypto.randomUUID(), cycleId: "c1", epoch: EPOCH, lastValidBlockHeight: 1000,
   rows: [{ owner: a.toBase58(), amount: 1_000_000n }, { owner: b.toBase58(), amount: 2_000_000n }],
   messageBase64: msg([SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: a, lamports: 1_000_000 }), SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: b, lamports: 2_000_000 })]),
   ...over });
@@ -88,13 +84,28 @@ describe("signing validated plans (offline fixture key)", () => {
     expect((await s.sign!(p, ctx(st))).ok).toBe(true);
     expect(await s.sign!(p, ctx(st))).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
   });
-  it("per-tx and per-cycle spend caps; missing caps fail closed", async () => {
-    const st = memStore();
-    expect((await s.sign!(solPlan(), ctx(st))).ok).toBe(true); // 3M of 8M
-    expect(await s.sign!(solPlan(), ctx(st, { limits: { ...LIMITS, maxLamportsPerCycle: 5_000_000n } }))).toEqual({ ok: false, reason: "CYCLE_SPEND_CAP" });
-    expect(await s.sign!(solPlan(), ctx(memStore(), { limits: { ...LIMITS, maxLamportsPerTx: 2_000_000n } }))).toEqual({ ok: false, reason: "TX_SPEND_CAP" });
-    expect(await s.sign!(solPlan(), ctx(memStore(), { limits: null }))).toEqual({ ok: false, reason: "LIMITS_UNSET" });
-    expect(readLimits({})).toBeNull();
+  it("no ceilings configured: a fee-backed payout signs; an unbacked one is refused", async () => {
+    expect(readLimits({})).toEqual({ ok: true, limits: LIMITS });
+    expect((await s.sign!(solPlan(), ctx(memStore()))).ok).toBe(true);
+    expect(await s.sign!(solPlan(), ctx(memStore({ sol: 2_999_999n })))).toEqual({ ok: false, reason: "NO_SOL_BUDGET" });
+    expect(await s.sign!(solPlan({ epoch: EPOCH + 300 }), ctx(memStore()))).toEqual({ ok: false, reason: "NO_EVIDENCE" });
+    expect(await s.sign!(solPlan(), ctx(memStore({ ops: 1n })))).toEqual({ ok: false, reason: "NO_OPS_RESERVE" });
+  });
+  it("cumulative epoch budget: second batch beyond the verified SOL budget is refused", async () => {
+    const st = memStore({ sol: 5_000_000n });
+    expect((await s.sign!(solPlan(), ctx(st))).ok).toBe(true); // 3M of 5M
+    expect(await s.sign!(solPlan(), ctx(st))).toEqual({ ok: false, reason: "NO_SOL_BUDGET" });
+  });
+  it("optional operator ceilings: invalid blocks, reached holds, raised resumes without double counting", async () => {
+    expect(readLimits({ MCPX_REWARDS_MAX_LAMPORTS_PER_TX: "abc" }).ok).toBe(false);
+    expect(readLimits({ MCPX_REWARDS_MAX_LAMPORTS_PER_TX: "9", MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE: "5" }).ok).toBe(false);
+    const st = memStore(); const p = solPlan();
+    const low = { ...LIMITS, maxLamportsPerTx: 2_000_000n };
+    expect(await s.sign!(p, ctx(st, { limits: low }))).toEqual({ ok: false, reason: "OPERATOR_CEILING_REACHED:TX_LAMPORTS" });
+    expect(st.rows.size).toBe(0); // held, nothing reserved or forfeited
+    expect((await s.sign!(p, ctx(st, { limits: { ...low, maxLamportsPerTx: 3_000_000n } }))).ok).toBe(true);
+    expect(st.rows.size).toBe(1);
+    expect(await s.sign!(solPlan(), ctx(st, { limits: { ...LIMITS, maxLamportsPerCycle: 5_000_000n } }))).toEqual({ ok: false, reason: "OPERATOR_CEILING_REACHED:CYCLE_LAMPORTS" });
   });
   it("priority-fee ceiling", async () => {
     const p = solPlan({ messageBase64: msg([SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: a, lamports: 1_000_000 }), SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: b, lamports: 2_000_000 })], kp.publicKey, 400_000, 200_000) });
@@ -111,7 +122,8 @@ describe("signing validated plans (offline fixture key)", () => {
     const mint = Keypair.generate().publicKey; const P = TOKEN_2022_PROGRAM_ID;
     const src = getAssociatedTokenAddressSync(mint, kp.publicKey, false, P), dst = getAssociatedTokenAddressSync(mint, a, true, P);
     const m = msg([createTransferCheckedInstruction(src, mint, dst, kp.publicKey, 500n, 6, [], P)]);
-    const plan: Plan = { kind: "TOKEN_PAYOUT", idempotencyKey: "t1", cycleId: "c2", lastValidBlockHeight: 1000, messageBase64: m, mint: mint.toBase58(), decimals: 6, rows: [{ owner: a.toBase58(), amount: 500n }] };
+    const plan: Plan = { kind: "TOKEN_PAYOUT", idempotencyKey: "t1", cycleId: "c2", epoch: EPOCH, lastValidBlockHeight: 1000, messageBase64: m, mint: mint.toBase58(), decimals: 6, rows: [{ owner: a.toBase58(), amount: 500n }] };
+    expect(await s.sign!(plan, ctx(memStore({ tokens: 499n })))).toEqual({ ok: false, reason: "NO_TOKEN_BUDGET" }); // more than purchased
     expect((await s.sign!(plan, ctx())).ok).toBe(true);
     expect((await s.sign!({ ...plan, idempotencyKey: "t2", mint: Keypair.generate().publicKey.toBase58() }, ctx())).ok).toBe(false);
   });
