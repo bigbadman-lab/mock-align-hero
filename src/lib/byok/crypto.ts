@@ -21,7 +21,7 @@ export async function parseKeyring(raw: string | undefined | null): Promise<Keyr
   for (const part of raw.split(",")) {
     const p = part.trim();
     let m = /^(v[0-9]{1,4}):([A-Za-z0-9+/]{43}=)$/.exec(p);
-    let bytes: Uint8Array;
+    let bytes: Uint8Array<ArrayBuffer>;
     if (m) bytes = b64(m[2]!);
     else {
       // Platform-generated secret: "[vN:]<48+ alphanumeric chars>", stretched to 32 bytes via domain-separated SHA-256.
