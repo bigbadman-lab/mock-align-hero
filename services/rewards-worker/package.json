@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "MCPX native rewards DRY-RUN planner. Render Background Worker. Not deployed. No signing, sending, swapping or payouts.",
+  "description": "MCPX native rewards worker: dry-run planner, validated deployer signer and durable executor. Render Background Worker. Broadcasting not enabled.",
   "engines": {
     "node": ">=20"
   },
