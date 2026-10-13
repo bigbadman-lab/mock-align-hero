@@ -1,3 +1,5 @@
+// DEPRECATED (05-F replacement): multi-wallet/multisig treasury model REJECTED for the MVP. Native rewards now use one
+// deployer wallet — see native-single.ts. Kept only so historical tests compile; must not be wired into the worker.
 // 05-F treasury authority & limits — versioned, UNAPPROVED configuration schema + validator. Pure; no secrets, no addresses.
 // Default state is non-executable. Approval of a real config is a future operator act outside this code.
 export const ROLES = [

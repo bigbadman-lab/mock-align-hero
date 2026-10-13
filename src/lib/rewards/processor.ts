@@ -9,6 +9,10 @@ import { checkNativeSplit, splitRewardsReceipt, type Distribution } from "./pump
 import type { EligibilitySnapshot } from "./eligibility";
 
 export type NativeConfig = {
+  /** 05-F replacement: "SINGLE_DEPLOYER" = one deployer wallet receives creator fees, 30/30/40 enforced by ledger (adopted).
+   *  Absent/"SHARING_60_40" = legacy Pump fee-sharing model (rejected for the MVP; kept only for historical tests/decoding). */
+  feeModel?: "SHARING_60_40" | "SINGLE_DEPLOYER";
+  deployerWallet?: string | null;
   mint: string | null; sharingConfig: string | null; rewardsTreasury: string | null; operationsTreasury: string | null;
   /** Seconds a window end must be behind finalized chain time before it can be sealed. */
   finalityLagSeconds: number;
@@ -59,6 +63,7 @@ export type IngestOutcome = { kind: "CREDITED" | "DUPLICATE" | "LATE_ADJUSTMENT"
 export function configBlockers(c: NativeConfig): string[] {
   const b: string[] = [];
   if (!c.mint) b.push("NATIVE_MINT_UNSET");
+  if (c.feeModel === "SINGLE_DEPLOYER") { if (!c.deployerWallet) b.push("DEPLOYER_WALLET_UNSET"); return b; }
   if (!c.sharingConfig) b.push("SHARING_CONFIG_UNSET");
   if (!c.rewardsTreasury) b.push("REWARDS_TREASURY_UNSET");
   if (!c.operationsTreasury) b.push("OPERATIONS_TREASURY_UNSET");
@@ -67,6 +72,7 @@ export function configBlockers(c: NativeConfig): string[] {
 
 /** Ingest one decoded distribution. `finalized` must come from a finalized-commitment fetch, never inferred. */
 export async function ingestDistribution(store: Store, cfg: NativeConfig, d: Distribution, finalized: boolean): Promise<IngestOutcome> {
+  if (cfg.feeModel === "SINGLE_DEPLOYER") return { kind: "REJECTED", reason: "fee_sharing_not_used_by_native_model" };
   const blk = configBlockers(cfg);
   if (blk.length) return { kind: "REJECTED", reason: blk[0]! };
   if (!finalized) return { kind: "REJECTED", reason: "not_finalized" };
