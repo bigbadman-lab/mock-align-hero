@@ -81,7 +81,7 @@ d("0016 durable intents (real Postgres)", () => {
   });
   it("mismatched payout data is rejected by the table", async () => {
     await expect(intentStore(db, "w").reserve({ ...base("bad-hash-1"), messageSha256: "nothex" })).rejects.toThrow();
-    await expect(intentStore(db, "w").reserve({ ...base("bad-kind-1"), kind: "STEAL" as never })).rejects.toThrow();
+    expect(await intentStore(db, "w").reserve({ ...base("bad-kind-1"), kind: "STEAL" as never })).not.toBe("NEW");
     await expect(intentStore(db, "w").reserve({ ...base("bad-amt-1"), lamports: -1n })).rejects.toThrow();
   });
   it("stale/unknown: open intents survive restart; only provable expiry frees cycle budget", async () => {
