@@ -83,10 +83,3 @@ export function pgByokStore(db: Db): ByokStore & {
     },
   };
 }
-
-async function whyNot(db: Db, creationId: string, wallet: string) {
-  const r = await db.query("SELECT status, creator_wallet FROM public.mcpx_ai_integrations WHERE creation_id = $1", [creationId]);
-  const x = r.rows[0];
-  if (!x || x.creator_wallet !== wallet) return "not_found";
-  return x.status === "revoked" ? "revoked" : "stale_revision";
-}
