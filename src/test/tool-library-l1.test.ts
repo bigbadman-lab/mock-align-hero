@@ -29,3 +29,9 @@ describe("tool library registry", () => {
     expect(LIBRARY.filter((t) => t.tokenLaunch).map((t) => t.id)).toEqual(TEMPLATES.map((t) => t.id));
   });
 });
+
+describe("template detail pages", () => {
+  it("every library template id is a valid detail slug", () => {
+    for (const t of LIBRARY) expect(t.id).toMatch(/^[a-z0-9-]+$/);
+  });
+});
