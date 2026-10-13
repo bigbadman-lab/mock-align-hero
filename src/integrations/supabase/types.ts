@@ -961,6 +961,109 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_hix_recovery_candidates: {
+        Row: {
+          candidate_digest: string | null
+          comparison: Json
+          correlation_id: string
+          created_at: string
+          cutoff_slot: number
+          hold_ids: number[]
+          id: string
+          mint: string
+          operator: string
+          original_digest: string
+          payable: boolean
+          provenance: Json
+          reason: string | null
+          status: string
+          window_start: string
+        }
+        Insert: {
+          candidate_digest?: string | null
+          comparison: Json
+          correlation_id: string
+          created_at?: string
+          cutoff_slot: number
+          hold_ids: number[]
+          id?: string
+          mint: string
+          operator: string
+          original_digest: string
+          payable?: boolean
+          provenance: Json
+          reason?: string | null
+          status: string
+          window_start: string
+        }
+        Update: {
+          candidate_digest?: string | null
+          comparison?: Json
+          correlation_id?: string
+          created_at?: string
+          cutoff_slot?: number
+          hold_ids?: number[]
+          id?: string
+          mint?: string
+          operator?: string
+          original_digest?: string
+          payable?: boolean
+          provenance?: Json
+          reason?: string | null
+          status?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_hix_recovery_candidates_mint_window_start_fkey"
+            columns: ["mint", "window_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_hix_frozen_snapshots"
+            referencedColumns: ["mint", "window_start"]
+          },
+        ]
+      }
+      mcpx_rw_hix_recovery_decisions: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          decision: string
+          hold_ids: number[]
+          id: number
+          mint: string
+          operator: string
+          window_start: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          decision: string
+          hold_ids: number[]
+          id?: number
+          mint: string
+          operator: string
+          window_start: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          decision?: string
+          hold_ids?: number[]
+          id?: number
+          mint?: string
+          operator?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_hix_recovery_decisions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "mcpx_rw_hix_recovery_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcpx_rw_hix_snapshots: {
         Row: {
           created_at: string
@@ -1547,6 +1650,10 @@ export type Database = {
           receipts: number
           residual: number
         }[]
+      }
+      mcpx_rw_hix_resolve_window: {
+        Args: { p_candidate: string; p_operator: string }
+        Returns: string
       }
       mcpx_rw_release_lease: { Args: { _owner: string }; Returns: undefined }
     }
