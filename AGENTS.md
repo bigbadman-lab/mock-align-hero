@@ -30,4 +30,4 @@
 - src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch never signs or sends; drafts/artwork/metadata rules live in src/lib/launch/AGENTS.md.
 - src/lib/rewards has its own AGENTS.md (native rewards, single deployer, assembly, holder index).
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (src/lib/templates.ts, explicit aliases); it fills an empty form once and never overrides a restored draft — URLs are hints, not draft data.
-- Single-mint intelligence tools (holder_intelligence, token_risk_analyst) share one bounded collection in services/mcp-worker/src/holders.mjs (≤5 RPC calls, largest-token-accounts coverage only, never the rewards holder index) and one page shell src/components/mcpx/MintToolShell.tsx — so coverage disclosure and error handling stay identical across both.
+- services/mcp-worker has its own AGENTS.md (single-mint intelligence tools).
