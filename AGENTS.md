@@ -29,3 +29,4 @@
 - services/transaction-builder has its own AGENTS.md — read it before changing launch/transaction code.
 - src/lib/mcp-gateway has its own AGENTS.md (product endpoints, product access keys).- Launch: /launch never signs or sends; drafts/artwork/metadata rules live in src/lib/launch/AGENTS.md.
 - src/lib/rewards has its own AGENTS.md (native rewards, single deployer, assembly, holder index).
+- Launch deep links: /launch?template= is resolved only via resolveTemplateParam (src/lib/templates.ts, explicit aliases); it fills an empty form once and never overrides a restored draft — URLs are hints, not draft data.

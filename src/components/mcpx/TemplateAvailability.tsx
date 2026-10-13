@@ -25,6 +25,16 @@ export function CapabilityRow({ t }: { t: LibraryTemplate }) {
   );
 }
 
+/** Shown only for templates the launch form accepts; the link carries the canonical id. */
+export function LaunchLink({ t }: { t: LibraryTemplate }) {
+  if (!t.tokenLaunch) return null;
+  return (
+    <Link to="/launch" search={{ template: t.id }} className="text-sm text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary">
+      Launch with token<span className="sr-only">: {t.name}</span>
+    </Link>
+  );
+}
+
 export function TemplateAction({ t }: { t: LibraryTemplate }) {
   return t.route && t.toolId ? <ToolAction t={t} toolId={t.toolId} route={t.route} /> : <span className="font-mono text-xs text-subtle">Not available yet — no tool to run</span>;
 }
