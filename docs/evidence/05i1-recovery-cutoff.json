@@ -1,0 +1,152 @@
+{
+  "phase": "05-I.1",
+  "labels": {
+    "real": "Helius Developer read-only mainnet + throwaway local Postgres 16.13",
+    "testOnly": "policy test-elig-v1-8m6w is TEST_FIXTURE, never payable"
+  },
+  "recovery": {
+    "mint": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+    "anchorSlot": 456380696,
+    "windows": [
+      {
+        "windowStart": 1791881700,
+        "cutoffSlot": 456384909,
+        "holdReason": "LATE_PRE_CUTOFF_DATA (simulated in 05-I)",
+        "status": "CANDIDATE_MATCH",
+        "originalDigest": "34d628d5d2a10f815d3f94dd4860602ffd360cc6d876595e78a82547bbff8efa",
+        "candidateDigest": "34d628d5d2a10f815d3f94dd4860602ffd360cc6d876595e78a82547bbff8efa",
+        "ownerDiffs": 0,
+        "V": 456413100,
+        "txs": 7862,
+        "accounts": 653,
+        "credits": 15871.4,
+        "resolution": "RESOLVED (operator --confirm); repeat = ALREADY_RESOLVED; without --confirm = refused"
+      },
+      {
+        "windowStart": 1791882000,
+        "cutoffSlot": 456386289,
+        "status": "CANDIDATE_MATCH",
+        "originalDigest": "c54d89674f32db3c6d4845f78031440f45516228c5fca44543b29ae07f7f5de1",
+        "candidateDigest": "c54d89674f32db3c6d4845f78031440f45516228c5fca44543b29ae07f7f5de1",
+        "ownerDiffs": 0,
+        "V": 456413260,
+        "credits": 15868.4,
+        "resolution": "left HELD deliberately (also holds an AMBIGUOUS program-owned balance)"
+      }
+    ],
+    "firstAttempt": {
+      "status": "CANDIDATE_INCOMPLETE",
+      "reason": "MISSING_SOURCE_PAGES (did not converge on an active coin)",
+      "credits": 55402.3,
+      "fix": "re-sweep only accounts that disagree with the chain"
+    },
+    "frozenRowsUnchanged": true
+  },
+  "cutoffComparison": [
+    {
+      "window": 1791881700,
+      "cutoff": 456384909,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": null,
+      "calls": {
+        "baseline": 55,
+        "optimizedNoHint": 46,
+        "optimizedHinted": 46
+      }
+    },
+    {
+      "window": 1791882000,
+      "cutoff": 456386289,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": 456384909,
+      "calls": {
+        "baseline": 55,
+        "optimizedNoHint": 42,
+        "optimizedHinted": 29
+      }
+    },
+    {
+      "window": 1791886500,
+      "cutoff": 456406903,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": 456386289,
+      "calls": {
+        "baseline": 47,
+        "optimizedNoHint": 37,
+        "optimizedHinted": 43
+      }
+    },
+    {
+      "window": 1791886800,
+      "cutoff": 456408280,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": 456406903,
+      "calls": {
+        "baseline": 47,
+        "optimizedNoHint": 37,
+        "optimizedHinted": 31
+      }
+    },
+    {
+      "window": 1791887100,
+      "cutoff": 456409658,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": 456408280,
+      "calls": {
+        "baseline": 47,
+        "optimizedNoHint": 33,
+        "optimizedHinted": 30
+      }
+    },
+    {
+      "window": 1791887400,
+      "cutoff": 456411042,
+      "identicalNoHint": true,
+      "identicalHinted": true,
+      "hint": 456409658,
+      "calls": {
+        "baseline": 47,
+        "optimizedNoHint": 30,
+        "optimizedHinted": 30
+      }
+    }
+  ],
+  "cutoffCost": {
+    "baselineCallsPerRecentWindow": 47,
+    "optimizedHintedCallsPerRecentWindow": [
+      43,
+      31,
+      30,
+      30
+    ],
+    "creditBasis": "ESTIMATE: 1 credit per standard RPC call (getSlot/getBlocks/getBlockTime); provider-side meter not read",
+    "monthlyEstimate": {
+      "baseline": "47 x 8640 = ~406k",
+      "optimized": "~31 x 8640 = ~268k"
+    }
+  },
+  "migrationLocal": {
+    "order": "0000..0009 then 0010, 0011",
+    "apply_ms": 73,
+    "reapply0010": "fails (CREATE TABLE not idempotent; single-run under journal)",
+    "rollback": "rollback_0011_0010.sql OK, re-apply OK",
+    "rls": "all 7 new tables RLS on; anon/authenticated no privileges; service_role yes"
+  },
+  "productionReadOnly": {
+    "hixTablesPresent": [
+      "mcpx_rw_hix_applied_txs",
+      "mcpx_rw_hix_balances",
+      "mcpx_rw_hix_checkpoints",
+      "mcpx_rw_hix_gaps",
+      "mcpx_rw_hix_snapshots"
+    ],
+    "rowCounts": "all 0",
+    "0010_0011_objects_present": false,
+    "anonOrAuthenticatedSelectOnBalances": false
+  }
+}

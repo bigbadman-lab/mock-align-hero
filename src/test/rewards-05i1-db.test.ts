@@ -202,6 +202,6 @@ d("05-I.1 recovery DB (throwaway Postgres)", () => {
   it("operator-only: anon/authenticated have no table or function privileges", async () => {
     const r = (await a.unsafe(`select bool_or(has_table_privilege(r, t, 'select') or has_table_privilege(r, t, 'insert')) tp, bool_or(has_function_privilege(r, 'public.mcpx_rw_hix_resolve_window(uuid,text)', 'execute')) fp
       from unnest(array['anon','authenticated']) r, unnest(array['public.mcpx_rw_hix_recovery_candidates','public.mcpx_rw_hix_recovery_decisions','public.mcpx_rw_hix_holds','public.mcpx_rw_hix_frozen_snapshots','public.mcpx_rw_hix_window_cutoffs','public.mcpx_rw_eligibility_policies']) t`))[0]!;
-    expect(r.tp).toBe(false); expect(r.fp).toBe(false);
+    expect(r['tp']).toBe(false); expect(r['fp']).toBe(false);
   });
 });
