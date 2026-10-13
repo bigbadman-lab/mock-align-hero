@@ -127,3 +127,9 @@ process B while lease live → LEASE_HELD
 after lease expiry, 4 processes race → 1 SEALED (plan_fa40b80f…), 3 LEASE_HELD; consumed=1
 fresh process → next window SEALED; stored SOL plan alice 225000 / bob 75000
 ```
+
+## 05-F replacement — single deployer wallet (adopted)
+- REJECTED for MVP: native onchain 60/40 fee sharing, rewards/operations treasuries, separate signers, multisig, signer service (`treasury-policy.ts` deprecated; 05-C decoder kept for read-only use only).
+- ADOPTED: $MCP launched manually in Pump.fun UI; one deployer wallet receives creator fees; `native-single.ts` attributes only finalized 05-B single-recipient collect events to the deployer, requires the deployer to have created $MCP alone (otherwise BLOCKED), and splits 30/30/40 (floors to holders/buyback, remainder to ops). Receipts flow through the unchanged 05-E durable store/processor with `feeModel: "SINGLE_DEPLOYER"`.
+- Spend guard: finalized balance must cover rent + 40% ops reserve + unpaid SOL obligations + unspent buyback + costs; costs come from a bounded ops cost budget; emergency stop fails closed. Deposits are never revenue.
+- Status: curve collection PASS (real fixture); PumpSwap WSOL PARTIAL (logic + synthetic only); holder history BLOCKED; execution not implemented.
