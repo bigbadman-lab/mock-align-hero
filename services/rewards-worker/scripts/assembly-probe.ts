@@ -10,9 +10,8 @@ const sim = async (b64: string) => {
 };
 const out: Record<string, unknown> = {};
 let mint: string | null = null, tokenProgram = "TokenzQdBNbLqP5VEhdkAovAUFj3z9VhjndPDzdC3jmT";
-{ const sigs = await conn.getSignaturesForAddress(new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"), { limit: 60 }, "finalized");
+{ const sigs = await conn.getSignaturesForAddress(new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"), { limit: 40 }, "finalized");
   for (const s of sigs) { if (s.err) continue; let t; try { t = await conn.getTransaction(s.signature, { maxSupportedTransactionVersion: 0, commitment: "finalized" }); } catch { continue; }
-    if (!t?.meta?.logMessages?.some((l) => /Instruction: Create(V2)?$/.test(l))) continue;
     const m = t.meta.postTokenBalances?.find((b) => b.mint.endsWith("pump")); if (!m) continue;
     mint = m.mint; tokenProgram = m.programId!; CREATOR = t.transaction.message.staticAccountKeys[0]!; out.createSig = s.signature; out.createSlot = t.slot; break; } }
 out.creator = CREATOR.toBase58(); out.mint = mint; out.tokenProgram = tokenProgram;
