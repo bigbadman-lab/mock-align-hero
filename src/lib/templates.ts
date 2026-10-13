@@ -1,3 +1,13 @@
+import img_wallet_inspector from "@/assets/templates/wallet-inspector.jpg";
+import img_whale_watch from "@/assets/templates/whale-watch.jpg";
+import img_token_scanner from "@/assets/templates/token-scanner.jpg";
+import img_supply_monitor from "@/assets/templates/supply-monitor.jpg";
+import img_transaction_verifier from "@/assets/templates/transaction-verifier.jpg";
+import img_account_checker from "@/assets/templates/account-checker.jpg";
+import img_holder_intelligence from "@/assets/templates/holder-intelligence.jpg";
+import img_token_risk_analyst from "@/assets/templates/token-risk-analyst.jpg";
+import img_smart_money_tracker from "@/assets/templates/smart-money-tracker.jpg";
+import img_onchain_report_builder from "@/assets/templates/onchain-report-builder.jpg";
 // Static product-definition catalogue. These are planned templates,
 // launchable via the launch form. Live availability is never stored here.
 export type Engine = "WALLET" | "TOKEN" | "VERIFY";
@@ -108,17 +118,16 @@ export interface LibraryTemplate {
   image: string;
 }
 
-const img = (n: string) => new URL(`../assets/templates/${n}.jpg`, import.meta.url).href;
 
 export const LIBRARY: LibraryTemplate[] = [
-  { id: "wallet-inspector", name: "Wallet Inspector", category: "Wallets", tagline: "See what any wallet holds.", benefit: "SOL and token balances plus recent transactions for a Solana address, in one read.", toolId: "wallet_inspector", route: "/tools/wallet-inspector", mcpAdapter: true, tokenLaunch: true, planned: false, image: img("wallet-inspector") },
-  { id: "whale-watch", name: "Whale Watch", category: "Wallets", tagline: "Spot large moves on demand.", benefit: "Recent activity for a wallet, filtered to transfers or swaps above set thresholds.", toolId: "whale_watch", route: "/tools/whale-watch", mcpAdapter: true, tokenLaunch: true, planned: false, image: img("whale-watch") },
-  { id: "token-scanner", name: "Token Scanner", category: "Tokens", tagline: "Check who controls a token.", benefit: "Mint and freeze authority, supply and decimals, reported exactly as stored onchain.", toolId: "token_scanner", route: "/tools/token-scanner", mcpAdapter: false, tokenLaunch: true, planned: false, image: img("token-scanner") },
-  { id: "supply-monitor", name: "Supply Monitor", category: "Tokens", tagline: "Know where supply sits.", benefit: "Total supply and the largest token accounts — accounts, not unique holders.", toolId: "supply_monitor", route: "/tools/supply-monitor", mcpAdapter: false, tokenLaunch: true, planned: false, image: img("supply-monitor") },
-  { id: "tx-verifier", name: "Transaction Verifier", category: "Verification", tagline: "Confirm a transaction landed.", benefit: "Confirmation status, slot and any onchain error for a signature. Not found is never called failed.", toolId: "transaction_verifier", route: "/tools/transaction-verifier", mcpAdapter: false, tokenLaunch: true, planned: false, image: img("transaction-verifier") },
-  { id: "account-checker", name: "Account Checker", category: "Verification", tagline: "Check an account exists.", benefit: "Existence, owning program, lamports and data size for any account address.", toolId: "account_checker", route: "/tools/account-checker", mcpAdapter: false, tokenLaunch: true, planned: false, image: img("account-checker") },
-  { id: "holder-intelligence", name: "Holder Intelligence", category: "Intelligence", tagline: "Understand a token's holder base.", benefit: "Planned: holder concentration and distribution built from complete history, not top-account snapshots.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img("holder-intelligence") },
-  { id: "token-risk-analyst", name: "Token Risk Analyst", category: "Intelligence", tagline: "Read a token's risk signals.", benefit: "Planned: authority, supply and concentration checks combined into one plain-language review.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img("token-risk-analyst") },
-  { id: "smart-money-tracker", name: "Smart Money Tracker", category: "Intelligence", tagline: "Follow wallets you choose.", benefit: "Planned: activity across a watchlist of wallets you supply. No ranking claims without a source.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img("smart-money-tracker") },
-  { id: "onchain-report-builder", name: "Onchain Report Builder", category: "Intelligence", tagline: "Turn reads into a report.", benefit: "Planned: combine results from other tools into one shareable, sourced report.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img("onchain-report-builder") },
+  { id: "wallet-inspector", name: "Wallet Inspector", category: "Wallets", tagline: "See what any wallet holds.", benefit: "SOL and token balances plus recent transactions for a Solana address, in one read.", toolId: "wallet_inspector", route: "/tools/wallet-inspector", mcpAdapter: true, tokenLaunch: true, planned: false, image: img_wallet_inspector },
+  { id: "whale-watch", name: "Whale Watch", category: "Wallets", tagline: "Spot large moves on demand.", benefit: "Recent activity for a wallet, filtered to transfers or swaps above set thresholds.", toolId: "whale_watch", route: "/tools/whale-watch", mcpAdapter: true, tokenLaunch: true, planned: false, image: img_whale_watch },
+  { id: "token-scanner", name: "Token Scanner", category: "Tokens", tagline: "Check who controls a token.", benefit: "Mint and freeze authority, supply and decimals, reported exactly as stored onchain.", toolId: "token_scanner", route: "/tools/token-scanner", mcpAdapter: false, tokenLaunch: true, planned: false, image: img_token_scanner },
+  { id: "supply-monitor", name: "Supply Monitor", category: "Tokens", tagline: "Know where supply sits.", benefit: "Total supply and the largest token accounts — accounts, not unique holders.", toolId: "supply_monitor", route: "/tools/supply-monitor", mcpAdapter: false, tokenLaunch: true, planned: false, image: img_supply_monitor },
+  { id: "tx-verifier", name: "Transaction Verifier", category: "Verification", tagline: "Confirm a transaction landed.", benefit: "Confirmation status, slot and any onchain error for a signature. Not found is never called failed.", toolId: "transaction_verifier", route: "/tools/transaction-verifier", mcpAdapter: false, tokenLaunch: true, planned: false, image: img_transaction_verifier },
+  { id: "account-checker", name: "Account Checker", category: "Verification", tagline: "Check an account exists.", benefit: "Existence, owning program, lamports and data size for any account address.", toolId: "account_checker", route: "/tools/account-checker", mcpAdapter: false, tokenLaunch: true, planned: false, image: img_account_checker },
+  { id: "holder-intelligence", name: "Holder Intelligence", category: "Intelligence", tagline: "Understand a token's holder base.", benefit: "Planned: holder concentration and distribution built from complete history, not top-account snapshots.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_holder_intelligence },
+  { id: "token-risk-analyst", name: "Token Risk Analyst", category: "Intelligence", tagline: "Read a token's risk signals.", benefit: "Planned: authority, supply and concentration checks combined into one plain-language review.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_token_risk_analyst },
+  { id: "smart-money-tracker", name: "Smart Money Tracker", category: "Intelligence", tagline: "Follow wallets you choose.", benefit: "Planned: activity across a watchlist of wallets you supply. No ranking claims without a source.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_smart_money_tracker },
+  { id: "onchain-report-builder", name: "Onchain Report Builder", category: "Intelligence", tagline: "Turn reads into a report.", benefit: "Planned: combine results from other tools into one shareable, sourced report.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_onchain_report_builder },
 ];
