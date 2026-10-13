@@ -113,6 +113,13 @@
       "when": 1791899802297,
       "tag": "0015_mcpx_l7b_byok_health",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791904131241,
+      "tag": "0016_mcpx_rw_remote_bridge",
+      "breakpoints": true
     }
   ]
 }

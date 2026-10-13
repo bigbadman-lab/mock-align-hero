@@ -792,6 +792,36 @@ export type Database = {
           },
         ]
       }
+      mcpx_rw_config: {
+        Row: {
+          anchor_slot: number | null
+          deployer_wallet: string | null
+          emergency_stop: boolean
+          genesis_window: number | null
+          id: number
+          mint: string | null
+          updated_at: string
+        }
+        Insert: {
+          anchor_slot?: number | null
+          deployer_wallet?: string | null
+          emergency_stop?: boolean
+          genesis_window?: number | null
+          id?: number
+          mint?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anchor_slot?: number | null
+          deployer_wallet?: string | null
+          emergency_stop?: boolean
+          genesis_window?: number | null
+          id?: number
+          mint?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_cursors: {
         Row: {
           last_signature: string | null
@@ -1578,6 +1608,21 @@ export type Database = {
           },
         ]
       }
+      mcpx_rw_remote_nonces: {
+        Row: {
+          nonce: string
+          seen_at: string
+        }
+        Insert: {
+          nonce: string
+          seen_at?: string
+        }
+        Update: {
+          nonce?: string
+          seen_at?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_sharing_receipts: {
         Row: {
           block_time: string
@@ -1982,6 +2027,9 @@ export type Database = {
         Returns: string
       }
       mcpx_rw_release_lease: { Args: { _owner: string }; Returns: undefined }
+      mcpx_rw_remote_exec: { Args: { p_steps: Json }; Returns: Json }
+      mcpx_rw_remote_nonce_take: { Args: { p_nonce: string }; Returns: boolean }
+      mcpx_rw_row_text: { Args: { r: Json }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
