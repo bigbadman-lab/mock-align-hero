@@ -14,3 +14,6 @@
 - [x] Phase L7-A — BYOK security foundation (code + pending migration 0014; stopped before L7-B)
 - [x] Migration 0014 applied
 - [ ] Add MCPX_BYOK_KEYRING secret — blocked on approval
+
+- [x] L7-B creator BYOK management built behind MCPX_BYOK_ENABLED (fixture/mocked tests)
+- [ ] L7-B activation: apply 0015, set MCPX_BYOK_ENABLED=1, publish (needs approval)

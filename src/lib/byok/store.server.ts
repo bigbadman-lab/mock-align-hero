@@ -62,11 +62,11 @@ export const serviceByokStore: ByokStore & { purgeUsage(batch: number): Promise<
     const i = await integration(creationId);
     if (!i || i["status"] !== "configured") return null;
     const db = await admin();
-    const c = must(await db.from("mcpx_ai_credentials").select("version, idempotency_key, iv, ciphertext, kek_version, alg")
+    const c = must(await db.from("mcpx_ai_credentials").select("id, version, idempotency_key, iv, ciphertext, kek_version, alg")
       .eq("integration_id", i["id"]).eq("status", "active").maybeSingle()) as Record<string, unknown> | null;
     const iv = fromHex(c?.["iv"]), ct = fromHex(c?.["ciphertext"]);
     if (!c || !iv || !ct) return null;
-    return { version: c["version"] as number, idem: c["idempotency_key"] as string, sealed: { iv, ciphertext: ct, kekVersion: c["kek_version"] as string, alg: c["alg"] as never } };
+    return { credentialId: c["id"] as string, version: c["version"] as number, idem: c["idempotency_key"] as string, sealed: { iv, ciphertext: ct, kekVersion: c["kek_version"] as string, alg: c["alg"] as never } };
   },
   async purgeUsage(batch) { return Number(await rpc("mcpx_ai_purge_usage", { _batch: batch })); },
 };

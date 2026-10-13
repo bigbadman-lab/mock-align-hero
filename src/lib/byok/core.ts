@@ -28,7 +28,7 @@ export interface ByokStore {
   getStatus(creationId: string): Promise<ByokStatus | null>;
   getUsage(creationId: string): Promise<ByokUsage>;
   recordHealth(p: { creationId: string; wallet: string; credentialVersion: number; health: Health }): Promise<string>;
-  loadActiveCredential(creationId: string): Promise<{ version: number; idem: string; sealed: Sealed } | null>;
+  loadActiveCredential(creationId: string): Promise<{ credentialId: string; version: number; idem: string; sealed: Sealed } | null>;
 }
 
 export interface ByokCtx {
