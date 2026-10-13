@@ -3,6 +3,8 @@
 import * as z from "zod/v4";
 import { WI_SCHEMA, WI_TOOL_ID, isValidSolanaAddress, isWalletInspectorResult } from "@/lib/tools/wallet-inspector";
 import { WW_SCHEMA, WW_TOOL_ID, WW_THRESHOLDS, isWhaleWatchResult } from "@/lib/tools/whale-watch";
+import { HI_SCHEMA, HI_TOOL_ID, isHolderIntelligenceResult } from "@/lib/tools/holder-intelligence";
+import { TRA_SCHEMA, TRA_TOOL_ID, isTokenRiskResult, STATE_MEANING } from "@/lib/tools/token-risk-analyst";
 
 /** Server-validated, per-template product settings. Never contains URLs, programs or secrets. */
 export type ProductSettings = Record<string, string>;
@@ -15,7 +17,7 @@ export interface TemplateAdapter {
   title: string;
   description: string;
   /** External (caller-visible) input schema. Product-fixed values are NOT in here. */
-  inputSchema: z.ZodObject<{ address: z.ZodString }>;
+  inputSchema: z.ZodObject<{ address: z.ZodString } | { mint: z.ZodString }>;
   /** Strict allowlist for product tool_config; returns null when invalid. */
   parseSettings(raw: unknown): ProductSettings | null;
   /** Public, human-readable description of server-fixed settings (safe to show; never raw config). */
@@ -75,10 +77,47 @@ const whaleWatch: TemplateAdapter = {
   validOutput: (out, i, s) => isWhaleWatchResult(out, String(i["address"]), String(s["minLamports"])),
 };
 
+const mintSchema = () =>
+  z.string().min(32).max(44).refine(isValidSolanaAddress, "Must be a 32-byte base58 Solana public key").describe("Solana token mint address (base58), SPL Token or Token-2022.");
+const noSettings = { parseSettings: (raw: unknown) => (isPlainObject(raw) && Object.keys(raw).length === 0 ? {} : null), describeSettings: () => ["No product-level settings: every caller gets the same read."], defaultSettings: {} };
+
+const holderIntelligence: TemplateAdapter = {
+  templateId: "holder-intelligence",
+  version: "1.0.0",
+  toolName: "holder_intelligence",
+  workerToolId: HI_TOOL_ID,
+  title: "Holder Intelligence (Solana mainnet, read-only)",
+  description:
+    "For one SPL Token / Token-2022 mint at 'confirmed': total supply, the largest token accounts the RPC returns (max 20), their owner addresses where decodable, owners aggregated within those accounts, and concentration relative to total supply. " +
+    "Coverage is largest token accounts only — `coverage.completeHolderSet` is always false and `uniqueHolderCount` is null. Token accounts and owner addresses are not people. Amounts are exact integer strings. `partial` true means a part could not be read. Read-only.",
+  inputSchema: z.strictObject({ mint: mintSchema() }),
+  ...noSettings,
+  toWorkerPayload: (i) => JSON.stringify({ schema: HI_SCHEMA, toolId: HI_TOOL_ID, input: { mint: i["mint"] } }),
+  validOutput: (out, i) => isHolderIntelligenceResult(out, String(i["mint"])),
+};
+
+const tokenRiskAnalyst: TemplateAdapter = {
+  templateId: "token-risk-analyst",
+  version: "1.0.0",
+  toolName: "token_risk_analyst",
+  workerToolId: TRA_TOOL_ID,
+  title: "Token Risk Analyst (Solana mainnet, read-only)",
+  description:
+    "Evidence checklist of observable control and concentration indicators for one mint: mint/freeze authority, Token-2022 extensions (permanent delegate, transfer hook, transfer fee, default-frozen, non-transferable, pausable, close authority), and largest-token-account concentration against fixed thresholds. " +
+    `States: observed = ${STATE_MEANING.observed} not_observed = ${STATE_MEANING.not_observed} unknown = ${STATE_MEANING.unknown} not_applicable = ${STATE_MEANING.not_applicable} ` +
+    "There is no score and no safety verdict; `summary.complete` is false whenever any check is unknown. Read-only.",
+  inputSchema: z.strictObject({ mint: mintSchema() }),
+  ...noSettings,
+  toWorkerPayload: (i) => JSON.stringify({ schema: TRA_SCHEMA, toolId: TRA_TOOL_ID, input: { mint: i["mint"] } }),
+  validOutput: (out, i) => isTokenRiskResult(out, String(i["mint"])),
+};
+
 /** All implemented adapters, keyed by templateId. */
 export const ADAPTERS: Record<string, TemplateAdapter> = {
   [walletInspector.templateId]: walletInspector,
   [whaleWatch.templateId]: whaleWatch,
+  [holderIntelligence.templateId]: holderIntelligence,
+  [tokenRiskAnalyst.templateId]: tokenRiskAnalyst,
 };
 
 /** An endpoint profile = which templates (at which version) one MCP endpoint exposes. */

@@ -7,3 +7,6 @@
 - [x] Phase L2 — template detail pages + 3 free tests/day (stopped before L3)
 - [x] Phase L3 — integrated launch form UX (stopped before L4)
 - [x] Phase L4 — sticky summary + optional tool description (stopped before L5)
+- [x] Phase L5 — Holder Intelligence + Token Risk Analyst (stopped before L6)
+- [ ] Free-test daily counter fix (pending migration 0012) — blocked on approval
+- [ ] Redeploy Render mcp-worker with holders.mjs/risk.mjs — blocked on approval

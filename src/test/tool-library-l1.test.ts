@@ -16,11 +16,13 @@ describe("tool library registry", () => {
       "supply-monitor": ["supply_monitor", "/tools/supply-monitor"],
       "tx-verifier": ["transaction_verifier", "/tools/transaction-verifier"],
       "account-checker": ["account_checker", "/tools/account-checker"],
+      "holder-intelligence": ["holder_intelligence", "/tools/holder-intelligence"],
+      "token-risk-analyst": ["token_risk_analyst", "/tools/token-risk-analyst"],
     });
   });
   it("planned templates have no tool, route, MCP or launch", () => {
     for (const t of LIBRARY.filter((x) => x.planned)) expect([t.toolId, t.route, t.mcpAdapter, t.tokenLaunch]).toEqual([null, null, false, false]);
-    expect(LIBRARY.filter((x) => x.planned).map((t) => t.id)).toEqual(["holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder"]);
+    expect(LIBRARY.filter((x) => x.planned).map((t) => t.id)).toEqual(["smart-money-tracker", "onchain-report-builder"]);
   });
   it("MCP flag matches real gateway adapters", () => {
     expect(LIBRARY.filter((t) => t.mcpAdapter).map((t) => t.id).sort()).toEqual(Object.keys(ADAPTERS).sort());
