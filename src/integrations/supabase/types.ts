@@ -325,6 +325,9 @@ export type Database = {
           creation_id: string
           creator_wallet: string
           enabled: boolean
+          health: string
+          health_checked_at: string | null
+          health_credential_version: number | null
           id: string
           max_concurrency: number
           max_input_tokens: number
@@ -343,6 +346,9 @@ export type Database = {
           creation_id: string
           creator_wallet: string
           enabled?: boolean
+          health?: string
+          health_checked_at?: string | null
+          health_credential_version?: number | null
           id?: string
           max_concurrency?: number
           max_input_tokens?: number
@@ -361,6 +367,9 @@ export type Database = {
           creation_id?: string
           creator_wallet?: string
           enabled?: boolean
+          health?: string
+          health_checked_at?: string | null
+          health_credential_version?: number | null
           id?: string
           max_concurrency?: number
           max_input_tokens?: number
@@ -1846,6 +1855,7 @@ export type Database = {
         }
         Returns: string
       }
+      mcpx_ai_purge_usage: { Args: { _batch: number }; Returns: number }
       mcpx_ai_put_credential: {
         Args: {
           _creation: string
@@ -1862,8 +1872,40 @@ export type Database = {
         }
         Returns: string
       }
+      mcpx_ai_record_health: {
+        Args: {
+          _creation: string
+          _cred_version: number
+          _health: string
+          _wallet: string
+        }
+        Returns: string
+      }
       mcpx_ai_revoke: {
         Args: { _creation: string; _expected_rev: number; _wallet: string }
+        Returns: string
+      }
+      mcpx_ai_set_enabled: {
+        Args: {
+          _creation: string
+          _enabled: boolean
+          _expected_rev: number
+          _wallet: string
+        }
+        Returns: string
+      }
+      mcpx_ai_set_model_limits: {
+        Args: {
+          _conc: number
+          _creation: string
+          _expected_rev: number
+          _in: number
+          _model: string
+          _out: number
+          _pd: number
+          _pm: number
+          _wallet: string
+        }
         Returns: string
       }
       mcpx_ai_settle: {

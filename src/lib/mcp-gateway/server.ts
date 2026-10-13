@@ -4,6 +4,8 @@ import { McpServer, createMcpHandler, type StandardSchemaWithJSON } from "@model
 import { adaptersFor, type EndpointProfile, type ProductSettings, type TemplateAdapter } from "./registry";
 import { parseCreationId, resolveProduct, type ProductDeps } from "./products";
 import { callWorker, hmac, takeShared, toolAvailability, workerConfig } from "@/lib/tools/relay";
+import * as z from "zod/v4";
+import { aiActive, summarise, type AiDeps } from "@/lib/byok/execute";
 
 export const MAX_MCP_BODY = 8 * 1024;
 const ALLOWED_ORIGINS = ["https://mcpx.fun", "https://www.mcpx.fun", "https://mock-align-hero.lovable.app"];
@@ -31,21 +33,27 @@ export interface ExecDeps {
 }
 export const productionExecDeps: ExecDeps = { workerConfig, toolAvailability, takeShared, callWorker };
 
-interface ToolEntry { adapter: TemplateAdapter; settings: ProductSettings; description: string; scope: string }
+interface ToolEntry { adapter: TemplateAdapter; settings: ProductSettings; description: string; scope: string;
+  /** Present only on product endpoints whose creator BYOK is active: adds optional `ai_summary` input. */
+  ai?: { deps: AiDeps; creationId: string } }
 
 function buildServer(info: { name: string; title: string }, entries: ToolEntry[], request: Request, exec: ExecDeps) {
   const server = new McpServer(
     { name: info.name, title: info.title, version: "0.3.1" },
     { instructions: "MCPX endpoint. Read-only Solana mainnet tools. Results are on-demand reads, not monitoring." },
   );
-  for (const { adapter: a, settings, description, scope } of entries) {
+  for (const { adapter: a, settings, description, scope, ai } of entries) {
+    const schema = ai ? a.inputSchema.extend({ ai_summary: z.boolean().optional().describe("Also return a short plain-English AI summary (uses the product creator's OpenAI key; counted against the product's AI limits).") }) : a.inputSchema;
     server.registerTool(
       a.toolName,
-      { title: a.title, description, inputSchema: a.inputSchema as unknown as StandardSchemaWithJSON, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
+      { title: a.title, description: ai ? `${description} Optional ai_summary adds a short AI explanation.` : description, inputSchema: schema as unknown as StandardSchemaWithJSON, annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
       async (raw: unknown) => {
         const fail = (msg: string) => ({ isError: true, content: [{ type: "text" as const, text: msg }] });
         // Defence in depth: only the declared external fields reach the payload builder.
-        const parsed = a.inputSchema.safeParse(raw);
+        const parsedAll = schema.safeParse(raw);
+        if (!parsedAll.success) return fail("invalid_input");
+        const { ai_summary: wantAi, ...rest } = parsedAll.data as Record<string, unknown>;
+        const parsed = a.inputSchema.safeParse(rest); // AI flag never reaches the worker payload
         if (!parsed.success) return fail("invalid_input");
         const input = parsed.data as Record<string, unknown>;
         const cfg = exec.workerConfig();
@@ -58,7 +66,11 @@ function buildServer(info: { name: string; title: string }, entries: ToolEntry[]
         const r = await exec.callWorker(cfg, a.toWorkerPayload(input, settings), request);
         if (!r.ok) return fail(r.error);
         if (!a.validOutput(r.out, input, settings)) return fail("bad_response");
-        const out = r.out as Record<string, unknown>;
+        let out = r.out as Record<string, unknown>;
+        if (ai && wantAi === true) {
+          const o = await summarise(ai.deps, ai.creationId, out).catch(() => ({ status: "unavailable" as const }));
+          out = { ...out, aiSummary: o.status === "ok" ? { status: "ok", model: o.model, text: o.text, source: "creator_openai_key" } : { status: o.status } };
+        }
         console.log(JSON.stringify({ mcp: scope, tool: a.toolName, v: a.version, executionId: out["executionId"] }));
         return {
           content: [{ type: "text" as const, text: JSON.stringify(out) }],
@@ -111,7 +123,7 @@ export async function handleMcp(profile: EndpointProfile, request: Request, exec
  * Product-scoped endpoint. Order: Origin/size → ID shape → bearer present → verified creation + active config
  * → product credential → worker capability → exactly one tool. Unknown/inactive/misconfigured never reach the worker.
  */
-export async function handleProductMcp(rawId: string, request: Request, deps: ProductDeps, exec: ExecDeps = productionExecDeps): Promise<Response> {
+export async function handleProductMcp(rawId: string, request: Request, deps: ProductDeps, exec: ExecDeps = productionExecDeps, aiDeps: AiDeps | null = null): Promise<Response> {
   const pre = preflight(request);
   if (pre) return pre;
   if (request.method !== "POST") return err(405, "method_not_allowed", { allow: "POST" });
@@ -141,6 +153,7 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
     settings: p.settings,
     description: `${p.displayName} — ${p.adapter.description}`,
     scope: `product:${p.creationId}`,
+    ...(aiDeps && (await aiActive(aiDeps, p.creationId)) ? { ai: { deps: aiDeps, creationId: p.creationId } } : {}),
   };
   return serve(() => buildServer({ name: `mcpx-product-${p.creationId}`, title: p.displayName }, [entry], request, exec), request);
 }

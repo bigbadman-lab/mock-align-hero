@@ -24,7 +24,13 @@ async function integration(creationId: string) {
     .eq("creation_id", creationId).maybeSingle()) as Record<string, unknown> | null;
 }
 
-export const serviceByokStore: ByokStore & { purgeUsage(batch: number): Promise<number> } = {
+export const serviceByokStore: ByokStore & {
+  purgeUsage(batch: number): Promise<number>;
+  admit(creationId: string, credentialId: string, ref: string, inTok: number, outTok: number): Promise<string>;
+  settle(usageId: string, status: "settled" | "failed" | "ambiguous", inTok: number | null, outTok: number | null, costMicros: number | null): Promise<boolean>;
+} = {
+  admit: (creationId, credentialId, ref, inTok, outTok) => rpc("mcpx_ai_admit", { _creation: creationId, _credential: credentialId, _ref: ref, _in: inTok, _out: outTok }),
+  settle: async (usageId, status, inTok, outTok, cost) => Boolean(await rpc("mcpx_ai_settle", { _usage: usageId, _status: status, _in: inTok, _out: outTok, _cost: cost })),
   putCredential: (p) => rpc("mcpx_ai_put_credential", { _creation: p.creationId, _wallet: p.wallet, _mode: p.mode, _provider: p.provider,
     _iv: toHex(p.sealed.iv), _ct: toHex(p.sealed.ciphertext), _kek: p.sealed.kekVersion, _hint: p.hint, _model: p.model, _idem: p.idem, _expected_rev: p.expectedRevision }),
   revoke: (p) => rpc("mcpx_ai_revoke", { _creation: p.creationId, _wallet: p.wallet, _expected_rev: p.expectedRevision }),
@@ -81,4 +87,25 @@ export async function takeByokTestBudget(creationId: string): Promise<boolean> {
     }
     return true;
   } catch { return false; }
+}
+
+/** Production AI execution deps for product MCP endpoints. Missing/invalid keyring → AI simply not available. */
+export async function productionAiDeps(): Promise<import("./execute").AiDeps | null> {
+  if (process.env["MCPX_BYOK_DISABLED"] === "1") return null; // emergency stop only; default is on
+  const { parseKeyring } = await import("./crypto");
+  const raw = process.env["MCPX_BYOK_KEYRING"];
+  try { await parseKeyring(raw); } catch { return null; }
+  return {
+    getStatus: serviceByokStore.getStatus, loadActiveCredential: serviceByokStore.loadActiveCredential,
+    admit: serviceByokStore.admit,
+    // Retention: ~2% of settlements also run one bounded 90-day purge batch (idempotent; never blocks the call).
+    async settle(...a) { const r = await serviceByokStore.settle(...a); if (Math.random() < 0.02) void serviceByokStore.purgeUsage(500).catch(() => {}); return r; },
+    recordHealth: serviceByokStore.recordHealth,
+    keyring: () => parseKeyring(raw),
+    async creatorWallet(creationId) {
+      const db = await admin();
+      const c = must(await db.from("mcp_creations").select("creator_wallet").eq("id", creationId).maybeSingle()) as { creator_wallet: string } | null;
+      return c?.creator_wallet ?? null;
+    },
+  };
 }

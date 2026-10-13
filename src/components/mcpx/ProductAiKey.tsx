@@ -44,7 +44,7 @@ const ERR_TEXT: Record<string, string> = {
   unsupported_model: "That model isn't allowed.",
   invalid_input: "Check the fields and try again. OpenAI keys start with “sk-”.",
   not_found: "You are not authorized to manage this product.",
-  byok_not_enabled: "AI key setup isn't switched on yet.",
+  byok_not_enabled: "AI keys are temporarily stopped by MCPX. Nothing was changed; try again later.",
 };
 const newIdem = () => Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 32);
 const field = "w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
@@ -150,7 +150,7 @@ export function ProductAiKey({ creationId, onSessionEnded }: { creationId: strin
   if (avail === "off") return (
     <div className="rounded-md border border-border p-3 text-sm">
       <p className="text-foreground">Your own OpenAI key (optional)</p>
-      <p>Not switched on yet. When it is, you'll be able to connect an OpenAI key here for this product. Nothing is stored until then.</p>
+      <p>Temporarily unavailable (MCPX maintenance stop). Your saved settings are unchanged and AI calls are paused until it's lifted.</p>
     </div>
   );
 
@@ -196,7 +196,7 @@ export function ProductAiKey({ creationId, onSessionEnded }: { creationId: strin
                 <button type="button" disabled={busy} onClick={() => void revoke()} className={buttonOutline}>Remove key</button>
               </div>
               {!i.enabled && st === "unchecked" && <p className="text-xs">Resume becomes available after a successful connection check.</p>}
-              <p className="text-xs">A passing check only confirms OpenAI accepts the key. It doesn't turn on AI tools for buyers — that's a separate step.</p>
+              <p className="text-xs">When AI is Active, your product's MCP tool offers an optional AI summary (ai_summary) that uses this key and these limits. Without a key, the tool still works normally.</p>
 
               {limits && (
                 <fieldset className="space-y-2">

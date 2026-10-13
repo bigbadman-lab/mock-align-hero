@@ -1,6 +1,5 @@
--- L7-B (PENDING — not applied; needs operator approval). Additive only: connection health, auto-pause on a
--- confirmed invalid key, revision-guarded pause/resume and model/limit updates as atomic functions (callable from
--- the website server via the service role), and a bounded 90-day usage purge (NOT scheduled).
+-- L7-B/L7-C. Additive: connection health, auto-pause on a confirmed invalid key, revision-guarded pause/resume and
+-- model/limit updates as atomic functions (service role only), and a bounded 90-day usage purge.
 ALTER TABLE public.mcpx_ai_integrations
   ADD COLUMN health text NOT NULL DEFAULT 'unchecked'
     CHECK (health IN ('unchecked','ok','invalid_key','no_permission','no_credit','rate_limited','model_unavailable','provider_error')),
@@ -23,7 +22,6 @@ BEGIN
   IF i.revision <> _expected_rev THEN RETURN 'stale_revision'; END IF;
   IF _enabled THEN
     SELECT version INTO v FROM public.mcpx_ai_credentials WHERE integration_id = i.id AND status = 'active';
-    -- Resume only after a passing check of the CURRENT key.
     IF v IS NULL OR i.health_credential_version IS DISTINCT FROM v OR i.health <> 'ok' THEN RETURN 'needs_passing_test'; END IF;
   END IF;
   UPDATE public.mcpx_ai_integrations SET enabled = _enabled, revision = revision + 1, updated_at = now() WHERE id = i.id RETURNING * INTO i;
@@ -43,15 +41,12 @@ BEGIN
   IF i.revision <> _expected_rev THEN RETURN 'stale_revision'; END IF;
   UPDATE public.mcpx_ai_integrations SET model = _model, max_concurrency = _conc, max_per_minute = _pm, max_per_day = _pd,
     max_input_tokens = _in, max_output_tokens = _out,
-    -- A model change invalidates the previous check (compatibility is per model).
     health = CASE WHEN model <> _model THEN 'unchecked' ELSE health END,
     revision = revision + 1, updated_at = now() WHERE id = i.id RETURNING * INTO i;
   INSERT INTO public.mcpx_ai_audit (integration_id, action, actor_ref, revision) VALUES (i.id, 'set_model_limits', left('wallet:' || _wallet, 96), i.revision);
   RETURN 'ok';
 END $$;
 
--- Records a connection-test result for a specific credential version. A result for a replaced/revoked key is
--- dropped ('stale'). A confirmed invalid key pauses (never revokes or deletes).
 CREATE OR REPLACE FUNCTION public.mcpx_ai_record_health(_creation uuid, _wallet text, _cred_version integer, _health text)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE i public.mcpx_ai_integrations; v integer;
@@ -70,8 +65,6 @@ BEGIN
   RETURN 'ok';
 END $$;
 
--- Bounded, idempotent retention purge for usage rows older than 90 days (UTC). Never touches reserved rows,
--- integrations, credentials or the audit log. Not scheduled; an operator runs it until it returns 0.
 CREATE OR REPLACE FUNCTION public.mcpx_ai_purge_usage(_batch integer)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE n integer;

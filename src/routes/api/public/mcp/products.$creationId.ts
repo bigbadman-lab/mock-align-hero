@@ -1,11 +1,13 @@
 // Product-scoped MCP endpoint (Phase 03-B implementation route). Resolves only verified creations with an
-// active config; per-product credentials are not issued yet, so every request currently fails closed.
+// active config and a valid product key. Creator BYOK (if active) adds an optional ai_summary to the one tool.
 import { createFileRoute } from "@tanstack/react-router";
-import { handleProductMcp } from "@/lib/mcp-gateway/server";
+import { handleProductMcp, productionExecDeps } from "@/lib/mcp-gateway/server";
 import { productionProductDeps } from "@/lib/mcp-gateway/products.server";
 
-const h = ({ request, params }: { request: Request; params: { creationId: string } }) =>
-  handleProductMcp(params.creationId, request, productionProductDeps);
+const h = async ({ request, params }: { request: Request; params: { creationId: string } }) => {
+  const { productionAiDeps } = await import("@/lib/byok/store.server");
+  return handleProductMcp(params.creationId, request, productionProductDeps, productionExecDeps, await productionAiDeps().catch(() => null));
+};
 
 export const Route = createFileRoute("/api/public/mcp/products/$creationId")({
   server: { handlers: { POST: h, GET: h, DELETE: h } },
