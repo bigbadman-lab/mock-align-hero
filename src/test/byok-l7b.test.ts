@@ -183,8 +183,8 @@ d("L7-B BYOK management (throwaway Postgres, mocked OpenAI)", () => {
   });
 
   it("90-day purge: bounded, idempotent, never touches reserved rows or the audit log", async () => {
-    const [{ id }] = await a.unsafe("select id from public.mcpx_ai_integrations where creation_id = $1", [PA]);
-    const [{ cid }] = await a.unsafe("select id as cid from public.mcpx_ai_credentials where integration_id = $1 limit 1", [id]);
+    const id = (await a.unsafe("select id from public.mcpx_ai_integrations where creation_id = $1", [PA]))[0]!["id"];
+    const cid = (await a.unsafe("select id as cid from public.mcpx_ai_credentials where integration_id = $1 limit 1", [id]))[0]!["cid"];
     const ins = (age: string, st: string, ref: string) => a.unsafe(
       `insert into public.mcpx_ai_usage (integration_id, credential_id, request_ref, model, status, reserved_input, reserved_output, created_at, lease_until)
        values ($1, $2, $3, 'gpt-4o-mini', $4, 1, 1, now() - $5::interval, now())`, [id, cid, ref, st, age]);
