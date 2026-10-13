@@ -135,7 +135,7 @@ export async function persistedPlan(db: Q, key: string) {
 
 /** Read-only Chain for reconcileOpen. settlement() proves exact deltas against the persisted plan; anything short
  *  of PROVEN returns null (HELD_NO_PROOF) — a signature status alone never marks an intent paid. */
-export function settlementChain(rpc: RpcCall, db: Q, deployer: string, keyOf: (sig: string) => Promise<string | null>): Chain {
+export function settlementChain(rpc: RpcCall, db: Q, deployer: string): Chain {
   return {
     async signatureStatus(sig) {
       try {
@@ -148,7 +148,7 @@ export function settlementChain(rpc: RpcCall, db: Q, deployer: string, keyOf: (s
     async finalizedBlockHeight() { try { return Number(await rpc("getBlockHeight", [{ commitment: "finalized" }])); } catch { return null; } },
     async settlement(sig, i) {
       try {
-        const key = await keyOf(sig); if (!key) return null;
+        const key = i.idempotencyKey; if (!key) return null;
         if (i.kind === "BUYBACK") { // landed swap; tokens are proven separately by captureFills before any token payout
           const t = await getTx(rpc, sig); if (!t?.meta || t.meta.err !== null || t.transaction.signatures[0] !== sig) return null;
           return { kind: "SWAP_FINALIZED", slot: t.slot };
