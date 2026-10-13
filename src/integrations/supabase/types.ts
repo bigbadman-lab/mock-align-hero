@@ -692,6 +692,144 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_hix_applied_txs: {
+        Row: {
+          applied_at: string
+          block_time: string | null
+          failed: boolean
+          mint: string
+          signature: string
+          slot: number
+        }
+        Insert: {
+          applied_at?: string
+          block_time?: string | null
+          failed: boolean
+          mint: string
+          signature: string
+          slot: number
+        }
+        Update: {
+          applied_at?: string
+          block_time?: string | null
+          failed?: boolean
+          mint?: string
+          signature?: string
+          slot?: number
+        }
+        Relationships: []
+      }
+      mcpx_rw_hix_balances: {
+        Row: {
+          amount: number
+          last_signature: string
+          last_slot: number
+          mint: string
+          owner: string | null
+          token_account: string
+        }
+        Insert: {
+          amount: number
+          last_signature: string
+          last_slot: number
+          mint: string
+          owner?: string | null
+          token_account: string
+        }
+        Update: {
+          amount?: number
+          last_signature?: string
+          last_slot?: number
+          mint?: string
+          owner?: string | null
+          token_account?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_hix_checkpoints: {
+        Row: {
+          anchor_slot: number
+          covered_to_slot: number
+          mint: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          anchor_slot: number
+          covered_to_slot: number
+          mint: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          anchor_slot?: number
+          covered_to_slot?: number
+          mint?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_hix_gaps: {
+        Row: {
+          from_slot: number
+          id: number
+          mint: string
+          reason: string
+          repaired_at: string | null
+          repaired_by_source: string | null
+          to_slot: number
+        }
+        Insert: {
+          from_slot: number
+          id?: number
+          mint: string
+          reason: string
+          repaired_at?: string | null
+          repaired_by_source?: string | null
+          to_slot: number
+        }
+        Update: {
+          from_slot?: number
+          id?: number
+          mint?: string
+          reason?: string
+          repaired_at?: string | null
+          repaired_by_source?: string | null
+          to_slot?: number
+        }
+        Relationships: []
+      }
+      mcpx_rw_hix_snapshots: {
+        Row: {
+          created_at: string
+          digest: string
+          holder_count: number
+          mint: string
+          slot: number
+          supply: number
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          digest: string
+          holder_count: number
+          mint: string
+          slot: number
+          supply: number
+          window_start: string
+        }
+        Update: {
+          created_at?: string
+          digest?: string
+          holder_count?: number
+          mint?: string
+          slot?: number
+          supply?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_owner_carry: {
         Row: {
           lamports: number

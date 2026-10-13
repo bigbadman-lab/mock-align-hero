@@ -64,6 +64,13 @@
       "when": 1791842108140,
       "tag": "0008_mcpx_05e_rewards_processor_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791883382799,
+      "tag": "0009_mcpx_05g_holder_index",
+      "breakpoints": true
     }
   ]
 }
