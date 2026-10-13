@@ -19,6 +19,8 @@ import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsHolderIntelligenceRouteImport } from './routes/tools.holder-intelligence'
+import { Route as ToolsOnchainReportBuilderRouteImport } from './routes/tools.onchain-report-builder'
+import { Route as ToolsSmartMoneyTrackerRouteImport } from './routes/tools.smart-money-tracker'
 import { Route as ToolsSupplyMonitorRouteImport } from './routes/tools.supply-monitor'
 import { Route as ToolsTokenRiskAnalystRouteImport } from './routes/tools.token-risk-analyst'
 import { Route as ToolsTokenScannerRouteImport } from './routes/tools.token-scanner'
@@ -93,6 +95,17 @@ const ToolsAccountCheckerRoute = ToolsAccountCheckerRouteImport.update({
 const ToolsHolderIntelligenceRoute = ToolsHolderIntelligenceRouteImport.update({
   id: '/tools/holder-intelligence',
   path: '/tools/holder-intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsOnchainReportBuilderRoute =
+  ToolsOnchainReportBuilderRouteImport.update({
+    id: '/tools/onchain-report-builder',
+    path: '/tools/onchain-report-builder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ToolsSmartMoneyTrackerRoute = ToolsSmartMoneyTrackerRouteImport.update({
+  id: '/tools/smart-money-tracker',
+  path: '/tools/smart-money-tracker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsSupplyMonitorRoute = ToolsSupplyMonitorRouteImport.update({
@@ -240,6 +253,8 @@ export interface FileRoutesByFullPath {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
+  '/tools/onchain-report-builder': typeof ToolsOnchainReportBuilderRoute
+  '/tools/smart-money-tracker': typeof ToolsSmartMoneyTrackerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-risk-analyst': typeof ToolsTokenRiskAnalystRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -277,6 +292,8 @@ export interface FileRoutesByTo {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
+  '/tools/onchain-report-builder': typeof ToolsOnchainReportBuilderRoute
+  '/tools/smart-money-tracker': typeof ToolsSmartMoneyTrackerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-risk-analyst': typeof ToolsTokenRiskAnalystRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -315,6 +332,8 @@ export interface FileRoutesById {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
+  '/tools/onchain-report-builder': typeof ToolsOnchainReportBuilderRoute
+  '/tools/smart-money-tracker': typeof ToolsSmartMoneyTrackerRoute
   '/tools/supply-monitor': typeof ToolsSupplyMonitorRoute
   '/tools/token-risk-analyst': typeof ToolsTokenRiskAnalystRoute
   '/tools/token-scanner': typeof ToolsTokenScannerRoute
@@ -354,6 +373,8 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
+    | '/tools/onchain-report-builder'
+    | '/tools/smart-money-tracker'
     | '/tools/supply-monitor'
     | '/tools/token-risk-analyst'
     | '/tools/token-scanner'
@@ -391,6 +412,8 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
+    | '/tools/onchain-report-builder'
+    | '/tools/smart-money-tracker'
     | '/tools/supply-monitor'
     | '/tools/token-risk-analyst'
     | '/tools/token-scanner'
@@ -428,6 +451,8 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
+    | '/tools/onchain-report-builder'
+    | '/tools/smart-money-tracker'
     | '/tools/supply-monitor'
     | '/tools/token-risk-analyst'
     | '/tools/token-scanner'
@@ -466,6 +491,8 @@ export interface RootRouteChildren {
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsHolderIntelligenceRoute: typeof ToolsHolderIntelligenceRoute
+  ToolsOnchainReportBuilderRoute: typeof ToolsOnchainReportBuilderRoute
+  ToolsSmartMoneyTrackerRoute: typeof ToolsSmartMoneyTrackerRoute
   ToolsSupplyMonitorRoute: typeof ToolsSupplyMonitorRoute
   ToolsTokenRiskAnalystRoute: typeof ToolsTokenRiskAnalystRoute
   ToolsTokenScannerRoute: typeof ToolsTokenScannerRoute
@@ -564,6 +591,20 @@ declare module '@tanstack/react-router' {
       path: '/tools/holder-intelligence'
       fullPath: '/tools/holder-intelligence'
       preLoaderRoute: typeof ToolsHolderIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/onchain-report-builder': {
+      id: '/tools/onchain-report-builder'
+      path: '/tools/onchain-report-builder'
+      fullPath: '/tools/onchain-report-builder'
+      preLoaderRoute: typeof ToolsOnchainReportBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/smart-money-tracker': {
+      id: '/tools/smart-money-tracker'
+      path: '/tools/smart-money-tracker'
+      fullPath: '/tools/smart-money-tracker'
+      preLoaderRoute: typeof ToolsSmartMoneyTrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/supply-monitor': {
@@ -754,6 +795,8 @@ const rootRouteChildren: RootRouteChildren = {
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsHolderIntelligenceRoute: ToolsHolderIntelligenceRoute,
+  ToolsOnchainReportBuilderRoute: ToolsOnchainReportBuilderRoute,
+  ToolsSmartMoneyTrackerRoute: ToolsSmartMoneyTrackerRoute,
   ToolsSupplyMonitorRoute: ToolsSupplyMonitorRoute,
   ToolsTokenRiskAnalystRoute: ToolsTokenRiskAnalystRoute,
   ToolsTokenScannerRoute: ToolsTokenScannerRoute,

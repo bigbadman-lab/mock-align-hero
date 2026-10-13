@@ -1,11 +1,11 @@
 // Shared form + status + error shell for single-mint tools (Holder Intelligence, Token Risk Analyst).
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useRef, useState, type ReactNode } from "react";
 import { FreeLimitNotice } from "@/components/mcpx/FreeLimitNotice";
 import { PageContainer, PageHeader, StatusMessage, buttonPrimary } from "@/components/mcpx/primitives";
 import { isValidSolanaAddress } from "@/lib/tools/wallet-inspector";
-import type { holderIntelligenceStatusQuery } from "@/lib/tools/status";
+import type { holderIntelligenceStatusQuery, ToolStatus } from "@/lib/tools/status";
 
 export type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
 export const ERROR_TEXT: Record<Kind, string> = {
@@ -37,7 +37,7 @@ export async function postTool<R>(endpoint: string, body: unknown, signal: Abort
 }
 
 /** Availability banner + error box shared by every single-request tool page. */
-export function ToolStatusBanner({ name, status }: { name: string; status: ReturnType<typeof useQuery<import("@/lib/tools/status").ToolStatus>> }) {
+export function ToolStatusBanner({ name, status }: { name: string; status: UseQueryResult<ToolStatus> }) {
   if (status.isPending) return <StatusMessage title="Checking tool availability…" />;
   if (status.isError) return <StatusMessage tone="warning" title="Couldn't check availability"><button className="underline" onClick={() => void status.refetch()}>Check again</button></StatusMessage>;
   if (status.data && !status.data.available) return (
