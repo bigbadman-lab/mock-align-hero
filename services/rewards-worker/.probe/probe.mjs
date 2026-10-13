@@ -96796,15 +96796,30 @@ if (curveMint && curveCreator) {
     return b2.kind === "OK" ? { expectedTokens: String(b2.expectedTokens), ...await pack(b2.ixs, curveCreator, 3e5) } : b2;
   });
   await run("token2022Payout", async () => {
+    const big = await conn.getTokenLargestAccounts(curveMint, "finalized");
+    let holder = null, have = 0n;
+    for (const a2 of big.value) {
+      const i = await conn.getParsedAccountInfo(a2.address, "finalized");
+      const info = i.value?.data?.parsed?.info;
+      const o = info?.owner ? new PublicKey11(info.owner) : null;
+      if (o && PublicKey11.isOnCurve(o.toBytes())) {
+        holder = o;
+        have = BigInt(info?.tokenAmount?.amount ?? "0");
+        break;
+      }
+    }
+    if (!holder) return { kind: "BLOCKED", reason: "NO_ON_CURVE_HOLDER" };
+    out["token2022PayoutSource"] = { wallet: holder.toBase58(), balance: String(have) };
+    const payer = holder;
     const rows = Array.from({ length: 30 }, () => ({ owner: Keypair.generate().publicKey.toBase58(), amount: 1000n, ataExists: false }));
-    const tb = batchBySize(rows, (p2) => assemble(tokenPayoutIxs(curveCreator, curveMint, 6, p2, TOKEN_2022_PROGRAM_ID8).ixs, curveCreator, bh, { cuLimit: 4e5, cuPriceMicroLamports: 1e3, allowedSigners: [curveCreator.toBase58()] }));
+    const tb = batchBySize(rows, (p2) => assemble(tokenPayoutIxs(payer, curveMint, 6, p2, TOKEN_2022_PROGRAM_ID8).ixs, payer, bh, { cuLimit: 4e5, cuPriceMicroLamports: 1e3, allowedSigners: [payer.toBase58()] }));
     if (tb.kind !== "OK") return tb;
     return {
       recipients: 30,
       batches: tb.batches.length,
       bytes: tb.batches.map((x2) => x2.bytes),
       firstBatchSim: await sim(tb.batches[0].messageBase64),
-      note: "stand-in payer holds none of this mint, so a funds error in TransferChecked is expected; size/accounts/ATA creation are what this proves"
+      note: "source = real on-curve holder of a Token-2022 Pump coin; recipients are fresh keys needing ATA creation"
     };
   });
   await run("solPayout", async () => {
@@ -96813,7 +96828,22 @@ if (curveMint && curveCreator) {
     return sb.kind === "OK" ? { recipients: 40, batches: sb.batches.length, bytes: sb.batches.map((x2) => x2.bytes), firstBatchSim: await sim(sb.batches[0].messageBase64) } : sb;
   });
 }
-var GRAD = new PublicKey11(process.env["GRAD_MINT"] ?? "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn");
+var GRAD = new PublicKey11("11111111111111111111111111111111");
+for (const s of await conn.getSignaturesForAddress(new PublicKey11("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"), { limit: 60 }, "finalized")) {
+  if (s.err) continue;
+  const t = await conn.getTransaction(s.signature, { maxSupportedTransactionVersion: 0, commitment: "finalized" }).catch(() => null);
+  const ms = [...new Set((t?.meta?.postTokenBalances ?? []).map((b2) => b2.mint).filter((m) => m.endsWith("pump")))];
+  let hit = false;
+  for (const m of ms) {
+    const pk = new PublicKey11(m);
+    if (await conn.getAccountInfo(canonicalPumpPoolPda(pk), "finalized")) {
+      GRAD = pk;
+      hit = true;
+      break;
+    }
+  }
+  if (hit) break;
+}
 await run("standInAmm", async () => {
   const pool = canonicalPumpPoolPda(GRAD);
   const p2 = await new OnlinePumpAmmSdk(conn).fetchPool(pool);

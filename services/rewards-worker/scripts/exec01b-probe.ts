@@ -37,11 +37,19 @@ if (curveMint && curveCreator) {
   await run("curveBuyback", async () => { const b = await curveBuyInstructions(conn, curveMint!, curveCreator!, { budgetLamports: 1_000_000n, maxSlippageBps: 300, minOutTokens: 1n }, TOKEN_2022_PROGRAM_ID);
     return b.kind === "OK" ? { expectedTokens: String(b.expectedTokens), ...(await pack(b.ixs, curveCreator!, 300_000)) } : b; });
   await run("token2022Payout", async () => {
+    // pay FROM a real holder wallet of the stand-in mint so the source Token-2022 ATA exists (simulation only)
+    const big = await conn.getTokenLargestAccounts(curveMint!, "finalized");
+    let holder: PublicKey | null = null, have = 0n;
+    for (const a of big.value) { const i = await conn.getParsedAccountInfo(a.address, "finalized"); const info = (i.value?.data as { parsed?: { info?: { owner?: string; tokenAmount?: { amount?: string } } } })?.parsed?.info;
+      const o = info?.owner ? new PublicKey(info.owner) : null; if (o && PublicKey.isOnCurve(o.toBytes())) { holder = o; have = BigInt(info?.tokenAmount?.amount ?? "0"); break; } }
+    if (!holder) return { kind: "BLOCKED", reason: "NO_ON_CURVE_HOLDER" };
+    out["token2022PayoutSource"] = { wallet: holder.toBase58(), balance: String(have) };
+    const payer = holder;
     const rows = Array.from({ length: 30 }, () => ({ owner: Keypair.generate().publicKey.toBase58(), amount: 1000n, ataExists: false }));
-    const tb = batchBySize(rows, (p) => assemble(tokenPayoutIxs(curveCreator!, curveMint!, 6, p, TOKEN_2022_PROGRAM_ID).ixs, curveCreator!, bh, { cuLimit: 400_000, cuPriceMicroLamports: 1000, allowedSigners: [curveCreator!.toBase58()] }));
+    const tb = batchBySize(rows, (p) => assemble(tokenPayoutIxs(payer, curveMint!, 6, p, TOKEN_2022_PROGRAM_ID).ixs, payer, bh, { cuLimit: 400_000, cuPriceMicroLamports: 1000, allowedSigners: [payer.toBase58()] }));
     if (tb.kind !== "OK") return tb;
     return { recipients: 30, batches: tb.batches.length, bytes: tb.batches.map((x) => x.bytes), firstBatchSim: await sim(tb.batches[0]!.messageBase64),
-      note: "stand-in payer holds none of this mint, so a funds error in TransferChecked is expected; size/accounts/ATA creation are what this proves" };
+      note: "source = real on-curve holder of a Token-2022 Pump coin; recipients are fresh keys needing ATA creation" };
   });
   await run("solPayout", async () => {
     const rows = Array.from({ length: 40 }, () => ({ owner: Keypair.generate().publicKey.toBase58(), lamports: 1_000_000n }));
@@ -51,7 +59,15 @@ if (curveMint && curveCreator) {
 }
 
 // Stand-in B: a graduated SOL-paired coin on its canonical PumpSwap pool.
-const GRAD = new PublicKey(process.env["GRAD_MINT"] ?? "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn");
+let GRAD = new PublicKey("11111111111111111111111111111111");
+for (const s of await conn.getSignaturesForAddress(new PublicKey("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"), { limit: 60 }, "finalized")) {
+  if (s.err) continue;
+  const t = await conn.getTransaction(s.signature, { maxSupportedTransactionVersion: 0, commitment: "finalized" }).catch(() => null);
+  const ms = [...new Set((t?.meta?.postTokenBalances ?? []).map((b) => b.mint).filter((m) => m.endsWith("pump")))];
+  let hit = false;
+  for (const m of ms) { const pk = new PublicKey(m); if (await conn.getAccountInfo(canonicalPumpPoolPda(pk), "finalized")) { GRAD = pk; hit = true; break; } }
+  if (hit) break;
+}
 await run("standInAmm", async () => { const pool = canonicalPumpPoolPda(GRAD); const p = await new OnlinePumpAmmSdk(conn).fetchPool(pool);
   out["ammCreator"] = p.coinCreator.toBase58(); return { mint: GRAD.toBase58(), pool: pool.toBase58(), coinCreator: p.coinCreator.toBase58(), tokenProgram: (await mintTokenProgram(conn, GRAD))?.toBase58() ?? null }; });
 const ammCreator = out["ammCreator"] ? new PublicKey(String(out["ammCreator"])) : null;
