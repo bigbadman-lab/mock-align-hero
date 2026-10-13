@@ -30,7 +30,9 @@ import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creato
 import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
+import { Route as ApiToolsHolderIntelligenceRouteImport } from './routes/api/tools/holder-intelligence'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
+import { Route as ApiToolsTokenRiskAnalystRouteImport } from './routes/api/tools/token-risk-analyst'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
@@ -145,11 +147,23 @@ const ApiToolsAccountCheckerRoute = ApiToolsAccountCheckerRouteImport.update({
   path: '/api/tools/account-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiToolsHolderIntelligenceRoute =
+  ApiToolsHolderIntelligenceRouteImport.update({
+    id: '/api/tools/holder-intelligence',
+    path: '/api/tools/holder-intelligence',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiToolsSupplyMonitorRoute = ApiToolsSupplyMonitorRouteImport.update({
   id: '/api/tools/supply-monitor',
   path: '/api/tools/supply-monitor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiToolsTokenRiskAnalystRoute =
+  ApiToolsTokenRiskAnalystRouteImport.update({
+    id: '/api/tools/token-risk-analyst',
+    path: '/api/tools/token-risk-analyst',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiToolsTokenScannerRoute = ApiToolsTokenScannerRouteImport.update({
   id: '/api/tools/token-scanner',
   path: '/api/tools/token-scanner',
@@ -212,7 +226,9 @@ export interface FileRoutesByFullPath {
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
+  '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
+  '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -243,7 +259,9 @@ export interface FileRoutesByTo {
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
+  '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
+  '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -275,7 +293,9 @@ export interface FileRoutesById {
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
+  '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
+  '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
@@ -308,7 +328,9 @@ export interface FileRouteTypes {
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
+    | '/api/tools/holder-intelligence'
     | '/api/tools/supply-monitor'
+    | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -339,7 +361,9 @@ export interface FileRouteTypes {
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
+    | '/api/tools/holder-intelligence'
     | '/api/tools/supply-monitor'
+    | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -370,7 +394,9 @@ export interface FileRouteTypes {
     | '/api/creator/launch-drafts'
     | '/api/creator/products'
     | '/api/tools/account-checker'
+    | '/api/tools/holder-intelligence'
     | '/api/tools/supply-monitor'
+    | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
@@ -402,7 +428,9 @@ export interface RootRouteChildren {
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
+  ApiToolsHolderIntelligenceRoute: typeof ApiToolsHolderIntelligenceRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
+  ApiToolsTokenRiskAnalystRoute: typeof ApiToolsTokenRiskAnalystRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
@@ -561,11 +589,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsAccountCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools/holder-intelligence': {
+      id: '/api/tools/holder-intelligence'
+      path: '/api/tools/holder-intelligence'
+      fullPath: '/api/tools/holder-intelligence'
+      preLoaderRoute: typeof ApiToolsHolderIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/supply-monitor': {
       id: '/api/tools/supply-monitor'
       path: '/api/tools/supply-monitor'
       fullPath: '/api/tools/supply-monitor'
       preLoaderRoute: typeof ApiToolsSupplyMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/token-risk-analyst': {
+      id: '/api/tools/token-risk-analyst'
+      path: '/api/tools/token-risk-analyst'
+      fullPath: '/api/tools/token-risk-analyst'
+      preLoaderRoute: typeof ApiToolsTokenRiskAnalystRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tools/token-scanner': {
@@ -642,7 +684,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
+  ApiToolsHolderIntelligenceRoute: ApiToolsHolderIntelligenceRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
+  ApiToolsTokenRiskAnalystRoute: ApiToolsTokenRiskAnalystRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
