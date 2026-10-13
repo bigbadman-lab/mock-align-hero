@@ -16,14 +16,15 @@ export function intentStore(db: Q, workerId: string): IntentStore & Omit<ExecSto
     async reserve(i) {
       // One sealed transaction: config-row lock (serialises concurrent workers), then insert only if the key is
       // new AND the persisted fee-backed budget covers it. Budget is derived in SQL from finalized records only.
-      const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports)
-        select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric
+      const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports, plan_rows, plan_mint, plan_token_program, message_base64)
+        select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric,$11::jsonb,$12,$13,$14
         where not exists (select 1 from public.mcpx_rw_intents where idempotency_key=$1)
           and exists (select 1 from public.mcpx_rw_budget_remaining(to_timestamp($8)) b where b.evidence and b.ops >= $10::numeric and
             case $3 when 'SOL_PAYOUT' then b.sol >= $5::numeric when 'BUYBACK' then b.buyback >= $5::numeric
                     when 'TOKEN_PAYOUT' then $5::numeric = 0 and b.tokens >= $9::numeric else false end)
         returning idempotency_key`;
-      const p = [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId, i.epoch, i.tokens.toString(), i.opsCostLamports.toString()];
+      const p = [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId, i.epoch, i.tokens.toString(), i.opsCostLamports.toString(),
+        i.plan ? JSON.stringify(i.plan.rows.map((r) => ({ owner: r.owner, amount: r.amount.toString() }))) : null, i.plan?.mint ?? null, i.plan?.tokenProgram ?? null, i.plan?.messageBase64 || null];
       const r = await runTx(db as never, [
         // Row lock on the single config row serialises all budget reservations (pg_* calls are refused by the bridge guard).
         { sql: "select id from public.mcpx_rw_config where id = 1 for update", params: [], abortIfEmpty: "NO_CONFIG" },
@@ -65,12 +66,14 @@ export function intentStore(db: Q, workerId: string): IntentStore & Omit<ExecSto
       if (r.rows.length !== 1) throw new Error("intent_not_signed");
     },
     async openSigned(): Promise<OpenIntent[]> {
-      // Rows (recipients) are re-checked from the persisted plan fingerprint by the settlement verifier; the executor
-      // needs identity + exact bytes only.
-      const r = await db.query(`select idempotency_key, kind, signature, signed_tx_base64, last_valid_block_height::text h
+      // Identity + exact bytes + the exact persisted plan (0020).
+      const r = await db.query(`select idempotency_key, kind, signature, signed_tx_base64, last_valid_block_height::text h, plan_rows, plan_mint
         from public.mcpx_rw_intents where state='SIGNED' and signed_tx_base64 is not null order by created_at`);
       return r.rows.map((x) => ({ idempotencyKey: String(x["idempotency_key"]), kind: String(x["kind"]), signature: String(x["signature"]),
-        signedBase64: String(x["signed_tx_base64"]), lastValidBlockHeight: Number(x["h"]), rows: [] }));
+        signedBase64: String(x["signed_tx_base64"]), lastValidBlockHeight: Number(x["h"]),
+        // 0020: exact persisted plan (legacy rows without a plan → empty → settlement cannot be proven → never LANDED)
+        rows: Array.isArray(x["plan_rows"]) ? (x["plan_rows"] as { owner: string; amount: string }[]).map((p) => ({ owner: p.owner, amount: BigInt(p.amount) })) : [],
+        ...(x["plan_mint"] ? { mint: String(x["plan_mint"]) } : {}) }));
     },
     async abandonUnsigned(key) {
       const r = await db.query(`update public.mcpx_rw_intents set state='ABANDONED_UNSIGNED'
