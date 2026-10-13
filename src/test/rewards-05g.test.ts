@@ -62,11 +62,11 @@ describe("E2E dry run (real fee event + fixture holders + fixture fill)", () => 
     expect((await ingestCreatorFee(store, { mint: M, deployerWallet: deployer, childFeeWallets: [] }, ev, true, { createdMints: [M] })).kind).toBe("CREDITED");
     const s = anchor(); recordCoverage(s, { fromSlot: 101, toSlot: 200, complete: true, source: "fixture" });
     const hs = snapshotAt(s, 150, 100n); if (hs.kind !== "SNAPSHOT") throw new Error();
-    const policy = { version: "fixture-v1", approved: true, excludedOwners: [], minBalance: 1n } as never;
+    const policy = { version: "fixture-v1", approved: true, poolVaults: [], treasuries: [], reserves: [], resolvedOwners: {} };
     const w = Math.floor(ev.blockTime! / EPOCH_SECONDS) * EPOCH_SECONDS;
     const r = await processNext(store, cfg, { workerId: "w", now: w + 1000, leaseSeconds: 60, finalizedBlockTime: w + 1000, genesisWindow: w,
       snapshot: async () => buildEligibility({ mint: M, slot: 150, commitment: "finalized", totalSupply: 100n, source: "fixture",
-        accounts: hs.owners.map((o, i) => ({ account: `acc${i}`, mint: M, tokenProgram: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", owner: o.owner, amount: o.amount, slot: 150, ownerKind: "WALLET" as const })) }, policy),
+        accounts: hs.owners.map((o, i) => ({ account: `acc${i}`, mint: M, tokenProgram: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", owner: o.owner, amount: o.amount, slot: 150, ownerKind: "WALLET" as const })) }, policy),
       costs: () => ({ estimateLamports: 10_000n, reserveLamports: 9_979_260n }) });
     if (r.kind !== "SEALED") throw new Error(r.kind);
     const p = r.plan;
