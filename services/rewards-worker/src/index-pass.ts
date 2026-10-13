@@ -25,7 +25,9 @@ export async function selectPendingCutoffs(db: Db, o: PassOpts) {
   const out: { window: number; result: string }[] = [];
   const ck = (await db.query("select covered_to_slot from public.mcpx_rw_hix_checkpoints where mint=$1", [o.mint])).rows[0];
   for (const w of todo) {
-    const r = await selectCutoff(w, o.deps); const saved = await saveCutoff(db, o.mint, w, r);
+    // 05-I.1: seed from the latest validated FROZEN cutoff before w (a search hint only, never proof)
+    const hr = (await db.query("select extract(epoch from window_start)::bigint w, cutoff_slot from public.mcpx_rw_hix_frozen_snapshots where mint=$1 and window_start < $2 order by window_start desc limit 1", [o.mint, new Date(w * 1000).toISOString()])).rows[0];
+    const r = await selectCutoff(w, o.deps, { hint: hr ? { windowStart: Number(hr.w), cutoffSlot: Number(hr.cutoff_slot) } : null }); const saved = await saveCutoff(db, o.mint, w, r);
     out.push({ window: w, result: `${saved}${r.kind === "HOLD" ? ":" + r.reason : ""}` });
     // index already past this cutoff without a capture → only a controlled rebuild can produce this window
     if (r.kind === "SELECTED" && saved === "SELECTED" && ck && Number(ck.covered_to_slot) >= r.evidence.cutoffSlot)
