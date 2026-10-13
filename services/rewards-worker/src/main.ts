@@ -10,6 +10,7 @@ import { EPOCH_SECONDS } from "../../../src/lib/rewards/epochs";
 import { loadSigner, readLimits, executionReadiness } from "./signer";
 import { intentStore } from "./intents";
 import { reconcileOpen, type Chain } from "./executor";
+import { runPassWindows } from "./orchestrator";
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
@@ -180,6 +181,19 @@ async function main() {
       // EXEC-01B: reconcile any persisted signed intents (no sender in this gate → never broadcasts). Execution of new
       // collect/buy/pay plans runs only when executionReadiness reports READY, which it cannot in this bundle.
       const rec = await reconcileOpen(intentStore(db, workerId), rpcChain(env("MCPX_REWARDS_RPC_URL")!), null);
+      // EXEC-01C: five-minute financial orchestration over sealed windows. Readiness is computed from real checks and is
+      // never READY in this gate, so every window reports HELD:EXECUTION_NOT_READY before any money stage runs.
+      if (lastPlanned !== null) {
+        const fin = await runPassWindows({
+          readiness: () => readiness, maxRecipientsPerTx: 20,
+          sealed: async () => null, openForCycle: async (c) => Number((await db.query("select count(*)::int n from public.mcpx_rw_intents where cycle_id=$1 and state='SIGNED'", [c])).rows[0]?.["n"] ?? 0),
+          vaultLamports: async () => null, pendingFills: async () => 0,
+          budget: async (w) => { const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [w])).rows[0];
+            return b ? { sol: BigInt(String(b["sol"])), buyback: BigInt(String(b["buyback"])), tokens: BigInt(String(b["tokens"])), ops: BigInt(String(b["ops"])), evidence: !!b["evidence"] } : null; },
+          submit: async () => "REFUSED",
+        }, [lastPlanned], 1);
+        log({ event: "financial_cycle", correlationId, windows: fin.map((x) => ({ window: x.window, last: x.stages.at(-1) })) });
+      }
       log({ event: "execution", correlationId, readiness: readiness.state, blockers: readiness.blockers, reconciled: rec.length, actions: rec.map((x) => x.action) });
       backoff = pollMs;
     } catch (e) {
