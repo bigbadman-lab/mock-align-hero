@@ -1,4 +1,4 @@
-// BYOK operations (server-only, injectable store). Wired to /api/creator/ai behind MCPX_BYOK_ENABLED (L7-B).
+// BYOK operations (server-only, injectable store). Wired to /api/creator/ai (on by default; MCPX_BYOK_DISABLED=1 = emergency stop).
 // Every operation re-checks: creator session present → session wallet owns the verified product (authorizeCreator).
 // Responses never contain key material — not even a masked substring: only provider, model, status, health, limits, usage.
 import { authorizeCreator, type OwnershipStore } from "@/lib/creator-auth/core";
