@@ -45,10 +45,10 @@ export function toIndexed(t: FullTx, mint: string): IndexedTx & { txIndex: numbe
 
 const OPTS = { sortOrder: "asc", commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 } as const;
 
-export async function fullHistory(rpc: Rpc, meter: Meter, address: string, mint: string, lteSlot: number) {
+export async function fullHistory(rpc: Rpc, meter: Meter, address: string, mint: string, lteSlot: number, gtSlot?: number) {
   const out: (IndexedTx & { txIndex: number })[] = []; let token: string | undefined;
   do {
-    const r = await rpc("getTransactionsForAddress", [address, { ...OPTS, transactionDetails: "full", limit: 100, filters: { slot: { lte: lteSlot } }, ...(token ? { paginationToken: token } : {}) }]);
+    const r = await rpc("getTransactionsForAddress", [address, { ...OPTS, transactionDetails: "full", limit: 100, filters: { slot: { lte: lteSlot, ...(gtSlot !== undefined ? { gt: gtSlot } : {}) } }, ...(token ? { paginationToken: token } : {}) }]);
     (meter["gTFA:full"] ??= { calls: 0, items: 0 }).calls++; meter["gTFA:full"]!.items += r.data.length;
     for (const t of r.data) out.push(toIndexed(t, mint));
     token = r.data.length ? r.paginationToken ?? undefined : undefined;
