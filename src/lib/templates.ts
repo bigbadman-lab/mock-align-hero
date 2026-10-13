@@ -131,3 +131,28 @@ export const LIBRARY: LibraryTemplate[] = [
   { id: "smart-money-tracker", name: "Smart Money Tracker", category: "Intelligence", tagline: "Follow wallets you choose.", benefit: "Planned: activity across a watchlist of wallets you supply. No ranking claims without a source.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_smart_money_tracker },
   { id: "onchain-report-builder", name: "Onchain Report Builder", category: "Intelligence", tagline: "Turn reads into a report.", benefit: "Planned: combine results from other tools into one shareable, sourced report.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_onchain_report_builder },
 ];
+
+// ---------------------------------------------------------------------------
+// Launch deep links: /launch?template=<id>. Canonical id = LIBRARY/TEMPLATES id (never renamed).
+// Legacy and relay spellings map explicitly to the canonical id.
+export const TEMPLATE_ALIASES: Record<string, string> = Object.fromEntries([
+  ...LIBRARY.flatMap((t) => [[t.id, t.id], ...(t.toolId ? [[t.toolId, t.id]] : [])]),
+  ["transaction-verifier", "tx-verifier"],
+  ["tx_verifier", "tx-verifier"],
+]);
+
+export type TemplateParam =
+  | { kind: "none" }
+  | { kind: "launchable"; id: string }
+  | { kind: "not_launchable"; id: string; name: string }
+  | { kind: "unknown"; raw: string };
+
+/** Resolve a ?template= value. Only templates the launch form accepts become a preselection. */
+export function resolveTemplateParam(raw: unknown): TemplateParam {
+  if (typeof raw !== "string" || raw.trim() === "") return { kind: "none" };
+  const v = raw.trim().toLowerCase().slice(0, 64);
+  const id = TEMPLATE_ALIASES[v];
+  if (!id) return { kind: "unknown", raw: v };
+  const t = LIBRARY.find((x) => x.id === id)!;
+  return t.tokenLaunch && TEMPLATES.some((x) => x.id === id) ? { kind: "launchable", id } : { kind: "not_launchable", id, name: t.name };
+}
