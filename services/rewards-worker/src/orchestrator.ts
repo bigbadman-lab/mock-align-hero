@@ -2,7 +2,6 @@
 // Stages: SETTLE_OPEN → COLLECT → BUY → FILL → PAY_SOL → PAY_TOKEN. Every stage is idempotent: batch ids are
 // deterministic, so a crash between stages re-runs into DUPLICATE reservations instead of new payments.
 // The first non-DONE stage stops the window with a precise reason; liabilities stay for the next pass.
-import { batchId } from "./executor";
 import { chunkEntitlements } from "./budget";
 
 export type StageResult = { stage: Stage; status: "DONE" | "HELD" | "WAITING"; reason?: string; detail?: Record<string, unknown> };
@@ -62,11 +61,11 @@ export async function runWindow(d: OrchestratorDeps, window: number): Promise<St
   out.push({ stage: "FILL", status: "DONE" });
 
   for (const [stage, kind, rows] of [["PAY_SOL", "SOL_PAYOUT", s.solRows], ["PAY_TOKEN", "TOKEN_PAYOUT", s.tokenRowsFor((await d.budget(window))?.tokens ?? 0n)]] as const) {
-    const batches = chunkEntitlements(rows.map((x) => ({ owner: x.owner, amount: x.amount })), d.maxRecipientsPerTx);
+    const batches = chunkEntitlements(window, kind, rows, d.maxRecipientsPerTx);
     let signed = 0;
-    for (const part of batches) {
+    for (const { idempotencyKey, rows: part } of batches) {
       const total = part.reduce((a, x) => a + x.amount, 0n);
-      const o = await d.submit(kind, batchId(cycleId, kind, part), cycleId, window, part, kind === "SOL_PAYOUT" ? total : 0n);
+      const o = await d.submit(kind, idempotencyKey, cycleId, window, part, kind === "SOL_PAYOUT" ? total : 0n);
       if (o === "REFUSED" || o === "NO_BUDGET") return stop({ stage, status: "HELD", reason: o, detail: { batches: batches.length, signed } });
       if (o === "NEW_SIGNED") signed++;
     }
