@@ -83,3 +83,19 @@ describe("optional tool description", () => {
     expect(validateDraft({ ...base, toolDescription: "a".repeat(281) }).ok).toBe(false);
   });
 });
+
+import { parseDraftBody } from "@/lib/launch/drafts-core";
+describe("draft requests with and without tool description", () => {
+  const d = { templateId: "token-scanner", settings: {}, productName: "Scan", tokenName: "Scan", symbol: "SCN", description: "d", link: "", buyEnabled: false, buyAmount: "", slippageBps: "100" };
+  const key = "abcdefghijklmnop";
+  it("older clients without the field still save", () => {
+    expect("action" in parseDraftBody({ action: "create", createKey: key, draft: d })).toBe(true);
+  });
+  it("new clients send it and it is kept", () => {
+    const r = parseDraftBody({ action: "create", createKey: key, draft: { ...d, toolDescription: "Reads authorities." } });
+    expect("draft" in r && r.draft.toolDescription).toBe("Reads authorities.");
+  });
+  it("a non-string value is rejected", () => {
+    expect(parseDraftBody({ action: "create", createKey: key, draft: { ...d, toolDescription: 5 } })).toEqual({ error: "invalid_input" });
+  });
+});
