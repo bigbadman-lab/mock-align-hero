@@ -124,7 +124,7 @@ function ToolAction({ t, toolId, route }: { t: LibraryTemplate; toolId: string; 
   if (checking) return <span className="font-mono text-xs text-subtle">Checking execution service…</span>;
   if (!ready) return <span className="font-mono text-xs text-subtle">Execution service not connected</span>;
   return (
-    <Link to={route} className="inline-flex min-h-10 items-center rounded-md border border-border-strong px-4 text-sm text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <Link to={route as "/tools/token-scanner"} search={{}} className="inline-flex min-h-10 items-center rounded-md border border-border-strong px-4 text-sm text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       Open {t.name} <span aria-hidden className="ml-2">→</span>
     </Link>
   );

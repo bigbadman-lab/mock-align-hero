@@ -62,7 +62,7 @@ function Home() {
       <section aria-labelledby="tpl" className="border-b border-border">
         <PageContainer className="py-20">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading label="Six templates" title={<span id="tpl">Three engines, six tools</span>} intro="Defined templates for reading Solana data on demand." />
+            <SectionHeading label="Tool library" title={<span id="tpl">Ten templates, six live-ready tools</span>} intro="Read-only Solana tools today, with four intelligence templates planned." />
             <Link to="/mcp" className={buttonOutline}>View all templates</Link>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
