@@ -7,8 +7,8 @@ import { PageContainer, PageHeader, StatusMessage, buttonPrimary } from "@/compo
 import { isValidSolanaAddress } from "@/lib/tools/wallet-inspector";
 import type { holderIntelligenceStatusQuery } from "@/lib/tools/status";
 
-type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
-const ERROR_TEXT: Record<Kind, string> = {
+export type Kind = "invalid_input" | "rate_limited" | "busy" | "timeout" | "provider_error" | "unavailable" | "too_large" | "bad_response" | "network" | "free_limit";
+export const ERROR_TEXT: Record<Kind, string> = {
   invalid_input: "That isn't a valid Solana public address.",
   rate_limited: "Too many requests right now. Wait a minute, then try again.",
   busy: "The tool is busy. Try again in a moment.",
@@ -20,7 +20,44 @@ const ERROR_TEXT: Record<Kind, string> = {
   network: "Couldn't reach MCPX. Check your connection.",
   free_limit: "You've used today's 3 free tests of this tool.",
 };
-class ToolError extends Error { constructor(public kind: Kind) { super(kind); } }
+export class ToolError extends Error { constructor(public kind: Kind) { super(kind); } }
+
+/** POST a JSON body to a same-origin tool relay; maps failures to stable, user-facing error kinds. */
+export async function postTool<R>(endpoint: string, body: unknown, signal: AbortSignal, timeoutMs: number): Promise<R> {
+  let r: Response;
+  try {
+    r = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) });
+  } catch { throw new ToolError(signal.aborted ? "network" : "timeout"); }
+  const b = (await r.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!r.ok || !b || !("schema" in b)) {
+    const k = b?.["error"] as Kind | undefined;
+    throw new ToolError(k && k in ERROR_TEXT ? k : "provider_error");
+  }
+  return b as R;
+}
+
+/** Availability banner + error box shared by every single-request tool page. */
+export function ToolStatusBanner({ name, status }: { name: string; status: ReturnType<typeof useQuery<import("@/lib/tools/status").ToolStatus>> }) {
+  if (status.isPending) return <StatusMessage title="Checking tool availability…" />;
+  if (status.isError) return <StatusMessage tone="warning" title="Couldn't check availability"><button className="underline" onClick={() => void status.refetch()}>Check again</button></StatusMessage>;
+  if (status.data && !status.data.available) return (
+    <StatusMessage tone="warning" title={`${name} is not available yet`}>
+      <p>{status.data.reason === "tool_not_deployed" ? `The execution service is running, but its ${name} update hasn't been deployed yet.` : "The execution service isn't connected, so checks can't run."} Nothing is simulated.</p>
+    </StatusMessage>
+  );
+  return null;
+}
+export function ToolErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const e = error as ToolError;
+  return (
+    <StatusMessage tone="warning" title={e.kind === "free_limit" ? "Free tests used" : e.kind === "rate_limited" ? "Rate limited" : "Check failed"}>
+      <p>{ERROR_TEXT[e.kind ?? "provider_error"]}</p>
+      {e.kind === "free_limit" && <FreeLimitNotice />}
+      {onRetry && e.kind !== "free_limit" && <button className="mt-2 underline" onClick={onRetry}>Retry</button>}
+    </StatusMessage>
+  );
+}
+export const QUOTA_HELP = "Mainnet only. 3 free tests per day (resets 00:00 UTC). Shared limits across all MCPX tools: 6 per minute, 40 per hour.";
 
 export const PROGRAM_NAME = { "spl-token": "SPL Token (original)", "token-2022": "Token-2022" } as const;
 export const NOT_MINT: Record<string, string> = {

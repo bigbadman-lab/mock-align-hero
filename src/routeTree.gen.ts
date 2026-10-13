@@ -33,6 +33,8 @@ import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsHolderIntelligenceRouteImport } from './routes/api/tools/holder-intelligence'
+import { Route as ApiToolsOnchainReportBuilderRouteImport } from './routes/api/tools/onchain-report-builder'
+import { Route as ApiToolsSmartMoneyTrackerRouteImport } from './routes/api/tools/smart-money-tracker'
 import { Route as ApiToolsSupplyMonitorRouteImport } from './routes/api/tools/supply-monitor'
 import { Route as ApiToolsTokenRiskAnalystRouteImport } from './routes/api/tools/token-risk-analyst'
 import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/token-scanner'
@@ -165,6 +167,18 @@ const ApiToolsHolderIntelligenceRoute =
     path: '/api/tools/holder-intelligence',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiToolsOnchainReportBuilderRoute =
+  ApiToolsOnchainReportBuilderRouteImport.update({
+    id: '/api/tools/onchain-report-builder',
+    path: '/api/tools/onchain-report-builder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiToolsSmartMoneyTrackerRoute =
+  ApiToolsSmartMoneyTrackerRouteImport.update({
+    id: '/api/tools/smart-money-tracker',
+    path: '/api/tools/smart-money-tracker',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiToolsSupplyMonitorRoute = ApiToolsSupplyMonitorRouteImport.update({
   id: '/api/tools/supply-monitor',
   path: '/api/tools/supply-monitor',
@@ -241,6 +255,8 @@ export interface FileRoutesByFullPath {
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
+  '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
+  '/api/tools/smart-money-tracker': typeof ApiToolsSmartMoneyTrackerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -276,6 +292,8 @@ export interface FileRoutesByTo {
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
+  '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
+  '/api/tools/smart-money-tracker': typeof ApiToolsSmartMoneyTrackerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -312,6 +330,8 @@ export interface FileRoutesById {
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
+  '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
+  '/api/tools/smart-money-tracker': typeof ApiToolsSmartMoneyTrackerRoute
   '/api/tools/supply-monitor': typeof ApiToolsSupplyMonitorRoute
   '/api/tools/token-risk-analyst': typeof ApiToolsTokenRiskAnalystRoute
   '/api/tools/token-scanner': typeof ApiToolsTokenScannerRoute
@@ -349,6 +369,8 @@ export interface FileRouteTypes {
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
+    | '/api/tools/onchain-report-builder'
+    | '/api/tools/smart-money-tracker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
@@ -384,6 +406,8 @@ export interface FileRouteTypes {
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
+    | '/api/tools/onchain-report-builder'
+    | '/api/tools/smart-money-tracker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
@@ -419,6 +443,8 @@ export interface FileRouteTypes {
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
+    | '/api/tools/onchain-report-builder'
+    | '/api/tools/smart-money-tracker'
     | '/api/tools/supply-monitor'
     | '/api/tools/token-risk-analyst'
     | '/api/tools/token-scanner'
@@ -455,6 +481,8 @@ export interface RootRouteChildren {
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsHolderIntelligenceRoute: typeof ApiToolsHolderIntelligenceRoute
+  ApiToolsOnchainReportBuilderRoute: typeof ApiToolsOnchainReportBuilderRoute
+  ApiToolsSmartMoneyTrackerRoute: typeof ApiToolsSmartMoneyTrackerRoute
   ApiToolsSupplyMonitorRoute: typeof ApiToolsSupplyMonitorRoute
   ApiToolsTokenRiskAnalystRoute: typeof ApiToolsTokenRiskAnalystRoute
   ApiToolsTokenScannerRoute: typeof ApiToolsTokenScannerRoute
@@ -636,6 +664,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsHolderIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools/onchain-report-builder': {
+      id: '/api/tools/onchain-report-builder'
+      path: '/api/tools/onchain-report-builder'
+      fullPath: '/api/tools/onchain-report-builder'
+      preLoaderRoute: typeof ApiToolsOnchainReportBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tools/smart-money-tracker': {
+      id: '/api/tools/smart-money-tracker'
+      path: '/api/tools/smart-money-tracker'
+      fullPath: '/api/tools/smart-money-tracker'
+      preLoaderRoute: typeof ApiToolsSmartMoneyTrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/supply-monitor': {
       id: '/api/tools/supply-monitor'
       path: '/api/tools/supply-monitor'
@@ -727,6 +769,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsHolderIntelligenceRoute: ApiToolsHolderIntelligenceRoute,
+  ApiToolsOnchainReportBuilderRoute: ApiToolsOnchainReportBuilderRoute,
+  ApiToolsSmartMoneyTrackerRoute: ApiToolsSmartMoneyTrackerRoute,
   ApiToolsSupplyMonitorRoute: ApiToolsSupplyMonitorRoute,
   ApiToolsTokenRiskAnalystRoute: ApiToolsTokenRiskAnalystRoute,
   ApiToolsTokenScannerRoute: ApiToolsTokenScannerRoute,
