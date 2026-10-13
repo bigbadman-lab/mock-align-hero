@@ -5,4 +5,4 @@
 - Retired/revoked credentials are crypto-shredded (ciphertext NULL); a revoked integration is never revived by rotate — only an explicit connect starts a fresh, paused config.
 - Every operation runs authorizeCreator first; provider endpoints are fixed in providers.ts (no user base URL); test_connection is one fixed 1-token OpenAI call (openai-test.ts); only HTTP 401 counts as a bad key and auto-pauses (never revokes); results bind to the credential version, so a replaced key's result is dropped.
 - No key substring is stored or returned (key_hint deprecated, placeholder '----'). 'active' requires enabled + a passing check of the current key; resume is refused otherwise.
-- Pause/resume, model/limits, health and the 90-day usage purge run through 0015 SQL functions (pending in docs/pending-migrations until approved).
+- Pause/resume, model/limits, health and the 90-day usage purge run through 0015 SQL functions (migration 0015, applied).

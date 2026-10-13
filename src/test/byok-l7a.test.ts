@@ -122,7 +122,7 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     a = postgres(URL_!, { max: 1, onnotice: () => {} }); conns.push(a); A = wrap(a); store = pgByokStore(A);
     await a.unsafe("drop schema if exists public cascade; create schema public; grant usage on schema public to public;");
     await a.unsafe("do $$ begin create role anon; exception when others then null; end $$; do $$ begin create role authenticated; exception when others then null; end $$; do $$ begin create role service_role; exception when others then null; end $$;");
-    for (const f of ["drizzle/migrations/0000_mcpx_01b_registry_outbox.sql", "drizzle/migrations/0002_mcpx_03b_product_configs.sql", "drizzle/migrations/0014_mcpx_l7a_byok.sql", "docs/pending-migrations/0015_mcpx_l7b_byok_health.sql"])
+    for (const f of ["drizzle/migrations/0000_mcpx_01b_registry_outbox.sql", "drizzle/migrations/0002_mcpx_03b_product_configs.sql", "drizzle/migrations/0014_mcpx_l7a_byok.sql", "drizzle/migrations/0015_mcpx_l7b_byok_health.sql"])
       await a.unsafe(readFileSync(f, "utf8").replace(/--> statement-breakpoint/g, ""));
     for (const [id, w, life, n] of [[PA, WA, "active", 1], [PB, WB, "inactive", 2]] as const) {
       await a.unsafe(`insert into public.mcp_creations (id, slug, template_id, template_version, display_name, ticker, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
