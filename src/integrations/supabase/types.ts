@@ -564,6 +564,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_eligibility_policies: {
+        Row: {
+          approved_by: string | null
+          body: Json
+          created_at: string
+          effective_from_window: string
+          status: string
+          version: string
+        }
+        Insert: {
+          approved_by?: string | null
+          body: Json
+          created_at?: string
+          effective_from_window: string
+          status: string
+          version: string
+        }
+        Update: {
+          approved_by?: string | null
+          body?: Json
+          created_at?: string
+          effective_from_window?: string
+          status?: string
+          version?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_entitlements: {
         Row: {
           amount: number
@@ -770,6 +797,107 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_hix_frozen_owners: {
+        Row: {
+          amount: number
+          class: string
+          mint: string
+          owner: string
+          reason: string | null
+          window_start: string
+        }
+        Insert: {
+          amount: number
+          class: string
+          mint: string
+          owner: string
+          reason?: string | null
+          window_start: string
+        }
+        Update: {
+          amount?: number
+          class?: string
+          mint?: string
+          owner?: string
+          reason?: string | null
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_hix_frozen_owners_mint_window_start_fkey"
+            columns: ["mint", "window_start"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_hix_frozen_snapshots"
+            referencedColumns: ["mint", "window_start"]
+          },
+        ]
+      }
+      mcpx_rw_hix_frozen_snapshots: {
+        Row: {
+          ambiguous_total: number
+          checkpoint_slot: number
+          completeness: string
+          cutoff_slot: number
+          digest: string
+          eligible_total: number
+          excluded_total: number
+          frozen_at: string
+          indexed_total: number
+          mint: string
+          policy_version: string
+          supply_at_cutoff: number
+          supply_proof: Json
+          window_start: string
+        }
+        Insert: {
+          ambiguous_total: number
+          checkpoint_slot: number
+          completeness: string
+          cutoff_slot: number
+          digest: string
+          eligible_total: number
+          excluded_total: number
+          frozen_at?: string
+          indexed_total: number
+          mint: string
+          policy_version: string
+          supply_at_cutoff: number
+          supply_proof: Json
+          window_start: string
+        }
+        Update: {
+          ambiguous_total?: number
+          checkpoint_slot?: number
+          completeness?: string
+          cutoff_slot?: number
+          digest?: string
+          eligible_total?: number
+          excluded_total?: number
+          frozen_at?: string
+          indexed_total?: number
+          mint?: string
+          policy_version?: string
+          supply_at_cutoff?: number
+          supply_proof?: Json
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_rw_hix_frozen_snapshots_mint_window_start_fkey"
+            columns: ["mint", "window_start"]
+            isOneToOne: true
+            referencedRelation: "mcpx_rw_hix_window_cutoffs"
+            referencedColumns: ["mint", "window_start"]
+          },
+          {
+            foreignKeyName: "mcpx_rw_hix_frozen_snapshots_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "mcpx_rw_eligibility_policies"
+            referencedColumns: ["version"]
+          },
+        ]
+      }
       mcpx_rw_hix_gaps: {
         Row: {
           from_slot: number
@@ -800,6 +928,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_rw_hix_holds: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: number
+          mint: string
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: number
+          mint: string
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          window_start: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: number
+          mint?: string
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       mcpx_rw_hix_snapshots: {
         Row: {
           created_at: string
@@ -826,6 +987,57 @@ export type Database = {
           mint?: string
           slot?: number
           supply?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      mcpx_rw_hix_window_cutoffs: {
+        Row: {
+          cutoff_block_time: string | null
+          cutoff_slot: number | null
+          evidence: Json
+          finalized_head: number | null
+          finalized_head_time: string | null
+          hold_reason: string | null
+          mint: string
+          next_block_time: string | null
+          next_slot: number | null
+          selected_at: string
+          selection_method: string
+          status: string
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          cutoff_block_time?: string | null
+          cutoff_slot?: number | null
+          evidence?: Json
+          finalized_head?: number | null
+          finalized_head_time?: string | null
+          hold_reason?: string | null
+          mint: string
+          next_block_time?: string | null
+          next_slot?: number | null
+          selected_at?: string
+          selection_method: string
+          status: string
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          cutoff_block_time?: string | null
+          cutoff_slot?: number | null
+          evidence?: Json
+          finalized_head?: number | null
+          finalized_head_time?: string | null
+          hold_reason?: string | null
+          mint?: string
+          next_block_time?: string | null
+          next_slot?: number | null
+          selected_at?: string
+          selection_method?: string
+          status?: string
+          window_end?: string
           window_start?: string
         }
         Relationships: []

@@ -71,6 +71,13 @@
       "when": 1791883382799,
       "tag": "0009_mcpx_05g_holder_index",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791890129475,
+      "tag": "0010_mcpx_05i_cutoff_snapshots",
+      "breakpoints": true
     }
   ]
 }
