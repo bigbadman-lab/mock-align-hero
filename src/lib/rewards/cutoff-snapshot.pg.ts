@@ -2,7 +2,7 @@
 // applied to production yet). Worker/server only. All writes for one index pass happen in ONE transaction on ONE
 // connection, guarded by a compare-and-swap on the holder-index checkpoint: a slower/older process can never
 // overwrite newer balances, and two racing processes produce exactly one committed pass.
-import type { Db } from "./store.pg";
+import { runTx, type Db, type Step } from "./store.pg";
 import type { IndexState } from "./holder-index";
 import type { CutoffEvidence, CutoffResult } from "./cutoff";
 import type { FrozenSnapshot } from "./cutoff-snapshot";
@@ -49,44 +49,45 @@ export type PassWrite = {
   frozen: { snap: FrozenSnapshot; supply: SupplyProof }[]; holds: { windowStart: number; reason: string; detail?: unknown }[];
 };
 
-/** One pass = one transaction. Returns STALE if another process already advanced the checkpoint. */
+/** One pass = one transaction. Returns STALE if another process already advanced the checkpoint.
+ * Built as a flat step list so the same atomic pass runs on a direct connection or through the site's sealed batch. */
 export async function commitPass(db: Db, w: PassWrite): Promise<"COMMITTED" | "STALE"> {
   const s = w.state;
-  await db.query("begin");
-  try {
-    await db.query("insert into public.mcpx_rw_hix_checkpoints (mint, anchor_slot, covered_to_slot, source) values ($1,$2,$2,$3) on conflict do nothing", [s.mint, s.anchorSlot, w.source]);
-    const cas = await db.query("update public.mcpx_rw_hix_checkpoints set covered_to_slot=$3, source=$4, updated_at=now() where mint=$1 and covered_to_slot=$2 returning mint", [s.mint, w.expectedCoveredTo, s.coveredTo, w.source]);
-    if (!cas.rows.length) { await db.query("rollback"); return "STALE"; }
-    for (const t of w.txs) await db.query("insert into public.mcpx_rw_hix_applied_txs (mint, signature, slot, block_time, failed) values ($1,$2,$3,$4,$5) on conflict do nothing",
-      [s.mint, t.signature, t.slot, t.blockTime === null ? null : iso(t.blockTime), t.failed]);
-    const last = w.txs[w.txs.length - 1];
-    for (const a of w.touched) {
-      const b = s.balances.get(a);
-      if (!b) await db.query("delete from public.mcpx_rw_hix_balances where mint=$1 and token_account=$2", [s.mint, a]);
-      else await db.query(`insert into public.mcpx_rw_hix_balances (mint, token_account, owner, amount, last_signature, last_slot) values ($1,$2,$3,$4,$5,$6)
-        on conflict (mint, token_account) do update set owner=excluded.owner, amount=excluded.amount, last_signature=excluded.last_signature, last_slot=excluded.last_slot`, [s.mint, a, b.owner, b.amount.toString(), last?.signature ?? "anchor", last?.slot ?? s.anchorSlot]);
-    }
-    for (const g of s.gaps) {
-      await db.query("insert into public.mcpx_rw_hix_gaps (mint, from_slot, to_slot, reason) values ($1,$2,$3,$4) on conflict do nothing", [s.mint, g.fromSlot, g.toSlot, g.reason]);
-      // a gap reaching back before an already-frozen cutoff = late pre-cutoff data: hold, never rewrite
-      await db.query(`insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) select mint, window_start, 'LATE_PRE_CUTOFF_DATA', jsonb_build_object('gapFrom',$2::bigint,'gapTo',$3::bigint)
-        from public.mcpx_rw_hix_frozen_snapshots where mint=$1 and cutoff_slot >= $2 on conflict do nothing`, [s.mint, g.fromSlot, g.toSlot]);
-    }
-    for (const { snap: f, supply } of w.frozen) {
-      const ins = await db.query(`insert into public.mcpx_rw_hix_frozen_snapshots (mint, window_start, cutoff_slot, checkpoint_slot, policy_version, supply_at_cutoff, indexed_total, supply_proof, eligible_total, excluded_total, ambiguous_total, completeness, digest)
-        values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13) on conflict do nothing returning digest`,
-        [f.mint, iso(f.windowStart), f.cutoffSlot, f.checkpointSlot, f.policyVersion, f.supplyAtCutoff.toString(), f.indexedTotal.toString(), js(supply), f.eligibleTotal.toString(), f.excludedTotal.toString(), f.ambiguousTotal.toString(), f.completeness, f.digest]);
-      if (!ins.rows.length) {
-        const ex = (await db.query("select digest from public.mcpx_rw_hix_frozen_snapshots where mint=$1 and window_start=$2", [f.mint, iso(f.windowStart)])).rows[0];
-        if (ex?.digest !== f.digest) await db.query(`insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) values ($1,$2,'DIGEST_CONFLICT',$3::jsonb) on conflict do nothing`, [f.mint, iso(f.windowStart), js({ existing: ex?.digest, recomputed: f.digest })]);
-        continue;
-      }
-      for (const o of f.owners) await db.query("insert into public.mcpx_rw_hix_frozen_owners (mint, window_start, owner, amount, class, reason) values ($1,$2,$3,$4,$5,$6)", [f.mint, iso(f.windowStart), o.owner, o.amount.toString(), o.class, o.reason]);
-    }
-    for (const h of w.holds) await db.query("insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) values ($1,$2,$3,$4::jsonb) on conflict do nothing", [s.mint, iso(h.windowStart), h.reason, js(h.detail ?? {})]);
-    await db.query("commit");
-    return "COMMITTED";
-  } catch (e) { await db.query("rollback"); throw e; }
+  const steps: Step[] = [
+    { sql: "insert into public.mcpx_rw_hix_checkpoints (mint, anchor_slot, covered_to_slot, source) values ($1,$2,$2,$3) on conflict do nothing", params: [s.mint, s.anchorSlot, w.source] },
+    { sql: "update public.mcpx_rw_hix_checkpoints set covered_to_slot=$3, source=$4, updated_at=now() where mint=$1 and covered_to_slot=$2 returning mint", params: [s.mint, w.expectedCoveredTo, s.coveredTo, w.source], abortIfEmpty: "STALE" },
+  ];
+  for (const t of w.txs) steps.push({ sql: "insert into public.mcpx_rw_hix_applied_txs (mint, signature, slot, block_time, failed) values ($1,$2,$3,$4,$5) on conflict do nothing",
+    params: [s.mint, t.signature, t.slot, t.blockTime === null ? null : iso(t.blockTime), t.failed] });
+  const last = w.txs[w.txs.length - 1];
+  for (const a of w.touched) {
+    const b = s.balances.get(a);
+    if (!b) steps.push({ sql: "delete from public.mcpx_rw_hix_balances where mint=$1 and token_account=$2", params: [s.mint, a] });
+    else steps.push({ sql: `insert into public.mcpx_rw_hix_balances (mint, token_account, owner, amount, last_signature, last_slot) values ($1,$2,$3,$4,$5,$6)
+      on conflict (mint, token_account) do update set owner=excluded.owner, amount=excluded.amount, last_signature=excluded.last_signature, last_slot=excluded.last_slot`, params: [s.mint, a, b.owner, b.amount.toString(), last?.signature ?? "anchor", last?.slot ?? s.anchorSlot] });
+  }
+  for (const g of s.gaps) {
+    steps.push({ sql: "insert into public.mcpx_rw_hix_gaps (mint, from_slot, to_slot, reason) values ($1,$2,$3,$4) on conflict do nothing", params: [s.mint, g.fromSlot, g.toSlot, g.reason] });
+    // a gap reaching back before an already-frozen cutoff = late pre-cutoff data: hold, never rewrite
+    steps.push({ sql: `insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) select mint, window_start, 'LATE_PRE_CUTOFF_DATA', jsonb_build_object('gapFrom',$2::bigint,'gapTo',$3::bigint)
+      from public.mcpx_rw_hix_frozen_snapshots where mint=$1 and cutoff_slot >= $2 on conflict do nothing`, params: [s.mint, g.fromSlot, g.toSlot] });
+  }
+  for (const { snap: f, supply } of w.frozen) {
+    const ws = iso(f.windowStart);
+    // an already-frozen window with a different digest → DIGEST_CONFLICT hold (checked BEFORE our insert can happen)
+    steps.push({ sql: `insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) select mint, window_start, 'DIGEST_CONFLICT', jsonb_build_object('existing', digest, 'recomputed', $3::text)
+      from public.mcpx_rw_hix_frozen_snapshots where mint=$1 and window_start=$2::timestamptz and digest <> $3::text on conflict do nothing`, params: [f.mint, ws, f.digest] });
+    steps.push({ sql: `insert into public.mcpx_rw_hix_frozen_snapshots (mint, window_start, cutoff_slot, checkpoint_slot, policy_version, supply_at_cutoff, indexed_total, supply_proof, eligible_total, excluded_total, ambiguous_total, completeness, digest)
+        values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13) on conflict do nothing`,
+      params: [f.mint, ws, f.cutoffSlot, f.checkpointSlot, f.policyVersion, f.supplyAtCutoff.toString(), f.indexedTotal.toString(), js(supply), f.eligibleTotal.toString(), f.excludedTotal.toString(), f.ambiguousTotal.toString(), f.completeness, f.digest] });
+    // owners only for the snapshot carrying THIS digest (frozen rows are immutable; a duplicate pass is a no-op)
+    for (const o of f.owners) steps.push({ sql: `insert into public.mcpx_rw_hix_frozen_owners (mint, window_start, owner, amount, class, reason)
+        select $1::text, $2::timestamptz, $3::text, $4::numeric, $5::text, $6::text where exists (select 1 from public.mcpx_rw_hix_frozen_snapshots where mint=$1::text and window_start=$2::timestamptz and digest=$7::text) on conflict do nothing`,
+      params: [f.mint, ws, o.owner, o.amount.toString(), o.class, o.reason, f.digest] });
+  }
+  for (const h of w.holds) steps.push({ sql: "insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) values ($1,$2,$3,$4::jsonb) on conflict do nothing", params: [s.mint, iso(h.windowStart), h.reason, js(h.detail ?? {})] });
+  const r = await runTx(db, steps);
+  return r.aborted === "STALE" ? "STALE" : "COMMITTED";
 }
 
 export async function openHoldWindows(db: Db, mint: string): Promise<Set<number>> {

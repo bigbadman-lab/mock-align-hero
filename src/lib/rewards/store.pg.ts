@@ -4,7 +4,27 @@
 import { PROCESSOR_VERSION, type Plan, type Receipt, type Store } from "./processor";
 
 /** Minimal driver contract (works with `postgres`/porsager `sql.unsafe` or node-postgres `client.query`). */
-export type Db = { query(text: string, params?: unknown[]): Promise<{ rows: any[] }> };
+export type Db = {
+  query(text: string, params?: unknown[]): Promise<{ rows: any[] }>;
+  /** Optional atomic batch (remote site store): all steps in ONE transaction, aborted as a whole on abortIfEmpty. */
+  tx?(steps: Step[]): Promise<{ aborted: string | null }>;
+};
+/** One statement of an atomic batch. abortIfEmpty: roll the whole batch back (returning that code) when it returns no rows. */
+export type Step = { sql: string; params?: unknown[]; abortIfEmpty?: string };
+
+/** Runs steps atomically on either a direct connection (begin/commit) or a remote batch store. */
+export async function runTx(db: Db, steps: Step[]): Promise<{ aborted: string | null }> {
+  if (db.tx) return db.tx(steps);
+  await db.query("begin");
+  try {
+    for (const st of steps) {
+      const r = await db.query(st.sql, st.params ?? []);
+      if (st.abortIfEmpty && !r.rows.length) { await db.query("rollback"); return { aborted: st.abortIfEmpty }; }
+    }
+    await db.query("commit");
+    return { aborted: null };
+  } catch (e) { await db.query("rollback"); throw e; }
+}
 
 const ts = (s: number) => new Date(s * 1000).toISOString();
 const sec = (v: unknown) => Math.floor(new Date(v as string).getTime() / 1000);
