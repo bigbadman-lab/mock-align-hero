@@ -107,7 +107,7 @@ describe("05-I historical supply at cutoff", () => {
     expect(p).toMatchObject({ kind: "PROVEN", supplyAtCutoff: 1000n, laterNetChange: -18n });
   });
   it("is UNPROVEN for unknown supply instructions, incomplete history, missing anchor, or out-of-range txs (never assumes today's supply)", () => {
-    expect(supplyAtCutoff(50, { slot: 70, supply: 1n }, [raw(60, [{ tag: 39, mintPos: 0 }])], MINT, true)).toMatchObject({ kind: "UNPROVEN", reason: "token_ix_39" });
+    expect(supplyAtCutoff(50, { slot: 70, supply: 1n }, [raw(60, [{ tag: 42, mintPos: 0 }])], MINT, true)).toMatchObject({ kind: "UNPROVEN", reason: "token_ix_42" });
     expect(supplyAtCutoff(50, { slot: 70, supply: 1n }, [], MINT, false)).toMatchObject({ reason: "MINT_HISTORY_INCOMPLETE" });
     expect(supplyAtCutoff(50, null, [], MINT, true)).toMatchObject({ reason: "ANCHOR_SUPPLY_UNKNOWN" });
     expect(supplyAtCutoff(50, { slot: 70, supply: 1n }, [raw(40, [])], MINT, true)).toMatchObject({ reason: "TX_OUTSIDE_RANGE" });
