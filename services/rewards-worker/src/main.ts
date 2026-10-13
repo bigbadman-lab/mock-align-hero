@@ -6,6 +6,7 @@ import { configBlockers, runPass, classify, type NativeConfig } from "../../../s
 import { pgStore, type Db } from "../../../src/lib/rewards/store.pg";
 import { unavailableHistory } from "../../../src/lib/rewards/holder-history";
 import { EPOCH_SECONDS } from "../../../src/lib/rewards/epochs";
+import { signerStartupGate, SIGNER_SECRET_ENV } from "../../../src/lib/rewards/native-single";
 
 const env = (k: string) => process.env[k]?.trim() || null;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "mcpx-rewards-worker", at: new Date().toISOString(), ...o }));
@@ -13,13 +14,15 @@ const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "m
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
   const cfg: NativeConfig = {
-    mint: env("MCPX_NATIVE_MINT"), sharingConfig: env("MCPX_NATIVE_SHARING_CONFIG"),
-    rewardsTreasury: env("MCPX_REWARDS_TREASURY"), operationsTreasury: env("MCPX_OPERATIONS_TREASURY"),
+    // 05-F replacement: one deployer wallet (public address only). Sharing config / treasury envs are no longer read.
+    feeModel: "SINGLE_DEPLOYER", deployerWallet: env("MCPX_NATIVE_DEPLOYER_WALLET"),
+    mint: env("MCPX_NATIVE_MINT"), sharingConfig: null, rewardsTreasury: null, operationsTreasury: null,
     finalityLagSeconds: Number(env("MCPX_REWARDS_FINALITY_LAG_SECONDS") ?? 60),
     minPayableLamports: BigInt(env("MCPX_REWARDS_MIN_PAYABLE_LAMPORTS") ?? "0"),
   };
   const genesis = Number(env("MCPX_REWARDS_GENESIS_WINDOW") ?? NaN);
   const blockers = [...configBlockers(cfg)];
+  if (env("MCPX_REWARDS_EMERGENCY_STOP") === "1") blockers.push("EMERGENCY_STOP");
   if (!env("MCPX_REWARDS_DB_URL")) blockers.push("DB_URL_UNSET");
   if (!env("MCPX_REWARDS_RPC_URL")) blockers.push("RPC_URL_UNSET");
   if (!Number.isInteger(genesis) || genesis % EPOCH_SECONDS !== 0) blockers.push("GENESIS_WINDOW_UNSET");
@@ -45,6 +48,8 @@ async function finalizedBlockTime(rpc: string): Promise<number | null> {
 async function main() {
   const { mode, cfg, genesis, blockers } = readConfig();
   if (mode !== "DRY_RUN") { log({ level: "fatal", event: "refused_mode", mode }); process.exit(2); }
+  const gate = signerStartupGate(process.env[SIGNER_SECRET_ENV]); // value never logged
+  if (!gate.start) { log({ level: "fatal", event: "refused_signer_secret", reason: gate.reason }); process.exit(3); }
   const workerId = `rw-${env("RENDER_INSTANCE_ID") ?? process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   const pollMs = Math.min(Math.max(Number(env("MCPX_REWARDS_POLL_SECONDS") ?? 30), 10), 300) * 1000;
   const maxWindows = Math.min(Math.max(Number(env("MCPX_REWARDS_MAX_WINDOWS_PER_PASS") ?? 12), 1), 288);
