@@ -172,7 +172,8 @@ d("L7-A BYOK DB (throwaway Postgres)", () => {
     expect(await store.settle(usage, "failed", 0, 0, 0)).toBe(false); // exactly once
     const u = await store.getUsage(PA);
     expect(u.today).toMatchObject({ requests: 1, inputTokens: 100, outputTokens: 100 });
-    expect(await store.admit(PA, cred.credentialId, idem(200), 100, 100)).toBe("duplicate");
+    const won = res.findIndex((x) => x.startsWith("admitted:"));
+    expect(await store.admit(PA, cred.credentialId, idem(200 + won), 100, 100)).toBe("duplicate");
   });
 
   it("stale reservations become ambiguous and are charged at the reserved amount", async () => {
