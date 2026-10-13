@@ -89,12 +89,15 @@ export async function stateAtSameSlot(rpc: Rpc, mint: string, tokenProgram: stri
  * and shows up here; only those accounts then need a per-account history fetch.
  */
 export async function verifyKnownAccounts(rpc: Rpc, accounts: string[]) {
-  const out = new Map<string, { owner: string; amount: bigint } | null>(); let slot: number | null = null;
-  for (let i = 0; i < accounts.length; i += 100) {
-    const part = accounts.slice(i, i + 100);
-    const r = await rpc("getMultipleAccounts", [part, { commitment: "finalized", encoding: "jsonParsed", ...(slot ? { minContextSlot: slot } : {}) }]);
-    if (slot === null) slot = r.context.slot; else if (r.context.slot !== slot) return null; // inconsistent position → retry caller
-    r.value.forEach((v: any, k: number) => out.set(part[k]!, v ? { owner: v.data.parsed.info.owner, amount: BigInt(v.data.parsed.info.tokenAmount.amount) } : null));
+  const out = new Map<string, { owner: string; amount: bigint } | null>();
+  const parts: string[][] = []; for (let i = 0; i < accounts.length; i += 100) parts.push(accounts.slice(i, i + 100));
+  for (let attempt = 0; attempt < 8; attempt++) {
+    // parallel reads usually land on one finalized slot; any disagreement → retry, never mix positions
+    const rs = await Promise.all(parts.map((p) => rpc("getMultipleAccounts", [p, { commitment: "finalized", encoding: "jsonParsed" }])));
+    const slot = rs[0].context.slot as number;
+    if (!rs.every((r: any) => r.context.slot === slot)) continue;
+    rs.forEach((r: any, i: number) => r.value.forEach((v: any, k: number) => out.set(parts[i]![k]!, v ? { owner: v.data.parsed.info.owner, amount: BigInt(v.data.parsed.info.tokenAmount.amount) } : null)));
+    return { slot, accounts: out };
   }
-  return { slot: slot!, accounts: out };
+  return null;
 }
