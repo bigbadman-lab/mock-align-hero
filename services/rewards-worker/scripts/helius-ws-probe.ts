@@ -26,7 +26,7 @@ await new Promise((r) => setTimeout(r, 20_000)); // let the range finalize every
 let missing: string[] = [];
 const endSlot: number = await rpc0("getSlot", [{ commitment: "finalized" }]);
 {
-  const lo = startSlot + 1, hi = Math.min(endSlot - 40, msgs ? maxSlot : endSlot - 40);
+  const lo = msgs ? minSlot + 1 : startSlot + 1, hi = msgs ? maxSlot - 1 : endSlot - 40;
   const ref = new Set<string>();
   for (const a of watch) for (const s of await signatures(rpc, meter, a, hi)) if (s.slot >= lo) ref.add(s.signature);
   missing = [...ref].filter((s) => !seen.has(s));
