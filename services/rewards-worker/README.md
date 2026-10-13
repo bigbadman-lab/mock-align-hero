@@ -35,6 +35,7 @@ connection and are not part of the Render service.
 ## Deployer signer (pre-launch, signing only — no sending)
 - `MCPX_DEPLOYER_PUBLIC_KEY` — deployer wallet address (public).
 - `MCPX_DEPLOYER_PRIVATE_KEY` — Render secret only. One base58 string (Phantom / Pump.fun "Export private key"). JSON byte arrays are rejected.
-- `MCPX_REWARDS_MAX_LAMPORTS_PER_TX`, `MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE`, `MCPX_REWARDS_MAX_TOKENS_PER_TX` — spend caps; missing → signing refused.
+- Payout size is set by verified collected creator fees (30/30/40 per five-minute window, finalized fills for tokens) — there is no required cap.
+- Optional emergency ceilings (leave unset normally): `MCPX_REWARDS_MAX_LAMPORTS_PER_TX`, `MCPX_REWARDS_MAX_LAMPORTS_PER_CYCLE` (lamports), `MCPX_REWARDS_MAX_TOKENS_PER_TX` (token base units). Invalid values block signing; reaching one holds the batch as `OPERATOR_CEILING_REACHED` until reconfigured. Not payout budgets — never set huge placeholders.
 - Remove `MCPX_NATIVE_DEPLOYER_PRIVATE_KEY` if present (old name; blocks the signer).
 - Startup logs `signer_status` with state MONITOR_ONLY / SIGNER_VALIDATED / EXECUTION_BLOCKED and the derived address only.

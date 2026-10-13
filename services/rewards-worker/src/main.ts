@@ -64,7 +64,7 @@ async function main() {
   const limits = readLimits(process.env);
   const readiness = executionReadiness({ signer: signer.state, mintVerified: false, eligibilityApproved: false, snapshotComplete: false,
     feeOwnershipConfirmed: false, intentStoreReady: false, simulationsPassed: false, reservesSufficient: false, operatorAuthorized: false,
-    limitsSet: limits !== null, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" });
+    limitsSet: limits.ok, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" });
   log({ event: "signer_status", ...signer.describe(), execution: readiness.state, executionBlockers: readiness.blockers });
   const workerId = `rw-${env("RENDER_INSTANCE_ID") ?? process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   const pollMs = Math.min(Math.max(Number(env("MCPX_REWARDS_POLL_SECONDS") ?? 300), 60), 900) * 1000; // 05-I: 5-minute default, no hot loop
