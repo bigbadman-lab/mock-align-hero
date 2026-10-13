@@ -1,14 +1,7 @@
--- MCPX Phase L7-A: optional BYOK (bring-your-own-key) AI foundation. PENDING — NOT APPLIED.
--- Server-only. Stores AES-256-GCM ciphertext only (key-encryption key lives outside the DB as a server secret).
--- Additive: no existing table or column is changed. Products without AI keep working unchanged.
--- ROLLBACK (only while empty): DROP FUNCTION public.mcpx_ai_settle(uuid,text,integer,integer,bigint);
---   DROP FUNCTION public.mcpx_ai_admit(uuid,uuid,text,integer,integer); DROP FUNCTION public.mcpx_ai_revoke(uuid,text,integer);
---   DROP FUNCTION public.mcpx_ai_put_credential(uuid,text,text,text,bytea,bytea,text,text,text,text,integer);
---   DROP TABLE public.mcpx_ai_audit, public.mcpx_ai_usage, public.mcpx_ai_credentials, public.mcpx_ai_integrations;
-
+-- MCPX Phase L7-A: optional BYOK AI foundation. Server-only; ciphertext only. Additive.
 CREATE TABLE public.mcpx_ai_integrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  creation_id uuid NOT NULL UNIQUE REFERENCES public.mcp_creations (id) ON DELETE RESTRICT, -- one provider per product (MVP)
+  creation_id uuid NOT NULL UNIQUE REFERENCES public.mcp_creations (id) ON DELETE RESTRICT,
   creator_wallet text NOT NULL CHECK (creator_wallet ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'),
   provider text NOT NULL CHECK (provider IN ('openai')),
   model text NOT NULL CHECK (model ~ '^[a-z0-9.-]{1,48}$'),
@@ -34,14 +27,13 @@ CREATE TABLE public.mcpx_ai_credentials (
   kek_version text NOT NULL CHECK (kek_version ~ '^v[0-9]{1,4}$'),
   iv bytea,
   ciphertext bytea,
-  key_hint text NOT NULL CHECK (key_hint ~ '^[A-Za-z0-9_-]{4}$'), -- last 4 chars only
+  key_hint text NOT NULL CHECK (key_hint ~ '^[A-Za-z0-9_-]{4}$'),
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','retired','revoked')),
   idempotency_key text NOT NULL CHECK (idempotency_key ~ '^[A-Za-z0-9_-]{16,64}$'),
   created_at timestamptz NOT NULL DEFAULT now(),
   retired_at timestamptz,
   UNIQUE (integration_id, version),
   UNIQUE (integration_id, idempotency_key),
-  -- revoked/retired credentials are crypto-shredded: ciphertext removed, never recoverable
   CHECK ((status = 'active') = (ciphertext IS NOT NULL AND iv IS NOT NULL)),
   CHECK (ciphertext IS NULL OR octet_length(ciphertext) BETWEEN 17 AND 1024),
   CHECK (iv IS NULL OR octet_length(iv) = 12)
@@ -78,7 +70,6 @@ CREATE TABLE public.mcpx_ai_audit (
 );
 CREATE INDEX mcpx_ai_audit_idx ON public.mcpx_ai_audit (integration_id, at DESC);
 
--- Least privilege: nothing for public/browser roles; server role only.
 REVOKE ALL ON public.mcpx_ai_integrations, public.mcpx_ai_credentials, public.mcpx_ai_usage, public.mcpx_ai_audit FROM PUBLIC, anon, authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.mcpx_ai_integrations, public.mcpx_ai_usage TO service_role;
 GRANT SELECT, INSERT, UPDATE ON public.mcpx_ai_credentials TO service_role;
@@ -87,11 +78,7 @@ ALTER TABLE public.mcpx_ai_integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mcpx_ai_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mcpx_ai_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mcpx_ai_audit ENABLE ROW LEVEL SECURITY;
--- Intentionally no policies.
 
--- Connect / replace / rotate. Locks the integration row, so it serialises with revoke and admission.
--- Revoked integrations can never be revived by a replayed or racing rotate; only an explicit 'connect' after revoke
--- opens a fresh configuration (old credentials stay shredded). Returns 'ok' | 'replayed' | error code.
 CREATE OR REPLACE FUNCTION public.mcpx_ai_put_credential(
   _creation uuid, _wallet text, _mode text, _provider text, _iv bytea, _ct bytea, _kek text, _hint text,
   _model text, _idem text, _expected_rev integer
@@ -125,8 +112,6 @@ BEGIN
   RETURN 'ok';
 END $$;
 
--- Revoke + remove: blocks every new admission at commit, shreds ciphertext. In-flight calls finish against
--- the decrypted key they already hold (bounded by the provider timeout) and still settle their usage row.
 CREATE OR REPLACE FUNCTION public.mcpx_ai_revoke(_creation uuid, _wallet text, _expected_rev integer)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE i public.mcpx_ai_integrations;
@@ -143,8 +128,6 @@ BEGIN
   RETURN 'ok';
 END $$;
 
--- Atomic admission. Returns 'admitted:<usage uuid>' or a denial code. Serialised per integration by the row lock.
--- Stale reservations (lease expired, process died) become 'ambiguous' and are charged at the reserved amount.
 CREATE OR REPLACE FUNCTION public.mcpx_ai_admit(_creation uuid, _credential uuid, _ref text, _in integer, _out integer)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE i public.mcpx_ai_integrations; c public.mcpx_ai_credentials; u uuid; lifecycle text;
@@ -169,7 +152,6 @@ BEGIN
   RETURN 'admitted:' || u::text;
 END $$;
 
--- Settlement: exactly once; used tokens are clamped to the reservation so accounting is always bounded.
 CREATE OR REPLACE FUNCTION public.mcpx_ai_settle(_usage uuid, _status text, _in integer, _out integer, _cost bigint)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
