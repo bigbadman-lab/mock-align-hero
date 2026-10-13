@@ -36,7 +36,7 @@ L7-B runtime: server --fixed https endpoint--> OpenAI      (Render worker never 
 ## Data model (pending `drizzle/migrations/0014_mcpx_l7a_byok.sql`)
 - `mcpx_ai_integrations`: one per product (UNIQUE creation_id → mcp_creations), creator_wallet, provider (`openai`), model, status, enabled (default false), revision, limits with DB CHECK ceilings.
 - `mcpx_ai_credentials`: versioned; alg, kek_version, iv, ciphertext, last-4 hint; one active per integration (partial unique index); non-active rows must have NULL ciphertext.
-- `mcpx_ai_usage`: reservation rows (reserved/settled/failed/ambiguous/expired), token counts, cost estimate; indexes for window counts. Retention: 90 days proposed (cleanup job in L7-B).
+- `mcpx_ai_usage`: reservation rows (reserved/settled/failed/ambiguous/expired), token counts, cost estimate; indexes for window counts. Retention: 90 days (decided; cleanup job in L7-B).
 - `mcpx_ai_audit`: action, actor, revision, time — no secret content.
 - RLS on, no policies, service_role grants only. Functions are SECURITY DEFINER, EXECUTE revoked from public roles.
 
@@ -70,3 +70,10 @@ Collapsed "Optional AI (Bring Your Own Key)" in `/launch` records intent only (p
 2. Usage retention period (90 days proposed)?
 3. Exact OpenAI models to allow (currently gpt-4o-mini, gpt-4.1-mini)?
 4. Should provider 401 auto-pause the integration?
+
+
+## Decisions (2026-10-13)
+- Usage retention: 90 days.
+- Allowed OpenAI models: gpt-4o-mini, gpt-4.1-mini.
+- A provider-rejected key (401) automatically pauses that product's AI (implemented in L7-B with the first real provider call).
+- MCPX_BYOK_KEYRING is a Lovable Cloud secret (not Render), platform-generated; accepted as v1 via SHA-256 stretching. Never rotate without keeping the old version in the ring.

@@ -19,9 +19,17 @@ export async function parseKeyring(raw: string | undefined | null): Promise<Keyr
   const keys = new Map<string, CryptoKey>();
   let active = "";
   for (const part of raw.split(",")) {
-    const m = /^(v[0-9]{1,4}):([A-Za-z0-9+/]{43}=)$/.exec(part.trim());
-    if (!m) throw new ByokCryptoError("keyring_invalid");
-    const bytes = b64(m[2]!);
+    const p = part.trim();
+    let m = /^(v[0-9]{1,4}):([A-Za-z0-9+/]{43}=)$/.exec(p);
+    let bytes: Uint8Array<ArrayBuffer>;
+    if (m) bytes = b64(m[2]!);
+    else {
+      // Platform-generated secret: "[vN:]<48+ alphanumeric chars>", stretched to 32 bytes via domain-separated SHA-256.
+      m = /^(?:(v[0-9]{1,4}):)?([A-Za-z0-9]{48,512})$/.exec(p);
+      if (!m) throw new ByokCryptoError("keyring_invalid");
+      m[1] = m[1] ?? "v1";
+      bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`mcpx-byok-kek:${m[2]}`)));
+    }
     if (bytes.length !== 32 || keys.has(m[1]!)) throw new ByokCryptoError("keyring_invalid");
     keys.set(m[1]!, await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"]));
     if (!active) active = m[1]!;
