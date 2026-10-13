@@ -18,7 +18,7 @@ out.collection = cu.kind === "UNSIGNED" ? { bytes: cu.bytes, signers: cu.signers
 // find a live SOL bonding-curve coin from recent finalized Pump txs
 const sigs = await conn.getSignaturesForAddress(new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"), { limit: 25 }, "finalized");
 let mint: string | null = null;
-for (const s of sigs) { if (s.err) continue; const t = await conn.getTransaction(s.signature, { maxSupportedTransactionVersion: 0, commitment: "finalized" });
+for (const s of sigs) { if (s.err) continue; let t; try { t = await conn.getTransaction(s.signature, { maxSupportedTransactionVersion: 0, commitment: "finalized" }); } catch { continue; }
   const m = t?.meta?.postTokenBalances?.find((b) => b.mint.endsWith("pump") && b.programId === "TokenzQdBNbLqP5VEhdkAovAUFj3z9VhjndPDzdC3jmT"); if (m) { mint = m.mint; out.buyMintSourceSig = s.signature; break; } }
 out.buyMint = mint;
 if (mint) {
