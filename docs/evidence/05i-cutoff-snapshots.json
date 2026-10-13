@@ -1,0 +1,254 @@
+{
+  "phase": "05-I",
+  "mint": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "source": "Helius Developer plan, read-only",
+  "db": "throwaway local PostgreSQL 16.13 (never production)",
+  "cutoffRule": "CUTOFF_RULE_V1_LAST_PRODUCED_FINALIZED_BLOCKTIME_LT_END",
+  "windows": [
+    {
+      "windowStartUnix": 1791881700,
+      "cutoffSlot": 456384909,
+      "cutoffBlockTime": 1791881999,
+      "nextSlot": 456384910,
+      "nextBlockTime": 1791882000,
+      "skipped": 0
+    },
+    {
+      "windowStartUnix": 1791882000,
+      "cutoffSlot": 456386289,
+      "cutoffBlockTime": 1791882299,
+      "nextSlot": 456386290,
+      "nextBlockTime": 1791882300,
+      "skipped": 0
+    }
+  ],
+  "lateReselectSameSlots": [
+    456384909,
+    456386289
+  ],
+  "killInsideCommit": {
+    "result": "process SIGKILLed after first frozen-snapshot insert",
+    "persistedAfter": {
+      "applied": 0,
+      "balances": 0,
+      "frozen": 0,
+      "checkpoint": "none"
+    }
+  },
+  "race": {
+    "A": {
+      "kind": "SYNCED",
+      "frozen": [
+        {
+          "window": 1791881700,
+          "cutoff": 456384909,
+          "owners": 114,
+          "digest": "34d628d5d2a10f81"
+        },
+        {
+          "window": 1791882000,
+          "cutoff": 456386289,
+          "owners": 100,
+          "digest": "c54d89674f32db3c"
+        }
+      ]
+    },
+    "B": {
+      "kind": "STALE",
+      "frozen": [
+        {
+          "window": 1791881700,
+          "cutoff": 456384909,
+          "owners": 114,
+          "digest": "34d628d5d2a10f81"
+        },
+        {
+          "window": 1791882000,
+          "cutoff": 456386289,
+          "owners": 100,
+          "digest": "c54d89674f32db3c"
+        }
+      ]
+    }
+  },
+  "frozenSnapshots": [
+    {
+      "w": "1791881700",
+      "cutoff_slot": "456384909",
+      "checkpoint_slot": "456405390",
+      "policy_version": "test-elig-v1-8m6w",
+      "s": "999999999999999",
+      "it": "999999999999999",
+      "e": "558574146776932",
+      "x": "441425853223067",
+      "a": "0",
+      "completeness": "COMPLETE",
+      "digest": "34d628d5d2a10f815d3f94dd4860602ffd360cc6d876595e78a82547bbff8efa",
+      "supply_proof": {
+        "kind": "PROVEN",
+        "cutoffSlot": 456384909,
+        "supplyAtCutoff": "999999999999999",
+        "anchorSlot": 456405390,
+        "anchorSupply": "999999999999999",
+        "laterTxs": 1028,
+        "laterNetChange": "0",
+        "method": "MINT_ACCOUNT_AT_S_MINUS_IX_DELTAS_V1"
+      }
+    },
+    {
+      "w": "1791882000",
+      "cutoff_slot": "456386289",
+      "checkpoint_slot": "456405390",
+      "policy_version": "test-elig-v1-8m6w",
+      "s": "999999999999999",
+      "it": "999999999999999",
+      "e": "557397072397181",
+      "x": "437675301180227",
+      "a": "4927626422591",
+      "completeness": "COMPLETE_AMBIGUOUS_HELD",
+      "digest": "c54d89674f32db3c6d4845f78031440f45516228c5fca44543b29ae07f7f5de1",
+      "supply_proof": {
+        "kind": "PROVEN",
+        "cutoffSlot": 456386289,
+        "supplyAtCutoff": "999999999999999",
+        "anchorSlot": 456405390,
+        "anchorSupply": "999999999999999",
+        "laterTxs": 768,
+        "laterNetChange": "0",
+        "method": "MINT_ACCOUNT_AT_S_MINUS_IX_DELTAS_V1"
+      }
+    }
+  ],
+  "ownerClasses": [
+    {
+      "w": "1791881700",
+      "class": "ELIGIBLE",
+      "n": 113
+    },
+    {
+      "w": "1791881700",
+      "class": "EXCLUDED",
+      "n": 1
+    },
+    {
+      "w": "1791882000",
+      "class": "AMBIGUOUS",
+      "n": 1
+    },
+    {
+      "w": "1791882000",
+      "class": "ELIGIBLE",
+      "n": 98
+    },
+    {
+      "w": "1791882000",
+      "class": "EXCLUDED",
+      "n": 1
+    }
+  ],
+  "nonEligible": [
+    {
+      "w": "1791881700",
+      "o": "2G5JqK",
+      "a": "441425853223067",
+      "class": "EXCLUDED",
+      "reason": "pool_vault"
+    },
+    {
+      "w": "1791882000",
+      "o": "2G5JqK",
+      "a": "437675301180227",
+      "class": "EXCLUDED",
+      "reason": "pool_vault"
+    },
+    {
+      "w": "1791882000",
+      "o": "xg1KDp",
+      "a": "4927626422591",
+      "class": "AMBIGUOUS",
+      "reason": "owner_program"
+    }
+  ],
+  "ownersChangedBetweenWindows": 91,
+  "laterIncrementalPass": {
+    "kind": "SYNCED",
+    "newTxs": 1,
+    "frozenChanged": false,
+    "credits": 6.1,
+    "meter": {
+      "getSlot": {
+        "calls": 1,
+        "items": 0
+      },
+      "getTransactionsForAddress": {
+        "calls": 2,
+        "items": 0
+      },
+      "gTFA:full": {
+        "calls": 2,
+        "items": 1
+      },
+      "getMultipleAccounts": {
+        "calls": 5,
+        "items": 0
+      }
+    }
+  },
+  "independentRebuildDigestsMatch": true,
+  "rebuildPass": {
+    "kind": "SYNCED",
+    "frozen": [
+      {
+        "window": 1791881700,
+        "cutoff": 456384909,
+        "owners": 114,
+        "digest": "34d628d5d2a10f81"
+      },
+      {
+        "window": 1791882000,
+        "cutoff": 456386289,
+        "owners": 100,
+        "digest": "c54d89674f32db3c"
+      }
+    ]
+  },
+  "lateGapHold": "gap reaching before both cutoffs opened LATE_PRE_CUTOFF_DATA holds for both windows; frozen rows unchanged",
+  "immutability": "UPDATE/DELETE on frozen snapshots/owners/selected cutoffs/policies refused by trigger; TEST-version approval refused by CHECK",
+  "credits": {
+    "fullRebuildFromCreation": 15649.6,
+    "rebuildMeter": {
+      "getSlot": {
+        "calls": 1,
+        "items": 0
+      },
+      "getTransactionsForAddress": {
+        "calls": 1396,
+        "items": 0
+      },
+      "gTFA:full": {
+        "calls": 81,
+        "items": 7646
+      },
+      "gTFA:sigs": {
+        "calls": 1315,
+        "items": 19102
+      },
+      "getTransaction": {
+        "calls": 172,
+        "items": 0
+      },
+      "getMultipleAccounts": {
+        "calls": 14,
+        "items": 0
+      }
+    },
+    "incrementalPass": 6.1,
+    "cutoffSelectionPerRecentWindow": [
+      43,
+      47,
+      47
+    ],
+    "projection30d": "cutoffs ~45 x 8640 = ~0.39M; passes 6-25 x 8640 = ~0.05-0.22M; total ~0.45-0.6M/month for this stand-in (projection, not measured over 30 days)"
+  },
+  "policy": "test-elig-v1-8m6w (TEST_FIXTURE; deployer = create-tx fee payer, pool = Pump bonding-curve PDA). Never live."
+}
