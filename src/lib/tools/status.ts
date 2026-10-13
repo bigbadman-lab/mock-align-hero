@@ -7,6 +7,8 @@ import { WW_ENDPOINT } from "./whale-watch";
 import { AC_ENDPOINT } from "./account-checker";
 import { HI_ENDPOINT } from "./holder-intelligence";
 import { TRA_ENDPOINT } from "./token-risk-analyst";
+import { SMT_ENDPOINT } from "./smart-money-tracker";
+import { ORB_ENDPOINT } from "./onchain-report";
 
 export interface ToolStatus { available: boolean; reason?: string; limits?: { perVisitorPerMinute: number; perVisitorPerHour: number; globalPerMinute: number } }
 
@@ -33,3 +35,5 @@ export const whaleWatchStatusQuery = statusQuery("whale_watch", WW_ENDPOINT);
 export const accountCheckerStatusQuery = statusQuery("account_checker", AC_ENDPOINT);
 export const holderIntelligenceStatusQuery = statusQuery("holder_intelligence", HI_ENDPOINT);
 export const tokenRiskAnalystStatusQuery = statusQuery("token_risk_analyst", TRA_ENDPOINT);
+export const smartMoneyTrackerStatusQuery = statusQuery("smart_money_tracker", SMT_ENDPOINT);
+export const onchainReportStatusQuery = statusQuery("onchain_report_builder", ORB_ENDPOINT);

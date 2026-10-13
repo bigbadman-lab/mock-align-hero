@@ -148,9 +148,8 @@ describe("L5 integration rules", () => {
     expect(freeTestBucket("token_risk_analyst", "v").bucket).not.toBe(freeTestBucket("holder_intelligence", "v").bucket);
     expect(bucketsFor("v").map((b) => b.limit)).toEqual([6, 40, 60]);
   });
-  it("new tools are runnable but not launchable; last two stay planned", () => {
+  it("new tools are runnable but not launchable", () => {
     const by = Object.fromEntries(LIBRARY.map((t) => [t.id, t]));
     expect([by["holder-intelligence"]!.tokenLaunch, by["token-risk-analyst"]!.tokenLaunch]).toEqual([false, false]);
-    expect([by["smart-money-tracker"]!.planned, by["onchain-report-builder"]!.planned]).toEqual([true, true]);
   });
 });

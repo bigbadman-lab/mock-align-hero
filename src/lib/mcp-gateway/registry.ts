@@ -4,6 +4,8 @@ import * as z from "zod/v4";
 import { WI_SCHEMA, WI_TOOL_ID, isValidSolanaAddress, isWalletInspectorResult } from "@/lib/tools/wallet-inspector";
 import { WW_SCHEMA, WW_TOOL_ID, WW_THRESHOLDS, isWhaleWatchResult } from "@/lib/tools/whale-watch";
 import { HI_SCHEMA, HI_TOOL_ID, isHolderIntelligenceResult } from "@/lib/tools/holder-intelligence";
+import { SMT_SCHEMA, SMT_TOOL_ID, SMT_MAX_WALLETS, isSmartMoneyResult } from "@/lib/tools/smart-money-tracker";
+import { ORB_SCHEMA, ORB_TOOL_ID, isOnchainReport, type TargetType } from "@/lib/tools/onchain-report";
 import { TRA_SCHEMA, TRA_TOOL_ID, isTokenRiskResult, STATE_MEANING } from "@/lib/tools/token-risk-analyst";
 
 /** Server-validated, per-template product settings. Never contains URLs, programs or secrets. */
@@ -17,7 +19,7 @@ export interface TemplateAdapter {
   title: string;
   description: string;
   /** External (caller-visible) input schema. Product-fixed values are NOT in here. */
-  inputSchema: z.ZodObject<{ address: z.ZodString } | { mint: z.ZodString }>;
+  inputSchema: z.ZodObject<z.ZodRawShape>;
   /** Strict allowlist for product tool_config; returns null when invalid. */
   parseSettings(raw: unknown): ProductSettings | null;
   /** Public, human-readable description of server-fixed settings (safe to show; never raw config). */
@@ -112,12 +114,44 @@ const tokenRiskAnalyst: TemplateAdapter = {
   validOutput: (out, i) => isTokenRiskResult(out, String(i["mint"])),
 };
 
+const smartMoneyTracker: TemplateAdapter = {
+  templateId: "smart-money-tracker",
+  version: "1.0.0",
+  toolName: "smart_money_tracker",
+  workerToolId: SMT_TOOL_ID,
+  title: "Smart Money Tracker (Solana mainnet, read-only)",
+  description:
+    "On-demand recent activity for 1–3 wallets you choose, at 'finalized': up to 20 recent signatures per wallet and native SOL transfers decoded from the newest 5. Transfers ≥ 1 SOL are listed as highlights. " +
+    "Not monitoring, not full history, no token transfers, swaps, PnL or claims about who the wallets are. `complete` false means part of the sample couldn't be read. Read-only.",
+  inputSchema: z.strictObject({ wallets: z.array(addressSchema()).min(1).max(SMT_MAX_WALLETS).refine((w) => new Set(w).size === w.length, "Duplicate wallet") }),
+  ...noSettings,
+  toWorkerPayload: (i) => JSON.stringify({ schema: SMT_SCHEMA, toolId: SMT_TOOL_ID, input: { wallets: i["wallets"] } }),
+  validOutput: (out, i) => isSmartMoneyResult(out, i["wallets"] as string[]),
+};
+
+const onchainReportBuilder: TemplateAdapter = {
+  templateId: "onchain-report-builder",
+  version: "1.0.0",
+  toolName: "onchain_report_builder",
+  workerToolId: ORB_TOOL_ID,
+  title: "Onchain Report Builder (Solana mainnet, read-only)",
+  description:
+    "Deterministic point-in-time report for one wallet (Wallet Inspector + Account Checker) or one token mint (Token Scanner + Supply Monitor). " +
+    "Max 6 provider calls per report. `status` is 'partial' whenever a component failed or was incomplete; a required component failure returns an error instead. No AI, no scores, no safety verdicts. Read-only.",
+  inputSchema: z.strictObject({ targetType: z.enum(["wallet", "token"]), target: addressSchema() }),
+  ...noSettings,
+  toWorkerPayload: (i) => JSON.stringify({ schema: ORB_SCHEMA, toolId: ORB_TOOL_ID, input: { targetType: i["targetType"], target: i["target"] } }),
+  validOutput: (out, i) => isOnchainReport(out, i["targetType"] as TargetType, String(i["target"])),
+};
+
 /** All implemented adapters, keyed by templateId. */
 export const ADAPTERS: Record<string, TemplateAdapter> = {
   [walletInspector.templateId]: walletInspector,
   [whaleWatch.templateId]: whaleWatch,
   [holderIntelligence.templateId]: holderIntelligence,
   [tokenRiskAnalyst.templateId]: tokenRiskAnalyst,
+  [smartMoneyTracker.templateId]: smartMoneyTracker,
+  [onchainReportBuilder.templateId]: onchainReportBuilder,
 };
 
 /** An endpoint profile = which templates (at which version) one MCP endpoint exposes. */
