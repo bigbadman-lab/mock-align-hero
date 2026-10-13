@@ -1,7 +1,7 @@
 // L7-A BYOK envelope encryption (server-only). AES-256-GCM via WebCrypto (works on workerd and Node).
 // The key-encryption keyring comes from a server secret (MCPX_BYOK_KEYRING), never the DB or the browser.
 // Format: "v2:<base64 32 bytes>,v1:<base64 32 bytes>" — the first entry encrypts; all entries can decrypt (rotation).
-// AAD binds every ciphertext to its product + credential version, so a row copied to another product fails to decrypt.
+// AAD binds every ciphertext to its product + credential idempotency ref, so a row copied to another product fails to decrypt.
 
 export const ALG = "AES-256-GCM" as const;
 export interface Sealed { iv: Uint8Array; ciphertext: Uint8Array; kekVersion: string; alg: typeof ALG }
@@ -28,7 +28,7 @@ export async function parseKeyring(raw: string | undefined | null): Promise<Keyr
   return { active, keys };
 }
 
-export const aadFor = (creationId: string, credentialVersion: number) => new TextEncoder().encode(`mcpx-byok:${creationId}:${credentialVersion}`);
+export const aadFor = (creationId: string, credentialRef: string) => new TextEncoder().encode(`mcpx-byok:${creationId}:${credentialRef}`);
 
 export async function seal(ring: Keyring, plaintext: string, aad: Uint8Array): Promise<Sealed> {
   if (!plaintext || plaintext.length > 512) throw new ByokCryptoError("invalid_input");
