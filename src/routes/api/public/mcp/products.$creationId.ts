@@ -6,7 +6,11 @@ import { productionProductDeps } from "@/lib/mcp-gateway/products.server";
 
 const h = async ({ request, params }: { request: Request; params: { creationId: string } }) => {
   const { productionAiDeps } = await import("@/lib/byok/store.server");
-  return handleProductMcp(params.creationId, request, productionProductDeps, productionExecDeps, await productionAiDeps().catch(() => null));
+  // Tool activity is recorded only once the 0026 table is live and MCPX_TOOL_ACTIVITY=1 is set.
+  const exec = process.env["MCPX_TOOL_ACTIVITY"] === "1"
+    ? { ...productionExecDeps, recordActivity: (await import("@/lib/creator-dashboard/source.server")).recordActivity }
+    : productionExecDeps;
+  return handleProductMcp(params.creationId, request, productionProductDeps, exec, await productionAiDeps().catch(() => null));
 };
 
 export const Route = createFileRoute("/api/public/mcp/products/$creationId")({

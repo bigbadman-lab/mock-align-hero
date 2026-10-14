@@ -204,15 +204,19 @@ async function handleCanvasProduct(id: string, displayName: string, token: strin
       { title: marker.title, description: `${displayName} — ${marker.description}`, inputSchema: canvasInputSchema(pv.cfg, ai),
         annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
       async (raw: unknown) => {
+        let executed = false; // record only requests that actually reached the execution worker
         const r = await executeCanvasTool(pv.cfg, pv.version, raw, {
           available: async (t) => (await exec.toolAvailability(t)).available,
           take: async () => { const l = await exec.takeShared(cfg, request); return l === "ok" ? "ok" : l === "unavailable" ? "unavailable" : "limited"; },
-          execute: async (p) => { const x = await exec.callWorker(cfg, p, request); return x.ok ? x : { ok: false, error: x.error }; },
+          execute: async (p) => { executed = true; const x = await exec.callWorker(cfg, p, request); return x.ok ? x : { ok: false, error: x.error }; },
           ...(ai && aiDeps ? { summarise: (o: unknown) => summarise(aiDeps, id, o) } : {}),
         });
         console.log(JSON.stringify({ mcp: `product:${id}`, tool: CANVAS_TOOL, canvasVersion: pv.version }));
         // One external Canvas request = one record, however many steps ran (steps are not recorded separately).
-        if (!(r as { invalidInput?: boolean }).invalidInput) await track(exec.recordActivity, id, "canvas", (r as { isError?: boolean }).isError ? "error" : "ok");
+        if (executed) {
+          const done = !(r as { isError?: boolean }).isError && (r as { structuredContent?: { complete?: unknown } }).structuredContent?.complete === true;
+          await track(exec.recordActivity, id, "canvas", done ? "ok" : "error");
+        }
         return r;
       });
     return server;
