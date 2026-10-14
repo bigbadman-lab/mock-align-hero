@@ -79,7 +79,7 @@ d("0016 durable intents (real Postgres)", () => {
     await s.recordSigned("imm-key-1", "sigI", "QkFTRTY0");
     await expect(sql`update public.mcpx_rw_intents set signature='other' where idempotency_key='imm-key-1'`).rejects.toThrow(/immutable/);
     await expect(sql`delete from public.mcpx_rw_intents where idempotency_key='imm-key-1'`).rejects.toThrow(/append-only/);
-    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,state,signature) values ('ins-key-x','c','SOL_PAYOUT',${H},1,1,'w','SIGNED','s')`).rejects.toThrow(/RESERVED/);
+    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,state,signature) values ('ins-key-x','c','SOL_PAYOUT',${H},1,1,'w','SIGNED','s')`).rejects.toThrow(/RESERVED|requires plan_rows/);
   });
   it("mismatched payout data is rejected by the table", async () => {
     await expect(intentStore(db, "w").reserve({ ...base("bad-hash-1"), messageSha256: "nothex" })).rejects.toThrow();

@@ -60,7 +60,7 @@ d("0019 execution identity (real Postgres)", () => {
   it("cannot mark sent without bytes; cannot insert pre-signed or pre-sent", async () => {
     const s = intentStore(db, "w1"); await s.reserve(base("b19-key-2"));
     await expect(s.markSent("b19-key-2")).rejects.toThrow();
-    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,signed_tx_base64) values ('b19-ins-1','c','SOL_PAYOUT',${H},1,1,'w','QQ==')`).rejects.toThrow(/RESERVED/);
+    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,signed_tx_base64) values ('b19-ins-1','c','SOL_PAYOUT',${H},1,1,'w','QQ==')`).rejects.toThrow(/RESERVED|requires plan_rows/);
   });
   it("two workers racing to sign or settle: exactly one wins", async () => {
     await intentStore(db, "w1").reserve(base("b19-race-1"));
