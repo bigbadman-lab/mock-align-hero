@@ -27,6 +27,7 @@ const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? 
 
 const env = (k: string) => process.env[k]?.trim() || null;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "mcpx-rewards-worker", at: new Date().toISOString(), ...o }));
+import { fetchSiteState } from "./site-state";
 
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
@@ -132,7 +133,7 @@ async function main() {
       }
       log({ event: "ready_state", ready: false, health: true, mode, blockers: wait });
       await childPass(c?.mint ?? null, c?.deployerWallet ?? env("MCPX_DEPLOYER_PUBLIC_KEY"));
-    } catch (e) { log({ level: "error", event: "state_failed", error: e instanceof Error ? e.message : "unknown" }); }
+    } catch (e) { log({ level: "error", event: "state_failed", op, elapsedMs: Date.now() - t0, errorName: e instanceof Error ? e.name : "unknown", error: e instanceof Error ? e.message : "unknown" }); }
     await new Promise((r) => setTimeout(r, pollMs));
   }
   const store = pgStore(db, workerId, 60);
