@@ -14,7 +14,8 @@ export function rehearsalDeps(): RehearsalDeps {
     enabled: process.env["MCPX_SOL_REHEARSAL"] === "1",
     configuredCreator: c && B58.test(c) ? c : null,
     async permission(): Promise<RehearsalPermission | null> {
-      const { data, error } = await (await admin()).from("mcpx_sol_rehearsal").select("status, creator_wallet, draft_id, mint, signature").eq("id", 1).maybeSingle();
+      // Newest permission row (0028 allows exactly one more after the first is consumed).
+      const { data, error } = await (await admin()).from("mcpx_sol_rehearsal").select("status, creator_wallet, draft_id, mint, signature").order("id", { ascending: false }).limit(1).maybeSingle();
       if (error) throw new Error("unavailable");
       return data ? { status: data.status, creatorWallet: data.creator_wallet, draftId: data.draft_id, mint: data.mint, signature: data.signature } : null;
     },
