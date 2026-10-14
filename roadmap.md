@@ -33,3 +33,4 @@
   - [x] Section labels: decorative dash removed site-wide (matches hero)
   - [x] Homepage: section padding tightened (hero 96px, sections 56px)
   - [x] Homepage: Treasury copy replaced — "Every fee. Every reward. Fully transparent."
+  - [x] Homepage: flow section recast as "How it works" — bigger numbers, status chips
