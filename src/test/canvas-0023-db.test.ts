@@ -12,8 +12,8 @@ d("0023 Canvas drafts (real Postgres)", () => {
   let sql: ReturnType<typeof postgres>;
   beforeAll(() => { sql = postgres(URL!, { max: 4, onnotice: () => {} }); });
   afterAll(async () => { await sql.end(); });
-  const ins = (tpl: string, c: unknown, wallet = "W1") => sql`insert into public.mcpx_launch_drafts (creator_wallet, create_key, revision, status, chain_status, template_id, template_version, settings, product_name, token_name, symbol, description, tool_description, canvas_config)
-    values (${wallet}, ${"k" + Math.random()}, 1, 'DRAFT', 'NOT_STARTED', ${tpl}, 1, '{}', 'P', 'T', 'TT', 'd', '', ${c === null ? null : sql.json(c)}) returning id`;
+  const ins = (tpl: string, c: unknown, wallet = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin") => sql`insert into public.mcpx_launch_drafts (creator_wallet, create_key, revision, status, chain_status, template_id, template_version, settings, product_name, token_name, symbol, description, tool_description, canvas_config)
+    values (${wallet}, ${"k" + crypto.randomUUID().replace(/-/g, "")}, 1, 'DRAFT', 'NOT_STARTED', ${tpl}, 1, '{}', 'P', 'T', 'TT', 'd', '', ${c === null ? null : sql.json(c)}) returning id`;
 
   it("canvas drafts require a config; other templates must not have one", async () => {
     await expect(ins("canvas", null)).rejects.toThrow(/canvas_shape/);
@@ -28,7 +28,7 @@ d("0023 Canvas drafts (real Postgres)", () => {
     await sql`update public.mcpx_launch_drafts set status = 'DRAFT' where id = ${id}`; // same revision: no new history row
     const h = await sql`select draft_revision, creator_wallet from public.mcpx_canvas_revisions where draft_id = ${id} order by 1`;
     expect(h.map((r) => r.draft_revision)).toEqual([1, 2]);
-    expect(h[0].creator_wallet).toBe("W1");
+    expect(h[0].creator_wallet).toBe("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
     await expect(sql`update public.mcpx_canvas_revisions set config = '{}' where draft_id = ${id}`).rejects.toThrow(/immutable/);
     await expect(sql`delete from public.mcpx_canvas_revisions where draft_id = ${id}`).rejects.toThrow(/immutable/);
   });
