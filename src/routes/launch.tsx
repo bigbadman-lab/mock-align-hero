@@ -7,10 +7,10 @@ import { WW_THRESHOLDS, WW_DEFAULT_THRESHOLD } from "@/lib/tools/whale-watch";
 import { useWallet } from "@/lib/wallet/context";
 import { useCreatorSession } from "@/lib/creator-auth/use-creator-session";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
-import { LaunchTxCheck } from "@/components/mcpx/launch/LaunchTxCheck";
+import { LaunchFlow } from "@/components/mcpx/launch/LaunchFlow";
 import { CanvasBuilder, EMPTY_CANVAS } from "@/components/mcpx/launch/CanvasBuilder";
 import { CANVAS_TEMPLATE_ID } from "@/lib/launch/draft";
-import { ArtworkPanel, MetadataPanel, SavedDrafts, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
+import { ArtworkPicker, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
 
 export const Route = createFileRoute("/launch")({
   // ?template= is a hint only; it is resolved through resolveTemplateParam and never trusted as a draft field.
@@ -60,14 +60,9 @@ function Launch() {
   const [saved, setSaved] = useState<DraftView | null>(null);
   const savedJson = saved ? JSON.stringify(saved.input) : null;
   const dirty = savedJson !== JSON.stringify(input);
-  const openDraft = (d: DraftView) => { urlApplied.current = true; setToolNameTouched(!!d.input.productName); setSaved(d); setInput(d.input); setErrors({}); setReview(null); setNotice(null); };
-  const onSave = async () => {
-    const r = validateDraft(input);
-    if (!r.ok) { setErrors(r.errors); requestAnimationFrame(() => errorRef.current?.focus()); return; }
-    const out = await drafts.save(saved, input);
-    if (out.draft) { setSaved(out.draft); setInput(out.draft.input); }
-    if (out.fields) setErrors(out.fields);
-  };
+  const [art, setArt] = useState<File | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [prepErr, setPrepErr] = useState<string | null>(null);
   const reviewRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
@@ -98,11 +93,34 @@ function Launch() {
     setErrors((p) => ({ ...p, templateId: undefined, settings: undefined, canvas: undefined }));
   };
 
-  const onReview = (e: React.FormEvent) => {
+  // Review quietly saves the launch (so the server only ever builds from saved details), uploads the
+  // chosen artwork and prepares the token metadata. The creator never manages drafts.
+  const onReview = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = validateDraft(input);
     if (!r.ok) { setErrors(r.errors); requestAnimationFrame(() => errorRef.current?.focus()); return; }
-    setErrors({}); setNotice(null); setCopied("idle");
+    setErrors({}); setNotice(null); setCopied("idle"); setPrepErr(null);
+    if (session.s === "signed_in") {
+      setPreparing(true);
+      try {
+        let d = saved;
+        if (!d || dirty) {
+          const out = await drafts.save(d, input);
+          if (out.fields) { setErrors(out.fields); return; }
+          if (!out.draft) { setPrepErr(drafts.message ?? "We couldn't save your launch. Try again."); return; }
+          d = out.draft; setSaved(d); setInput(d.input);
+        }
+        if (art) {
+          const up = await drafts.upload(d, art, () => {});
+          if (!up) { setPrepErr("Your artwork couldn't be saved. Try again."); return; }
+          d = up; setSaved(d); setArt(null);
+        }
+        if (d.artwork && !d.metadata) {
+          const m = await drafts.prepareMetadata(d);
+          if (m) { d = m; setSaved(d); }
+        }
+      } finally { setPreparing(false); }
+    }
     setReview({ draft: r.draft, wallet: mainnetWallet });
     requestAnimationFrame(() => reviewRef.current?.focus());
   };
@@ -118,12 +136,11 @@ function Launch() {
 
         {notice && <StatusMessage tone="warning" title={notice} />}
 
-        {session.s === "signed_in" && <SavedDrafts drafts={drafts} current={saved?.id ?? null} onOpen={openDraft} onNew={() => { setSaved(null); setInput(EMPTY); setReview(null); }} onAbandoned={(id) => { if (saved?.id === id) { setSaved(null); setInput(EMPTY); setReview(null); } }} />}
 
         {!review ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <form onSubmit={onReview} noValidate className="min-w-0 space-y-4" aria-labelledby="draft">
-            <SectionHeading label="Draft" title={<span id="draft">Your tool token</span>} />
+            <SectionHeading label="Launch" title={<span id="draft">Your tool token</span>} />
             {errorCount > 0 && (
               <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-warning/40 bg-surface-2 p-4 text-sm text-foreground">
                 {errorCount === 1 ? "1 field needs attention." : `${errorCount} fields need attention.`}
@@ -203,7 +220,7 @@ function Launch() {
             </section>
 
             <h3 className="label-mono text-xs text-primary">3 · Artwork, wallet and fees</h3>
-            <ArtworkPanel signedIn={session.s === "signed_in"} saved={saved} dirty={dirty} drafts={drafts} onSaved={(d) => { setSaved(d); setReview(null); }} />
+            <ArtworkPicker file={art} onFile={setArt} savedUrl={saved?.artwork?.url ?? null} />
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
               <p className="text-foreground">Creator wallet</p>
@@ -248,36 +265,27 @@ function Launch() {
             </fieldset>
 
             <div className="flex flex-wrap gap-3">
-              {session.s === "signed_in" && (
-                <button type="button" className={buttonOutline} onClick={onSave} disabled={drafts.busy !== null || (!!saved && !dirty)}>
-                  {drafts.busy === "save" ? "Saving…" : saved ? (dirty ? "Save changes" : "Saved") : "Save draft"}
-                </button>
-              )}
-              <button type="submit" className={buttonPrimary}>Review draft</button>
+              <button type="submit" className={buttonPrimary} disabled={preparing}>{preparing ? "Preparing…" : "Review"}</button>
               <Link to="/mcp" className={buttonOutline}>Browse templates</Link>
             </div>
             <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-              {session.s !== "signed_in" ? "Sign in as a creator from the Dashboard to save drafts and artwork. Without sign-in, your draft stays on this page only." : drafts.message ?? (saved ? (dirty ? `Unsaved changes (saved revision ${saved.revision}).` : `Saved — revision ${saved.revision}.`) : "Not saved yet.")}
+              {prepErr ?? (session.s !== "signed_in" ? "Sign in as a creator from the Dashboard to launch. You can still fill in and review the form." : "")}
             </p>
           </form>
           <DraftSummaryAside input={input} />
           </div>
         ) : (
           <section aria-labelledby="review" className="space-y-4">
-            <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Draft review — preparation only</h2>
-            <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
-            {saved && !dirty ? (
-              <>
-                <MetadataPanel saved={saved} drafts={drafts} onSaved={setSaved} />
-                <LaunchTxCheck saved={saved} wallet={mainnetWallet} />
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">{session.s === "signed_in" ? "Save this draft and its artwork to publish token metadata." : "This draft has not been sent anywhere."}</p>
-            )}
-            <p className="text-sm text-muted-foreground">Creating the token stays unavailable until launch prerequisites are proven. There is no Launch, Sign or Buy step.</p>
+            <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Confirm your launch</h2>
+            <p className="text-sm text-muted-foreground">Check the details below. When you press Launch, your wallet will ask you to sign the token creation.</p>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
+              {saved?.artwork && <img src={saved.artwork.url} alt="Token artwork" className="aspect-square w-full max-w-[300px] rounded-lg border border-border object-cover" />}
+            </div>
+            <LaunchFlow saved={saved && !dirty ? saved : null} signedInWallet={session.s === "signed_in" ? session.wallet ?? null : null} connectedWallet={mainnetWallet} />
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" className={buttonOutline} onClick={() => { setReview(null); setNotice(null); }}>Edit</button>
-              <button type="button" className={buttonOutline} onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied("ok"), () => setCopied("fail"))}>Copy draft summary</button>
+              <button type="button" className={buttonOutline} onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied("ok"), () => setCopied("fail"))}>Copy summary</button>
               <span role="status" className="text-sm text-muted-foreground">{copied === "ok" ? "Copied." : copied === "fail" ? "Couldn't copy — select the text instead." : ""}</span>
             </div>
           </section>
@@ -324,7 +332,7 @@ function DraftSummaryAside({ input }: { input: DraftInput }) {
     <div className="flex justify-between gap-3 py-1.5"><dt className="text-subtle">{k}</dt><dd className="min-w-0 truncate text-right text-foreground">{v}</dd></div>
   );
   return (
-    <aside aria-label="Draft summary" className="rounded-lg border border-border bg-card p-4 text-sm lg:sticky lg:top-24">
+    <aside aria-label="Launch summary" className="rounded-lg border border-border bg-card p-4 text-sm lg:sticky lg:top-24">
       <p className="label-mono text-xs text-primary">Summary</p>
       {t && <img src={t.image} alt="" width={1024} height={640} loading="lazy" className="mt-3 aspect-[16/10] w-full rounded object-cover" />}
       <dl className="mt-3 divide-y divide-border font-mono text-xs">
@@ -335,7 +343,6 @@ function DraftSummaryAside({ input }: { input: DraftInput }) {
         {row("MCP", t ? (t.mcpAdapter ? "adapter available" : "not yet") : "—")}
         {row("Initial buy", input.buyEnabled ? `${input.buyAmount || "?"} $MCP` : "none")}
       </dl>
-      <p className="mt-3 rounded border border-warning/40 p-2 text-xs text-muted-foreground">Draft only. Token creation is unavailable — nothing is created, signed or sent.</p>
-    </aside>
+          </aside>
   );
 }
