@@ -50,13 +50,13 @@ export function WalletPanel() {
   const connected = w.status === "connected_mainnet" || w.status === "connected_unsupported_network";
   const url = w.address ? explorerAccountUrl(w.address) : null;
   return (
-    <section aria-labelledby="wallet-h" className="rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="wallet-h" className="rounded-lg border border-border bg-card p-4">
       <p className="label-mono text-subtle">Wallet</p>
       <h2 id="wallet-h" className="mt-2 text-lg font-semibold">
         {connected ? "Wallet connected" : w.status === "unavailable" ? "Wallet connection unavailable" : "Connect a Solana wallet"}
       </h2>
       {connected ? (
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 space-y-3">
           <p className="break-all font-mono text-sm text-foreground">{w.address}</p>
           <p className="text-sm text-muted-foreground">
             {w.walletName ? `${w.walletName} · ` : ""}
@@ -71,7 +71,7 @@ export function WalletPanel() {
           <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{msg}</p>
         </div>
       ) : (
-        <div className="mt-3 space-y-4">
+        <div className="mt-2 space-y-3">
           <p className="text-sm text-muted-foreground">
             {w.status === "unavailable" ? w.message : w.status === "error" ? w.message : "Connecting shows your public address here. It does not create an MCPX account and nothing is signed."}
           </p>

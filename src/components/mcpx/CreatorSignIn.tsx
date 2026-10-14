@@ -114,12 +114,12 @@ export function CreatorSignIn({ onSessionChange }: { onSessionChange?: (signedIn
 
   const canSign = w.status === "connected_mainnet" && !!w.signMessage;
   return (
-    <section aria-labelledby="creator-h" className="rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="creator-h" className="rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="creator-h" className="text-sm font-semibold">Creator management</h2>
         <FeatureAvailability>{s.kind === "signed_in" ? "Signed in for creator management" : "Not signed in"}</FeatureAvailability>
       </div>
-      <div role="status" aria-live="polite" className="mt-3 space-y-4 text-sm text-muted-foreground">
+      <div role="status" aria-live="polite" className="mt-2 space-y-3 text-sm text-muted-foreground">
         {s.kind === "checking" && <p>Checking sign-in status…</p>}
         {s.kind === "unavailable" && <p>Creator sign-in is unavailable right now. Your wallet connection and the tools still work.</p>}
         {s.kind === "pending" && <p>{s.step}</p>}

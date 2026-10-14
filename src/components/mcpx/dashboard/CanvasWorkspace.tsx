@@ -23,17 +23,17 @@ export function CanvasWorkspace() {
   useEffect(() => { void load(); }, []);
 
   return (
-    <section aria-labelledby="d-canvas" className="rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="d-canvas" className="rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="d-canvas" className="text-sm font-semibold">Canvas workspace</h2>
         <FeatureAvailability>Creator only</FeatureAvailability>
       </div>
-      {st.k === "loading" && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
-      {st.k === "signed_out" && <p className="mt-3 text-sm text-muted-foreground">Sign in as a creator above to edit your Canvas products.</p>}
-      {st.k === "unavailable" && <p className="mt-3 text-sm text-muted-foreground">{st.msg}</p>}
+      {st.k === "loading" && <p className="mt-2 text-sm text-muted-foreground">Loading…</p>}
+      {st.k === "signed_out" && <p className="mt-2 text-sm text-muted-foreground">Sign in as a creator above to edit your Canvas products.</p>}
+      {st.k === "unavailable" && <p className="mt-2 text-sm text-muted-foreground">{st.msg}</p>}
       {st.k === "ready" && (st.products.length === 0
-        ? <p className="mt-3 text-sm text-muted-foreground">You have no launched Canvas products yet. Build a Canvas pipeline in a launch draft first.</p>
-        : <div className="mt-4 space-y-6">{st.products.map((p) => <ProductEditor key={p.creationId} p={p} onSaved={load} />)}</div>)}
+        ? <p className="mt-2 text-sm text-muted-foreground">You have no launched Canvas products yet. Build a Canvas pipeline in a launch draft first.</p>
+        : <div className="mt-3 space-y-4">{st.products.map((p) => <ProductEditor key={p.creationId} p={p} onSaved={load} />)}</div>)}
     </section>
   );
 }
