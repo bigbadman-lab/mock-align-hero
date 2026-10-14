@@ -58,7 +58,7 @@ export function validateCanvas(raw: unknown): CanvasCheck {
   });
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, config: { catalogVersion: CANVAS_CATALOG_VERSION, steps: out }, entryKind: CAPABILITY_BY_ID[out[0]!.capabilityId]!.input.kind };
+  return { ok: true, config: { catalogVersion: CANVAS_CATALOG_VERSION, steps: out, ...(r.ai ? { ai: { summarize: true as const } } : {}) }, entryKind: CAPABILITY_BY_ID[out[0]!.capabilityId]!.input.kind };
 }
 
 /** Outputs that a step at index `i` may legally read, for the guided picker. */
