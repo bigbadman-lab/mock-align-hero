@@ -169,6 +169,13 @@
       "when": 1791973487486,
       "tag": "0023_0023_mcpx_canvas_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791974094444,
+      "tag": "0024_0024_mcpx_canvas_products",
+      "breakpoints": true
     }
   ]
 }

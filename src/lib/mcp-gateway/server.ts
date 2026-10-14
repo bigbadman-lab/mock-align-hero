@@ -6,6 +6,7 @@ import { parseCreationId, resolveProduct, type ProductDeps } from "./products";
 import { callWorker, hmac, takeShared, toolAvailability, workerConfig } from "@/lib/tools/relay";
 import * as z from "zod/v4";
 import { aiActive, summarise, type AiDeps } from "@/lib/byok/execute";
+import { CANVAS_TOOL, canvasInputSchema, canvasMarker, executeCanvasTool, parseCanvasVersion } from "./canvas";
 
 export const MAX_MCP_BODY = 8 * 1024;
 const ALLOWED_ORIGINS = ["https://mcpx.fun", "https://www.mcpx.fun", "https://mock-align-hero.lovable.app"];
@@ -131,7 +132,12 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
   if (!id) return err(404, "not_found"); // no DB query for malformed IDs
   const token = bearerOf(request);
   if (!token) return unauthorized();
-  const res = await resolveProduct(deps, id);
+  // Canvas (Template 11): same endpoint, same order of checks, pipeline from the latest immutable version.
+  let creation;
+  try { creation = await deps.getVerifiedCreation(id); } catch { return err(503, "unavailable"); }
+  if (creation?.templateId === "canvas") return handleCanvasProduct(id, creation.displayName, token, request, deps, exec, aiDeps);
+  const cached = creation ?? null;
+  const res = await resolveProduct({ ...deps, getVerifiedCreation: async () => cached }, id);
   if (!res.ok) {
     if (res.reason === "store_unavailable") return err(503, "unavailable");
     if (res.reason === "misconfigured") console.warn(JSON.stringify({ mcp: "product", correlationId: crypto.randomUUID(), creationId: id, error: "misconfigured" }));
@@ -156,4 +162,39 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
     ...(aiDeps && (await aiActive(aiDeps, p.creationId)) ? { ai: { deps: aiDeps, creationId: p.creationId } } : {}),
   };
   return serve(() => buildServer({ name: `mcpx-product-${p.creationId}`, title: p.displayName }, [entry], request, exec), request);
+}
+
+async function handleCanvasProduct(id: string, displayName: string, token: string, request: Request, deps: ProductDeps, exec: ExecDeps, aiDeps: AiDeps | null): Promise<Response> {
+  let conf, ver;
+  try { conf = await deps.getProductConfig(id); ver = deps.getCanvasVersion ? await deps.getCanvasVersion(id) : null; } catch { return err(503, "unavailable"); }
+  if (!conf || conf.creationId !== id || conf.templateId !== "canvas" || conf.lifecycleState !== "active") return err(404, "not_found");
+  const pv = parseCanvasVersion(ver ?? null);
+  if (!pv) return err(404, "not_found"); // unbound or no longer valid against the catalog
+  const marker = canvasMarker(pv.cfg, pv.version);
+  const product = { creationId: id, displayName, adapter: marker, settings: {}, configVersion: conf.configVersion, accessMode: conf.accessMode };
+  let authorized: boolean;
+  try { authorized = await deps.authorizeProduct(product, token); } catch { return err(503, "unavailable"); }
+  if (!authorized) return unauthorized();
+  const cfg = exec.workerConfig();
+  if (!cfg) return err(503, "unavailable");
+  const ai = !!pv.cfg.ai && !!aiDeps && (await aiActive(aiDeps, id));
+  const build = () => {
+    const server = new McpServer({ name: `mcpx-product-${id}`, title: displayName, version: "0.3.1" },
+      { instructions: "MCPX Canvas product. Read-only Solana mainnet pipeline of existing MCPX tools." });
+    server.registerTool(CANVAS_TOOL,
+      { title: marker.title, description: `${displayName} — ${marker.description}`, inputSchema: canvasInputSchema(pv.cfg, ai),
+        annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false } },
+      async (raw: unknown) => {
+        const r = await executeCanvasTool(pv.cfg, pv.version, raw, {
+          available: async (t) => (await exec.toolAvailability(t)).available,
+          take: async () => { const l = await exec.takeShared(cfg, request); return l === "ok" ? "ok" : l === "unavailable" ? "unavailable" : "limited"; },
+          execute: async (p) => { const x = await exec.callWorker(cfg, p, request); return x.ok ? x : { ok: false, error: x.error }; },
+          ...(ai && aiDeps ? { summarise: (o: unknown) => summarise(aiDeps, id, o) } : {}),
+        });
+        console.log(JSON.stringify({ mcp: `product:${id}`, tool: CANVAS_TOOL, canvasVersion: pv.version }));
+        return r;
+      });
+    return server;
+  };
+  return serve(build, request);
 }
