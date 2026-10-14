@@ -19,7 +19,7 @@ export function launchBlocker(g: LaunchGate): LaunchBlocker {
 }
 
 export const BLOCKER_TEXT: Record<Exclude<LaunchBlocker, null>, string> = {
-  launch_closed: "Launching opens soon. Your launch is saved and ready. Nothing is signed or sent until launching opens.",
+  launch_closed: "Launching opens soon. Nothing is signed or sent until then.",
   sign_in: "Sign in as a creator from the Dashboard to launch.",
   connect_wallet: "Connect your wallet on Solana mainnet to launch.",
   wallet_mismatch: "The connected wallet isn't the one you signed in with.",
