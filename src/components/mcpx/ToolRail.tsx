@@ -43,7 +43,7 @@ export function ToolRail() {
         aria-label="Tool library. Scroll sideways to see every tool."
         className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1 outline-none [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-scrollbar]:hidden"
       >
-        {LIBRARY.map((t) => (
+        {LIBRARY.filter((t) => !t.hidden).map((t) => (
           <li key={t.id} className="w-[264px] shrink-0 snap-start sm:w-[312px]">
             <RailCard t={t} />
           </li>
@@ -62,7 +62,7 @@ export function ToolRail() {
       />
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <p className="font-mono text-xs text-subtle">{LIBRARY.length} tools · scroll for more</p>
+        <p className="font-mono text-xs text-subtle">{LIBRARY.filter((t) => !t.hidden).length} tools · scroll for more</p>
         <div className="flex gap-2">
           <RailButton label="Previous tools" disabled={edges.start} onClick={() => nudge(-1)}>←</RailButton>
           <RailButton label="Next tools" disabled={edges.end} onClick={() => nudge(1)}>→</RailButton>

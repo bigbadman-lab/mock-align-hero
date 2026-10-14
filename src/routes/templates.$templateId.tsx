@@ -6,7 +6,7 @@ import { LIBRARY, TEMPLATES } from "@/lib/templates";
 export const Route = createFileRoute("/templates/$templateId")({
   loader: ({ params }) => {
     const t = LIBRARY.find((x) => x.id === params.templateId);
-    if (!t) throw notFound();
+    if (!t || t.hidden) throw notFound();
     return { id: t.id };
   },
   head: ({ loaderData }) => {

@@ -47,7 +47,7 @@ const Code = ({ children }: { children: string }) => (
 );
 
 function Docs() {
-  const tools = LIBRARY.filter((t) => t.id !== "canvas");
+  const tools = LIBRARY.filter((t) => t.id !== "canvas" && !t.hidden);
   return (
     <>
       <PageHeader label="Documentation" title="MCPX docs" intro="What you can use today, and how the parts marked “Not live yet” are designed to work." />

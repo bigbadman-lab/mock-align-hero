@@ -176,7 +176,7 @@ function Launch() {
               <fieldset aria-describedby="templateId-hint templateId-err">
                 <legend className="text-sm text-foreground">{input.templateId ? "Change template" : "Template"}</legend>
                 <div role="radiogroup" aria-label="Template" className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {TEMPLATES.map((t) => {
+                  {TEMPLATES.filter((t) => !LIBRARY.find((x) => x.id === t.id)?.hidden).map((t) => {
                     const lib = LIBRARY.find((x) => x.id === t.id);
                     const selected = input.templateId === t.id;
                     return (
