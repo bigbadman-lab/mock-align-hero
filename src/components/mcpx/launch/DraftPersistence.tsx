@@ -192,10 +192,17 @@ export function ArtworkPanel({ signedIn, saved, dirty, drafts, onSaved }: { sign
         onDrop={(e) => { e.preventDefault(); setOver(false); void pick(e.dataTransfer.files[0]); }}
         className={`mt-3 rounded-md border border-dashed p-4 ${over ? "border-primary" : "border-border-strong"}`}
       >
-        <label className="block">
-          <span className="text-foreground">{saved?.artwork ? "Replace artwork" : "Choose artwork"}</span>
-          <span className="block text-xs text-subtle">or drag an image here</span>
-          <input ref={inputRef} type="file" accept="image/png,image/jpeg" className="mt-2 block w-full text-muted-foreground" aria-describedby="artwork-err" onChange={(e) => void pick(e.target.files?.[0])} />
+        <label className="block cursor-pointer rounded-md border border-border-strong bg-surface-2 p-3 transition-colors hover:border-primary hover:bg-secondary/60 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring">
+          <span className="flex flex-wrap items-center gap-3">
+            <span className={`${buttonPrimary} pointer-events-none`}>
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 shrink-0"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 20h16" /></svg>
+              {saved?.artwork ? "Choose a new image" : "Choose image file"}
+            </span>
+            <span className="min-w-0 flex-1 text-xs text-subtle">
+              {file ? <span className="block truncate text-foreground">{file.name}</span> : "or drag an image here · PNG or JPEG, square 1:1, up to 5 MB"}
+            </span>
+          </span>
+          <input ref={inputRef} type="file" accept="image/png,image/jpeg" className="sr-only" aria-describedby="artwork-err" onChange={(e) => void pick(e.target.files?.[0])} />
         </label>
         {preview && (
           <div className="mt-3 flex flex-wrap items-center gap-3">
