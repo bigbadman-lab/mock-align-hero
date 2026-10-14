@@ -58,3 +58,12 @@
 - [ ] Static lookup table: dry-run PASS (13 entries); creation awaits approval + deployer SOL
 - [x] Browser-wallet lookup table preview at /operator/alt (read-only)
 - [ ] Enable wallet signing for lookup table — awaits approval
+
+## SOL rehearsal (one-time SOL-paired child launch)
+Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SOL. No signing/broadcast/migration/deploy without approval.
+- [ ] Migration SQL (one-use permission + rehearsal marker) in docs/pending-migrations, throwaway-DB tests
+- [ ] Builder #2 SOL create_v2 branch (+ 0.05 SOL buy), size check, mainnet simulation
+- [ ] Site gate: MCPX_SOL_REHEARSAL path, reserve/consume permission, production $MCP route unchanged
+- [ ] Worker #3: rehearsal products plan-only, excluded from native accounting
+- [ ] "Rehearsal (SOL pair)" label; product lifecycle + tool activity checks
+- [ ] Report + activation sequence
