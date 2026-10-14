@@ -28,4 +28,3 @@
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.
 - /launch never signs or sends.
 - Subdirectories with their own AGENTS.md (read first): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch, src/lib/byok, src/lib/canvas.
-- Canvas (Template 11) rules live in src/lib/canvas/AGENTS.md.
