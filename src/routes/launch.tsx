@@ -278,10 +278,7 @@ function Launch() {
           <section aria-labelledby="review" className="space-y-4">
             <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Confirm your launch</h2>
             <p className="text-sm text-muted-foreground">Check the details below. When you press Launch, your wallet will ask you to sign the token creation.</p>
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-              <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
-              {saved?.artwork && <img src={saved.artwork.url} alt="Token artwork" className="aspect-square w-full max-w-[300px] rounded-lg border border-border object-cover" />}
-            </div>
+            <ReviewCard draft={review.draft} wallet={review.wallet} settings={settingsText(review.draft.templateId, review.draft.settings)} artworkUrl={saved?.artwork?.url ?? null} />
             <LaunchFlow saved={saved && !dirty ? saved : null} signedInWallet={session.s === "signed_in" ? session.wallet ?? null : null} connectedWallet={mainnetWallet} />
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" className={buttonOutline} onClick={() => { setReview(null); setNotice(null); }}>Edit</button>
