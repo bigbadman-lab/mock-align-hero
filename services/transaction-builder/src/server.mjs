@@ -79,6 +79,9 @@ export function createApp({ cfg, deps, now }) {
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const cfg = loadConfig(process.env);
+  // Refuse to start at all with missing/conflicting recipients, a missing deployer key, or key material.
+  const fatal = [...cfg.missing, ...cfg.invalid].filter((k) => /RECIPIENT|DEPLOYER|FORBIDDEN_KEY_MATERIAL/.test(k));
+  if (fatal.length) { console.error(`mcpx-transaction-builder refusing to start: ${fatal.map((k) => k.split(":")[0] === "FORBIDDEN_KEY_MATERIAL" ? k : k).join(",")}`); process.exit(1); }
   const deps = cfg.rpcUrl ? createChainDeps(cfg.rpcUrl) : { source: "chain" };
   const handle = createApp({ cfg, deps });
   const server = http.createServer((q, s) => { handle(q, s).catch(() => { try { s.writeHead(500); s.end(); } catch {} }); });
