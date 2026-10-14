@@ -119,7 +119,7 @@ describe("pre-sign metadata check", () => {
   const draftId = "3f1c2b4a-1d2e-4f30-8a1b-0c9d8e7f6a5b";
   const dr = { id: draftId, revision: 1, templateId: "wallet-inspector", name: "Child", symbol: "CHD", uri: "https://mcpx.fun/api/public/launch-assets/metadata/a.json" };
   const req = { draftId, revision: 1, mint, idempotencyKey: "0d6c5c1e-8f0a-4b8e-9d3c-2a1b0c9d8e7f", connectedWallet: me };
-  const base = (check?: GateDeps["checkMetadata"]) => ({ ...deps(), loadDraft: async () => dr, checkMetadata: check });
+  const base = (check?: GateDeps["checkMetadata"]): GateDeps => { const d: GateDeps = { ...deps(), loadDraft: async () => dr }; if (check) d.checkMetadata = check; return d; };
   it("refuses to prepare when metadata cannot be re-checked", async () => {
     expect((await gatePrepareDraft2(req, fresh(), base(undefined))).body["code"]).toBe("METADATA_CHECK_UNAVAILABLE");
   });
