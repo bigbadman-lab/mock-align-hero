@@ -22,8 +22,8 @@ export const tokenMarketQuery = (slug: string) =>
   queryOptions({
     queryKey: ["token-market", slug],
     queryFn: () => getTokenMarket({ data: { slug } }),
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
     retry: false,
     refetchOnWindowFocus: false,
   });

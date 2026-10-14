@@ -57,7 +57,7 @@ const inflight = new Map<string, Promise<MarketSnapshot | null>>();
 
 export async function fetchMarket(mint: string): Promise<MarketSnapshot | null> {
   const hit = cache.get(mint);
-  if (hit && Date.now() - hit.at < 60_000) return hit.v;
+  if (hit && Date.now() - hit.at < 30_000) return hit.v;
   const running = inflight.get(mint);
   if (running) return running;
   const p = (async () => {

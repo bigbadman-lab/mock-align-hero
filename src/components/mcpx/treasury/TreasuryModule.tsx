@@ -30,7 +30,7 @@ export function TreasuryModule() {
       </div>
       {v && (
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="Market cap" value={v.market?.marketCapUsd != null ? formatUsd(v.market.marketCapUsd) : "—"} note={v.market ? "DexScreener · USD" : v.mint ? "No verified market yet" : "Not launched"} />
+          <Stat label="Market cap" value={v.market?.marketCapUsd != null ? formatUsd(v.market.marketCapUsd) : "—"} note={v.market ? `${v.market.source === "birdeye" ? "Birdeye" : "DexScreener"} · USD` : v.mint ? "No verified market yet" : "Not launched"} />
           <Stat label="24h volume" value={v.market ? formatUsd(v.market.volume24hUsd) : "—"} note={v.market ? "Exact mint pairs only" : undefined} />
           <Stat label="Fees collected" value={v.fees ? `${lamportsToSol(v.fees.collectedLamports)} SOL` : "—"} note="Finalized native creator fees" />
           <Stat label="Rewards settled" value={v.paid ? `${lamportsToSol(v.paid.solLamports)} SOL` : "—"} accent={!!v.paid && v.paid.solLamports !== "0"}
