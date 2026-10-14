@@ -33,7 +33,8 @@ export function verifyChild(c: ChildRecord, o: OnchainChild, canonicalQuote: str
   if (new Set([c.creator, c.ops, c.platform]).size !== 3) return { ok: false, code: "RECIPIENT_DUPLICATE" };
   if (sc.shareholders.length !== 3) return { ok: false, code: "SHARES_MISMATCH" };
   for (let i = 0; i < 3; i++) {
-    if (sc.shareholders[i].address !== want[i][0] || sc.shareholders[i].shareBps !== want[i][1]) return { ok: false, code: "SHARES_MISMATCH" };
+    const s = sc.shareholders[i]!, w = want[i]!;
+    if (s.address !== w[0] || s.shareBps !== w[1]) return { ok: false, code: "SHARES_MISMATCH" };
   }
   return { ok: true };
 }
@@ -48,9 +49,10 @@ export function verifyRecipients(c: ChildRecord, o: OnchainChild, registeredCrea
   const sh = o.sharingConfig?.shareholders;
   if (!sh || sh.length !== 3 || sh.some((x) => !x || typeof x.address !== "string" || typeof x.shareBps !== "number")) return { ok: false, code: "SHARES_EVIDENCE_INCOMPLETE" };
   if (registeredCreator === a.nativeDeployer || sh.some((x) => x.address === a.nativeDeployer)) return { ok: false, code: "NATIVE_DEPLOYER_AS_RECIPIENT" };
-  if (sh[0].address !== registeredCreator || sh[0].shareBps !== CHILD_SPLIT.creator || c.creator !== registeredCreator) return { ok: false, code: "CREATOR_RECIPIENT_MISMATCH" };
-  if (sh[1].address !== a.ops || sh[1].shareBps !== CHILD_SPLIT.ops || c.ops !== a.ops) return { ok: false, code: "OPS_RECIPIENT_MISMATCH" };
-  if (sh[2].address !== a.platform || sh[2].shareBps !== CHILD_SPLIT.platform || c.platform !== a.platform) return { ok: false, code: "PLATFORM_RECIPIENT_MISMATCH" };
+  const [s0, s1, s2] = sh as [Shareholder, Shareholder, Shareholder];
+  if (s0.address !== registeredCreator || s0.shareBps !== CHILD_SPLIT.creator || c.creator !== registeredCreator) return { ok: false, code: "CREATOR_RECIPIENT_MISMATCH" };
+  if (s1.address !== a.ops || s1.shareBps !== CHILD_SPLIT.ops || c.ops !== a.ops) return { ok: false, code: "OPS_RECIPIENT_MISMATCH" };
+  if (s2.address !== a.platform || s2.shareBps !== CHILD_SPLIT.platform || c.platform !== a.platform) return { ok: false, code: "PLATFORM_RECIPIENT_MISMATCH" };
   return { ok: true };
 }
 
