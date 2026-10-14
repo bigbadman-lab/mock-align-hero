@@ -136,7 +136,8 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
   let creation;
   try { creation = await deps.getVerifiedCreation(id); } catch { return err(503, "unavailable"); }
   if (creation?.templateId === "canvas") return handleCanvasProduct(id, creation.displayName, token, request, deps, exec, aiDeps);
-  const res = await resolveProduct(deps, id);
+  const cached = creation ?? null;
+  const res = await resolveProduct({ ...deps, getVerifiedCreation: async () => cached }, id);
   if (!res.ok) {
     if (res.reason === "store_unavailable") return err(503, "unavailable");
     if (res.reason === "misconfigured") console.warn(JSON.stringify({ mcp: "product", correlationId: crypto.randomUUID(), creationId: id, error: "misconfigured" }));
