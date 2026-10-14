@@ -107,7 +107,7 @@ describe("transaction security before signing", () => {
   });
   it("unavailable lookup table blocks before signing", async () => {
     expect((await gateVerify(vin(), fresh(), deps({ rehearsal: rehearsal(reserved), checkAlt: async () => "ALT_UNAVAILABLE" }))).body["code"]).toBe("ALT_UNAVAILABLE");
-    expect((await gatePrepareDraft(prep, fresh(), deps({ rehearsal: rehearsal(avail), checkAlt: undefined }))).body["code"]).toBe("ALT_CHECK_UNAVAILABLE");
+    expect((await gatePrepareDraft(prep, fresh(), deps({ rehearsal: rehearsal(avail), checkAlt: undefined as any }))).body["code"]).toBe("ALT_CHECK_UNAVAILABLE");
   });
 });
 
