@@ -18,8 +18,8 @@ export const Route = createFileRoute("/paired")({
 function Paired() {
   return (
     <>
-      <PageHeader label="Paired market" title="Paired tokens" intro="Child tokens paired to $MCP, each powering one tool." />
-      <PageContainer className="py-16">
+      <PageHeader label="Paired market" title="Paired tokens" intro="Child tokens paired to $MCP, each powering one tool." className="py-8 sm:py-10" />
+      <PageContainer className="py-6">
         <ClientOnly fallback={<RegistryLoading />}>
           <VerifiedRegistry />
         </ClientOnly>
