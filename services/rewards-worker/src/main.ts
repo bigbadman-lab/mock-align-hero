@@ -2,6 +2,7 @@
 // DRY-RUN PLANNING + validated deployer signer (signer.ts). No sending, swapping or payout broadcast in this bundle;
 // refuses to start in any mode other than DRY_RUN. Separate from the six-tool MCP worker, the transaction builder and the website.
 import { remoteDb, sealedPost, type RemoteConfig } from "../../../src/lib/rewards/remote";
+import { waitForLaunch, type Pending } from "./launch-wake";
 import { deriveLaunch } from "./launch-derive";
 import { configBlockers, runPass, classify, type NativeConfig } from "../../../src/lib/rewards/processor";
 import { pgStore } from "../../../src/lib/rewards/store.pg";
@@ -136,7 +137,11 @@ async function main() {
       log({ event: "ready_state", ready: false, health: true, mode, blockers: wait });
       await childPass(c?.mint ?? null, c?.deployerWallet ?? env("MCPX_DEPLOYER_PUBLIC_KEY"));
     } catch (e) { log({ level: "error", event: "state_failed", op, elapsedMs: Date.now() - t0, errorName: e instanceof Error ? e.name : "unknown", error: e instanceof Error ? e.message : "unknown" }); }
-    await new Promise((r) => setTimeout(r, Math.min(pollMs, launchPollMs)));
+    // Fast wake: a fresh launch claim ends the wait within ~5 s instead of the full launch poll interval.
+    const lastPassAt = Date.now();
+    const woke = await waitForLaunch({ maxMs: Math.min(pollMs, launchPollMs), lastPassAt, stopping: () => stopping,
+      check: async () => (await sealedPost({ ...bridge, timeoutMs: 5_000 }, "/api/public/rewards/launch-pending", {})) as Pending });
+    if (woke === "woken") log({ event: "launch_wake" });
   }
   const store = pgStore(db, workerId, 60);
   log({ event: "started", workerId, mode, blockers });

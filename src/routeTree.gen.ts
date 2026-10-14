@@ -59,6 +59,7 @@ import { Route as ApiCreatorDashboardEarningsRouteImport } from './routes/api/cr
 import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/public/launch-assets.$'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
 import { Route as ApiPublicRewardsExecRouteImport } from './routes/api/public/rewards/exec'
+import { Route as ApiPublicRewardsLaunchPendingRouteImport } from './routes/api/public/rewards/launch-pending'
 import { Route as ApiPublicRewardsStateRouteImport } from './routes/api/public/rewards/state'
 import { Route as ApiPublicTreasuryChildEcosystemRouteImport } from './routes/api/public/treasury/child-ecosystem'
 import { Route as ApiPublicTreasuryDistributionsRouteImport } from './routes/api/public/treasury/distributions'
@@ -327,6 +328,12 @@ const ApiPublicRewardsExecRoute = ApiPublicRewardsExecRouteImport.update({
   path: '/api/public/rewards/exec',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRewardsLaunchPendingRoute =
+  ApiPublicRewardsLaunchPendingRouteImport.update({
+    id: '/api/public/rewards/launch-pending',
+    path: '/api/public/rewards/launch-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicRewardsStateRoute = ApiPublicRewardsStateRouteImport.update({
   id: '/api/public/rewards/state',
   path: '/api/public/rewards/state',
@@ -414,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/launch-pending': typeof ApiPublicRewardsLaunchPendingRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
@@ -472,6 +480,7 @@ export interface FileRoutesByTo {
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/launch-pending': typeof ApiPublicRewardsLaunchPendingRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
@@ -531,6 +540,7 @@ export interface FileRoutesById {
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
+  '/api/public/rewards/launch-pending': typeof ApiPublicRewardsLaunchPendingRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
   '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
+    | '/api/public/rewards/launch-pending'
     | '/api/public/rewards/state'
     | '/api/public/treasury/child-ecosystem'
     | '/api/public/treasury/distributions'
@@ -649,6 +660,7 @@ export interface FileRouteTypes {
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
+    | '/api/public/rewards/launch-pending'
     | '/api/public/rewards/state'
     | '/api/public/treasury/child-ecosystem'
     | '/api/public/treasury/distributions'
@@ -707,6 +719,7 @@ export interface FileRouteTypes {
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
+    | '/api/public/rewards/launch-pending'
     | '/api/public/rewards/state'
     | '/api/public/treasury/child-ecosystem'
     | '/api/public/treasury/distributions'
@@ -764,6 +777,7 @@ export interface RootRouteChildren {
   ApiPublicLaunchAssetsSplatRoute: typeof ApiPublicLaunchAssetsSplatRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
   ApiPublicRewardsExecRoute: typeof ApiPublicRewardsExecRoute
+  ApiPublicRewardsLaunchPendingRoute: typeof ApiPublicRewardsLaunchPendingRoute
   ApiPublicRewardsStateRoute: typeof ApiPublicRewardsStateRoute
   ApiPublicTreasuryChildEcosystemRoute: typeof ApiPublicTreasuryChildEcosystemRoute
   ApiPublicTreasuryDistributionsRoute: typeof ApiPublicTreasuryDistributionsRoute
@@ -1124,6 +1138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRewardsExecRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rewards/launch-pending': {
+      id: '/api/public/rewards/launch-pending'
+      path: '/api/public/rewards/launch-pending'
+      fullPath: '/api/public/rewards/launch-pending'
+      preLoaderRoute: typeof ApiPublicRewardsLaunchPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/rewards/state': {
       id: '/api/public/rewards/state'
       path: '/api/public/rewards/state'
@@ -1231,6 +1252,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLaunchAssetsSplatRoute: ApiPublicLaunchAssetsSplatRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
   ApiPublicRewardsExecRoute: ApiPublicRewardsExecRoute,
+  ApiPublicRewardsLaunchPendingRoute: ApiPublicRewardsLaunchPendingRoute,
   ApiPublicRewardsStateRoute: ApiPublicRewardsStateRoute,
   ApiPublicTreasuryChildEcosystemRoute: ApiPublicTreasuryChildEcosystemRoute,
   ApiPublicTreasuryDistributionsRoute: ApiPublicTreasuryDistributionsRoute,
