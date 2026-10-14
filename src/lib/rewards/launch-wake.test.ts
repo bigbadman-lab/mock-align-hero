@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shouldWake, waitForLaunch } from "../src/launch-wake";
+import { shouldWake, waitForLaunch } from "../../../services/rewards-worker/src/launch-wake";
 
 const iso = (t: number) => new Date(t).toISOString();
 
