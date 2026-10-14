@@ -58,7 +58,8 @@ function TemplatePage() {
             <h2 className="label-mono text-xs text-subtle">Available today</h2>
             <div className="mt-4"><CapabilityRow t={t} /></div>
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><TemplateAction t={t} /><LaunchLink t={t} /></div>
-            {t.tokenLaunch && <p className="mt-3 text-xs text-subtle">Launching opens a draft. Token creation is not available yet — nothing is created or signed.</p>}
+            {t.id === "canvas" && <p className="mt-3 text-xs text-subtle">Canvas builder, draft saving and dry runs: available to signed-in creators. Public Canvas MCP product: only after a verified child-token launch. Token launching: not available yet.</p>}
+            {t.tokenLaunch && t.id !== "canvas" && <p className="mt-3 text-xs text-subtle">Launching opens a draft. Token creation is not available yet — nothing is created or signed.</p>}
           </section>
           <p className="mt-4 font-mono text-xs text-subtle">Template id: {t.id}</p>
         </div>
