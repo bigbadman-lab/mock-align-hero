@@ -2,12 +2,14 @@
 // Runs only with MCPX_TEST_PG_URL (throwaway Postgres with migration 0016 applied).
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import postgres from "postgres";
+import { createHash } from "node:crypto";
 import { intentStore } from "../../services/rewards-worker/src/intents";
 import { reconcile } from "../../services/rewards-worker/src/signer";
 
 const URL = process.env["MCPX_TEST_PG_URL"];
 const d = URL ? describe : describe.skip;
-const H = "a".repeat(64);
+const MSG = Buffer.from("MCPX-TEST-MESSAGE").toString("base64");
+const H = createHash("sha256").update(Buffer.from(MSG, "base64")).digest("hex");
 const E1 = 1_800_000_000 - (1_800_000_000 % 300), E2 = E1 + 300, E3 = E1 + 600;
 
 d("0016 durable intents (real Postgres)", () => {
@@ -22,7 +24,7 @@ d("0016 durable intents (real Postgres)", () => {
       return { aborted };
     },
   };
-  const base = (k: string, epoch = E1) => ({ idempotencyKey: k, cycleId: "cyc-1", kind: "SOL_PAYOUT" as const, epoch, messageSha256: H, lamports: 1_000_000n, tokens: 0n, opsCostLamports: 5_000n, lastValidBlockHeight: 500 });
+  const base = (k: string, epoch = E1) => ({ idempotencyKey: k, cycleId: "cyc-1", kind: "SOL_PAYOUT" as const, epoch, messageSha256: H, lamports: 1_000_000n, tokens: 0n, opsCostLamports: 5_000n, lastValidBlockHeight: 500, plan: { rows: [{ owner: "A", amount: 1_000_000n }], mint: null, tokenProgram: null, messageBase64: MSG } });
   let n = 0;
   const credit = async (epoch: number, mint = "MINT", recipient = "DEPLOYER") => { // 10M lamports → 3M sol / 3M buyback / 4M ops
     const sig = `sig${n++}`;
@@ -77,7 +79,7 @@ d("0016 durable intents (real Postgres)", () => {
     await s.recordSigned("imm-key-1", "sigI", "QkFTRTY0");
     await expect(sql`update public.mcpx_rw_intents set signature='other' where idempotency_key='imm-key-1'`).rejects.toThrow(/immutable/);
     await expect(sql`delete from public.mcpx_rw_intents where idempotency_key='imm-key-1'`).rejects.toThrow(/append-only/);
-    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,state,signature) values ('ins-key-x','c','SOL_PAYOUT',${H},1,1,'w','SIGNED','s')`).rejects.toThrow(/RESERVED/);
+    await expect(sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,state,signature) values ('ins-key-x','c','SOL_PAYOUT',${H},1,1,'w','SIGNED','s')`).rejects.toThrow(/RESERVED|requires plan_rows/);
   });
   it("mismatched payout data is rejected by the table", async () => {
     await expect(intentStore(db, "w").reserve({ ...base("bad-hash-1"), messageSha256: "nothex" })).rejects.toThrow();

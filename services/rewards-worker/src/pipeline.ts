@@ -155,7 +155,7 @@ export function settlementChain(rpc: RpcCall, db: Q, deployer: string): Chain {
         }
         if (i.kind !== "SOL_PAYOUT" && i.kind !== "TOKEN_PAYOUT") return null;
         const p = await persistedPlan(db, key); if (!p) return null;
-        const proof = verifySettlement(await getTx(rpc, sig), { kind: i.kind, signature: sig, deployer, messageSha256: p.messageSha256, messageBase64: p.messageBase64, rows: p.rows, mint: p.mint, tokenProgram: p.tokenProgram });
+        const proof = verifySettlement(await getTx(rpc, sig), { kind: i.kind, signature: sig, deployer, messageSha256: p.messageSha256, messageBase64: p.messageBase64, rows: p.rows, ...(p.mint ? { mint: p.mint } : {}), ...(p.tokenProgram ? { tokenProgram: p.tokenProgram } : {}) });
         return proof.kind === "PROVEN" ? proof : null;
       } catch { return null; }
     },
