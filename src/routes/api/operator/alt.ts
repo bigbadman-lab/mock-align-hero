@@ -10,12 +10,17 @@ import { ALT_AUTHORITY, ALT_PROGRAM_ID, STATIC_ALT_ENTRIES, nextAltStep, type Ex
 
 const rpcCall = async (url: string, method: string, params: unknown[]) => {
   const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(15_000), body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+  if (!r.ok) throw new Error(`rpc_http_${r.status}`);
   const j = await r.json();
   if (j.error) throw new Error(String(j.error.message ?? "rpc_error"));
   return j.result;
 };
 
-const RPC = () => process.env["MCPX_SOLANA_RPC_URL"] || "https://api.mainnet-beta.solana.com";
+// The public mainnet endpoint refuses most cloud-hosted servers, so prefer a keyed provider when configured.
+const RPC = () => {
+  const helius = process.env["MCPX_HELIUS_TEST_API_KEY"];
+  return process.env["MCPX_SOLANA_RPC_URL"] || (helius ? `https://mainnet.helius-rpc.com/?api-key=${encodeURIComponent(helius)}` : "https://api.mainnet-beta.solana.com");
+};
 
 // Every lookup table the deployer owns (authority at byte offset 22); null when the check fails.
 async function listTables(rpc: string, commitment: "finalized" | "confirmed"): Promise<ExistingTable[] | null> {
