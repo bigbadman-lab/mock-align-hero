@@ -29,6 +29,7 @@ const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? 
 const env = (k: string) => process.env[k]?.trim() || null;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "mcpx-rewards-worker", at: new Date().toISOString(), ...o }));
 import { fetchSiteState } from "./site-state";
+import { freshFetch } from "./fresh-fetch";
 
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
@@ -99,7 +100,7 @@ async function main() {
     while (!stopping) await new Promise((r) => setTimeout(r, pollMs));
     return;
   }
-  const bridge: RemoteConfig = { siteUrl: env("MCPX_SITE_URL")!, secret: env("MCPX_REWARDS_SHARED_SECRET")! };
+  const bridge: RemoteConfig = { siteUrl: env("MCPX_SITE_URL")!, secret: env("MCPX_REWARDS_SHARED_SECRET")!, fetchImpl: freshFetch };
   const db = remoteDb(bridge);
   // Launch config comes from the site. Setting the $MCP mint there is the ONLY go-live step: anchor slot, genesis
   // window and deployer wallet are derived from the mint's creation transaction unless explicitly configured.
