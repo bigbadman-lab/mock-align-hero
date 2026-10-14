@@ -165,7 +165,7 @@ export async function gateVerify(input: VerifyInput, session: GateSession, d: Ga
     if (b.name !== dr.name || b.symbol !== dr.symbol || b.uri !== dr.uri) return err(403, "DRAFT_MISMATCH");
   }
   let r;
-  try { r = await d.builder("inspect", { messageBase64: input.messageBase64, binding: input.binding, bindingMac: input.bindingMac }); } catch { return err(503, "BUILDER_UNREACHABLE"); }
+  try { r = await d.builder("inspect", { schema: "mcpx.launch.inspect.v1", messageBase64: input.messageBase64, binding: input.binding, bindingMac: input.bindingMac }); } catch { return err(503, "BUILDER_UNREACHABLE"); }
   const c = r.body?.checks ?? {};
   if (r.status !== 200 || r.body?.valid !== true) return err(403, String(r.body?.code ?? "CANDIDATE_INCONSISTENT"));
   if (!(c.payerIsCreator && c.signersExactlyCreatorAndMint && c.feeSharesExact)) return err(403, "CANDIDATE_INCONSISTENT");
