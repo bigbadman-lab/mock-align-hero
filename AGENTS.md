@@ -28,3 +28,4 @@
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.
 - /launch never signs or sends.
 - Subdirectories with their own AGENTS.md (read first): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch, src/lib/byok, src/lib/canvas.
+- Treasury (TREASURY-01): public read-only projection in src/lib/treasury (core.ts pure rules shared by home module and /treasury; source.server.ts bounded admin reads namespaced to mcpx_rw_config mint + genesis window, single-flight 15s cache; market.server.ts DexScreener exact-mint only, 60s cache) served by GET /api/public/treasury/{overview,windows,distributions,child-ecosystem}; feed shows only LANDED payout intents with finalized slot + evidence — so public pages never touch private tables, signed bytes or execution.
