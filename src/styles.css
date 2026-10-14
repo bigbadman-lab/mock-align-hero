@@ -113,3 +113,10 @@
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes ho-spin { to { transform: rotate(360deg); } }
+@keyframes ho-pulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+.ho-spin { animation: ho-spin 60s linear infinite; }
+.ho-counter { animation: ho-spin 60s linear infinite reverse; transform-box: fill-box; transform-origin: center; }
+.ho-pulse { animation: ho-pulse 4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ho-spin, .ho-counter, .ho-pulse { animation: none; } }
