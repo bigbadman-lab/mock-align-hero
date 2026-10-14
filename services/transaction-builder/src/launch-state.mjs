@@ -70,3 +70,15 @@ export function verifySimulationEvents(logs, { mint, creator, cfg }, cpiEvents =
   if (!sameShares(fin, expectedShares(creator, cfg))) return "SIMULATION_FINAL_SHARES_MISMATCH";
   return null;
 }
+
+/** Simulated post-state of the child's sharing config: locked (admin revoked) with exactly the expected shares. */
+export function verifyLockedConfig(data, { mint, creator, cfg }) {
+  if (!data) return "SHARING_CONFIG_NOT_CREATED";
+  let sc;
+  try { sc = pump.PUMP_SDK.decodeSharingConfig({ data }); } catch { return "SHARING_CONFIG_UNREADABLE"; }
+  if (sc.mint.toBase58() !== mint) return "SHARING_CONFIG_MINT_MISMATCH";
+  if (!sc.adminRevoked) return "SHARES_NOT_LOCKED";
+  const fin = sc.shareholders.map((s) => ({ address: s.address.toBase58(), bps: s.shareBps }));
+  if (!sameShares(fin, expectedShares(creator, cfg))) return "SHARING_CONFIG_SHARES_MISMATCH";
+  return null;
+}

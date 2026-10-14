@@ -4,7 +4,7 @@ import { web3, pumpProgram, feeProgram, PROGRAMS, SDK_VERSIONS, instructionName 
 import { FEE_SPLIT_BPS } from "./config.mjs";
 import { assessParent } from "./parent.mjs";
 import { assemble, compile, manifest, feeFirst, verifyAlt, BuildError, PACKET_LIMIT } from "./build.mjs";
-import { verifyCreated, verifySimulationEvents } from "./launch-state.mjs";
+import { verifyCreated, verifySimulationEvents, verifyLockedConfig } from "./launch-state.mjs";
 import { pump, BN } from "./sdk.mjs";
 import { BINDING_SCHEMA, CANDIDATE_TTL_MS, macBinding, verifyBindingMac, sha256hex, canonical } from "./binding.mjs";
 
@@ -76,13 +76,19 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     let feeConfigVerified = false;
     if (deps.simulate) {
       let sim;
-      try { sim = await deadline(deps.simulate(c.messageBytes), READ_DEADLINE_MS); }
+      try { sim = await deadline(deps.simulate(c.messageBytes, [pump.feeSharingConfigPda(new PublicKey(req.mint)).toBase58()]), READ_DEADLINE_MS); }
       catch { return { http: 503, body: { status: "ERROR", code: "RPC_UNAVAILABLE", launchReady: false } }; }
       evidence.simulation = { status: sim.err ? "FAIL" : "PASS", unitsConsumed: sim.unitsConsumed, slot: sim.slot, sigVerify: false };
       evidence.compute = sim.unitsConsumed != null ? { measuredUnits: sim.unitsConsumed } : "COMPUTE_NOT_MEASURED";
       if (sim.err) return blocked(["SIMULATION_FAILED"], { evidence: { ...evidence, simulationError: sim.err, logsTail: sim.logs.slice(-8) } });
       const evErr = verifySimulationEvents(sim.logs, { mint: req.mint, creator: req.creator, cfg }, sim.cpiEvents ?? []);
       if (evErr) return blocked([evErr], { evidence });
+      // Post-state of the sharing config: shares must be locked (admin revoked) at exactly 60/25/15.
+      if (sim.postAccounts) {
+        const lockErr = verifyLockedConfig(sim.postAccounts[0], { mint: req.mint, creator: req.creator, cfg });
+        if (lockErr) return blocked([lockErr], { evidence });
+        evidence.sharesLocked = true;
+      }
       feeConfigVerified = true;
       evidence.chainAcceptance = "SIMULATED_NOT_SENT";
     }

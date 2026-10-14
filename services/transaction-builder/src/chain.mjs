@@ -38,11 +38,13 @@ export function createChainDeps(rpcUrl) {
     getLatestBlockhash: () => conn.getLatestBlockhash("confirmed"),
     getSlot: () => conn.getSlot("confirmed"),
     /** Read-only simulation: sigVerify off, blockhash replaced. Nothing is sent. */
-    async simulate(messageBytes) {
+    async simulate(messageBytes, watch = []) {
       const tx = new web3.VersionedTransaction(web3.VersionedMessage.deserialize(messageBytes));
-      const r = await conn.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed", innerInstructions: true });
+      const r = await conn.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed", innerInstructions: true,
+        ...(watch.length ? { accounts: { encoding: "base64", addresses: watch } } : {}) });
       return { err: r.value.err, unitsConsumed: r.value.unitsConsumed ?? null, logs: r.value.logs ?? [], slot: r.context.slot,
-        cpiEvents: cpiEventsOf(r.value.innerInstructions, PROGRAMS.pumpFees.toBase58()) };
+        cpiEvents: cpiEventsOf(r.value.innerInstructions, PROGRAMS.pumpFees.toBase58()),
+        postAccounts: (r.value.accounts ?? []).map((a) => (a?.data?.[0] ? Buffer.from(a.data[0], "base64") : null)) };
     },
     async getMintState(mint) {
       const m = new web3.PublicKey(mint);
