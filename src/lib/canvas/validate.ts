@@ -31,7 +31,7 @@ export function validateCanvas(raw: unknown): CanvasCheck {
   steps.forEach((s, i) => {
     const n = i + 1;
     if (!s || typeof s !== "object" || Object.keys(s).some((k) => !ALLOWED_KEYS.has(k))) { errors.push(`Step ${n} is malformed.`); return; }
-    const st = s as Record<string, unknown>;
+    const st = s as { capabilityId?: unknown; version?: unknown; from?: unknown };
     const c = typeof st.capabilityId === "string" ? CAPABILITY_BY_ID[st.capabilityId] : undefined;
     if (!c) { errors.push(`Step ${n} uses a capability that isn't available.`); return; }
     if (st.version !== c.version) { errors.push(`Step ${n} (${c.name}) uses an outdated version.`); return; }
@@ -42,7 +42,7 @@ export function validateCanvas(raw: unknown): CanvasCheck {
       out.push({ capabilityId: c.id, version: c.version });
       return;
     }
-    const f = st.from as Record<string, unknown> | undefined;
+    const f = st.from as { step?: unknown; output?: unknown } | undefined;
     if (!f || typeof f !== "object" || typeof f.step !== "number" || typeof f.output !== "string") { errors.push(`Step ${n} (${c.name}) needs a ${c.input.label.toLowerCase()} from an earlier step.`); return; }
     if (!Number.isInteger(f.step) || f.step < 0 || f.step >= i) { errors.push(`Step ${n} can only read from an earlier step.`); return; }
     const src = out[f.step] ? CAPABILITY_BY_ID[out[f.step]!.capabilityId] : undefined;
