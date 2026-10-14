@@ -10,7 +10,7 @@ export const EMPTY_CANVAS: CanvasConfig = { catalogVersion: CANVAS_CATALOG_VERSI
 
 const inputCls = "mt-1 block w-full rounded-md border border-border-strong bg-background p-2 text-sm text-foreground";
 
-export function CanvasBuilder({ value, onChange, err, signedIn }: { value: CanvasConfig | null | undefined; onChange: (c: CanvasConfig) => void; err?: string | undefined; signedIn: boolean }) {
+export function CanvasBuilder({ value, onChange, err, signedIn, creationId }: { value: CanvasConfig | null | undefined; onChange: (c: CanvasConfig) => void; err?: string | undefined; signedIn: boolean; /** Set on the dashboard for a launched product: enables the AI step in dry runs. */ creationId?: string }) {
   const cfg = value ?? EMPTY_CANVAS;
   const steps = cfg.steps;
   const check = validateCanvas(cfg);
@@ -84,24 +84,32 @@ export function CanvasBuilder({ value, onChange, err, signedIn }: { value: Canva
         </div>
       )}
 
+      <label className="flex items-start gap-2 rounded-md border border-border-strong bg-background p-3 text-xs">
+        <input type="checkbox" className="mt-0.5" checked={!!cfg.ai} onChange={(e) => onChange({ catalogVersion: CANVAS_CATALOG_VERSION, steps, ...(e.target.checked ? { ai: { summarize: true as const } } : {}) })} />
+        <span>
+          <span className="text-foreground">Optional final step: AI summary</span>
+          <span className="block text-muted-foreground">Summarises the results in plain language using your own OpenAI key, with your product's usage limits. Fixed instructions; it can't browse, call links or run code. Runs only after launch, once your AI key is connected and active.</span>
+        </span>
+      </label>
+
       <div role="status" className={`rounded-md border p-3 text-xs ${check.ok ? "border-primary/40 text-primary" : "border-border-strong text-muted-foreground"}`}>
         {check.ok ? `Valid pipeline · ${steps.length} steps · input: ${CAPABILITY_BY_ID[steps[0]!.capabilityId]!.input.label.toLowerCase()}` : check.errors.map((e) => <p key={e}>{e}</p>)}
       </div>
       {err && <p id="canvas-err" className="text-xs text-destructive">{err}</p>}
 
-      {check.ok && <DryRunPanel config={check.config} label={CAPABILITY_BY_ID[check.config.steps[0]!.capabilityId]!.input.label} signedIn={signedIn} />}
+      {check.ok && <DryRunPanel config={check.config} label={CAPABILITY_BY_ID[check.config.steps[0]!.capabilityId]!.input.label} signedIn={signedIn} creationId={creationId} />}
     </div>
   );
 }
 
-function DryRunPanel({ config, label, signedIn }: { config: CanvasConfig; label: string; signedIn: boolean }) {
+function DryRunPanel({ config, label, signedIn, creationId }: { config: CanvasConfig; label: string; signedIn: boolean; creationId?: string | undefined }) {
   const [value, setValue] = useState("");
   const [state, setState] = useState<{ k: "idle" } | { k: "running" } | { k: "done"; r: Extract<DryRun, { ok: true }> } | { k: "error"; msg: string }>({ k: "idle" });
   if (!signedIn) return <p className="text-xs text-subtle">Sign in as a creator to try a dry run of this pipeline.</p>;
   const run = async () => {
     setState({ k: "running" });
     try {
-      const res = await fetch("/api/creator/canvas-dry-run", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json", "x-mcpx-csrf": "1" }, body: JSON.stringify({ canvas: config, input: value.trim() }) });
+      const res = await fetch("/api/creator/canvas-dry-run", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json", "x-mcpx-csrf": "1" }, body: JSON.stringify({ canvas: config, input: value.trim(), ...(creationId ? { creationId } : {}) }) });
       const b = (await res.json().catch(() => null)) as (DryRun & { error?: string }) | null;
       if (res.ok && b?.ok) return setState({ k: "done", r: b });
       const e = b && "error" in b ? b.error : null;
@@ -123,6 +131,15 @@ function DryRunPanel({ config, label, signedIn }: { config: CanvasConfig; label:
         <div className="space-y-2" aria-live="polite">
           <p className="font-mono text-[11px] text-subtle">Trace {state.r.traceId} · {state.r.complete ? "all steps completed" : "stopped early"}</p>
           {state.r.steps.map((s) => <TraceRow key={s.step} s={s} />)}
+          {state.r.ai && (
+            <div className="rounded-md border border-border-strong bg-background p-2 text-xs">
+              <span className={state.r.ai.status === "ok" ? "text-primary" : state.r.ai.status === "failed" ? "text-destructive" : "text-subtle"}>{state.r.ai.status.toUpperCase().replace("_", " ")}</span>
+              <span className="ml-2 text-foreground">AI summary{state.r.ai.status === "ok" && state.r.ai.model ? ` · ${state.r.ai.model}` : ""}</span>
+              {state.r.ai.status === "ok" && <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{state.r.ai.text}</p>}
+              {state.r.ai.status === "not_run" && <p className="mt-1 text-muted-foreground">{state.r.ai.reason}</p>}
+              {state.r.ai.status === "failed" && <p className="mt-1 text-muted-foreground">Not completed ({state.r.ai.error}). Check your AI key and limits.</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
