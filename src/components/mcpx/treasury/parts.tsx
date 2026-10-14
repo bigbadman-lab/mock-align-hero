@@ -28,9 +28,19 @@ export function Stat({ label, value, note, accent }: { label: string; value: Rea
   );
 }
 
+/** Clock skew, re-measured only when the server sample changes. Recomputing it on every render
+ *  would cancel out the ticking clock and freeze the countdown until the next refresh. */
+function useServerOffset(serverTime: string) {
+  const [base, setBase] = useState(() => ({ serverTime, clientAt: Date.now() }));
+  useEffect(() => {
+    setBase((b) => (b.serverTime === serverTime ? b : { serverTime, clientAt: Date.now() }));
+  }, [serverTime]);
+  return Date.parse(base.serverTime) - base.clientAt;
+}
+
 /** Countdown to the next UTC five-minute boundary, offset by server time so client clock skew doesn't matter. */
 export function WindowClock({ o, large }: { o: Overview; large?: boolean }) {
-  const offset = Date.parse(o.serverTime) - Date.now();
+  const offset = useServerOffset(o.serverTime);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
