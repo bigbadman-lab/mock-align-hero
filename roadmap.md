@@ -34,4 +34,5 @@
   - [x] Homepage: section padding tightened (hero 96px, sections 56px)
   - [x] Homepage: Treasury copy replaced — "Every fee. Every reward. Fully transparent."
   - [x] Homepage: flow section recast as "How it works" — bigger numbers, status chips
-  - [ ] Homepage: Treasury countdown must tick live (no browser refresh needed)
+  - [x] Homepage: tool library recast as scrollable showcase rail (11 cards, arrows, real links)
+  - [x] Homepage: Treasury countdown ticks live (clock skew pinned per server sample)
