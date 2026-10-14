@@ -23,7 +23,7 @@ export const Route = createFileRoute("/dashboard")({
 const UNAVAILABLE = [
   { id: "earnings", title: "Creator earnings", reason: "Not available — the fee ledger is not built yet." },
   { id: "rewards", title: "Native rewards", reason: "Not available — $MCP has not been minted." },
-  { id: "activity", title: "Tool activity", reason: "Not available — tool execution is not built yet." },
+  { id: "activity", title: "Tool activity", reason: "Not available — product activity appears only after a verified token launch." },
 ];
 
 function Dashboard() {
