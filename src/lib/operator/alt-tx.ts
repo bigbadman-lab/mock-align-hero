@@ -6,6 +6,9 @@ import { readCompactU16 } from "@/lib/launch/tx-wire";
 import { ALT_AUTHORITY, ALT_PROGRAM_ID, STATIC_ALT_ENTRIES } from "./alt-manifest";
 
 const SYSTEM = "11111111111111111111111111111111";
+const COMPUTE_BUDGET = "ComputeBudget111111111111111111111111111111";
+const LIGHTHOUSE = "L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95";
+export const MAX_PRIORITY_LAMPORTS = 1_000_000; // 0.001 SOL
 export type AltTx = { kind: "create"; table: string; recentSlot: number } | { kind: "extend"; table: string; addresses: string[] };
 
 type Parsed = { numSigners: number; keys: string[]; ixs: { program: string; accounts: string[]; data: Uint8Array }[]; lookups: number };
@@ -41,8 +44,20 @@ export function validateAltMessage(m: Uint8Array): { ok: true; tx: AltTx } | { o
   try { p = parseMessage(m); } catch { return { ok: false, code: "UNPARSEABLE" }; }
   if (p.numSigners !== 1 || p.keys[0] !== ALT_AUTHORITY) return { ok: false, code: "SIGNER_NOT_DEPLOYER" };
   if (p.lookups !== 0) return { ok: false, code: "LOOKUPS_NOT_ALLOWED" };
-  if (p.ixs.length !== 1) return { ok: false, code: "ONE_INSTRUCTION_ONLY" };
-  const ix = p.ixs[0]!;
+  // Wallets (Phantom) may add a priority fee and Lighthouse safety assertions before signing. Those are
+  // allowed — capped fee, assertion-only program — and nothing else; exactly one lookup-table instruction.
+  let cuLimit = 200_000, cuPrice = 0;
+  for (const x of p.ixs) {
+    if (x.program === COMPUTE_BUDGET) {
+      if (x.data[0] === 2 && x.data.length === 5) cuLimit = new DataView(x.data.buffer, x.data.byteOffset).getUint32(1, true);
+      else if (x.data[0] === 3 && x.data.length === 9) cuPrice = Number(new DataView(x.data.buffer, x.data.byteOffset).getBigUint64(1, true));
+      else return { ok: false, code: "INSTRUCTION_NOT_ALLOWED" };
+    } else if (x.program !== LIGHTHOUSE && x.program !== ALT_PROGRAM_ID) return { ok: false, code: "INSTRUCTION_NOT_ALLOWED" };
+  }
+  if ((cuLimit * cuPrice) / 1e6 > MAX_PRIORITY_LAMPORTS) return { ok: false, code: "PRIORITY_FEE_TOO_HIGH" };
+  const alt = p.ixs.filter((x) => x.program === ALT_PROGRAM_ID);
+  if (alt.length !== 1) return { ok: false, code: "ONE_INSTRUCTION_ONLY" };
+  const ix = alt[0]!;
   if (ix.program !== ALT_PROGRAM_ID) return { ok: false, code: "WRONG_PROGRAM" };
   const [table, authority, payer, system] = ix.accounts;
   if (ix.accounts.length !== 4 || authority !== ALT_AUTHORITY || payer !== ALT_AUTHORITY || system !== SYSTEM || !table) return { ok: false, code: "WRONG_ACCOUNTS" };
