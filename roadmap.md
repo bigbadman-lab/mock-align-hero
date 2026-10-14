@@ -39,4 +39,4 @@
   - [x] Homepage: "Planned capability" → "What you can build" — 3 cards, honest status chips
   - [x] Homepage: "Current status" → "Live flow" animated fee-flow graphic (logo, flowing dots, 30/30/40)
   - [x] Homepage: Live flow moved above Treasury (Treasury now section 2)
-  - [x] Footer: tighter link spacing + disclaimer reworded (all facts kept)
+  - [x] Footer: tighter links + user mission statement replaces status note
