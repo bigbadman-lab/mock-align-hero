@@ -28,18 +28,18 @@ function Home() {
     <>
       <section className="relative overflow-hidden border-b border-border bg-grid">
         <PageContainer className="py-20 sm:py-28 lg:py-32">
-          <div className="max-w-3xl animate-rise">
+          <div className="max-w-5xl animate-rise">
             <SectionLabel rule={false}>CREATOR FEES PAY HOLDERS</SectionLabel>
-            <h1 className="mt-6 font-mono text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-8xl">MCPX</h1>
-            <p className="mt-4 text-2xl font-medium text-foreground sm:text-3xl">
-              Every token powers a <span className="text-primary">tool</span>.
-            </p>
+            <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+              <span className="block">Hold <span className="text-primary">$MCP</span>.</span>
+              <span className="block">Share in the ecosystem.</span>
+            </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              MCPX is being built as a platform for creating real Solana-connected MCP tools, each associated with a token paired to native $MCP.
+              Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders — 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link to="/mcp" className={buttonPrimary}>Explore MCP templates</Link>
-              <Link to="/docs" className={buttonOutline}>Read the docs</Link>
+              <Link to="/dashboard" className={buttonPrimary}>My Rewards</Link>
+              <Link to="/mcp" className={buttonOutline}>MCP Library</Link>
             </div>
           </div>
         </PageContainer>

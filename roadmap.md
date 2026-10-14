@@ -25,4 +25,7 @@
 - [x] CANVAS-01 live UI activation correction
 - [x] TREASURY-01 built + tested in preview (publish awaits approval)
 - [ ] UI cleanup + design optimisation series (manual requests, in progress)
-  - [x] Hero label → "CREATOR FEES PAY HOLDERS"
+  - [x] Hero label → "CREATOR FEES PAY HOLDERS" (no dash)
+  - [x] Hero headline/body → "Hold $MCP. Share in the ecosystem." + fee-sharing copy
+  - [x] Hero CTAs → "My Rewards" (/dashboard) + "MCP Library" (/mcp)
+  - [x] Hero H1 size increased (sm:text-6xl / lg:text-7xl)
