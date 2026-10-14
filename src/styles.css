@@ -82,6 +82,10 @@
     border-radius: 4px;
   }
   ::selection { background: var(--color-primary); color: var(--color-primary-foreground); }
+  /* Phone browsers auto-zoom when a focused field is smaller than 16px. */
+  @media (max-width: 40rem) {
+    input, select, textarea { font-size: 1rem; }
+  }
 }
 
 @utility bg-grid {
