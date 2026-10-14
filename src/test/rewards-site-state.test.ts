@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fetchSiteState, SITE_STATE_TIMEOUT_MS } from "./site-state";
+import { fetchSiteState, SITE_STATE_TIMEOUT_MS } from "../../services/rewards-worker/src/site-state";
 
 const bridge = { siteUrl: "https://x", secret: "s".repeat(32) };
 const timeout = () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
