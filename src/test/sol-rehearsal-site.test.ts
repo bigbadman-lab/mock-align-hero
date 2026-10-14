@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { Keypair, TransactionMessage, VersionedTransaction, SystemProgram, PublicKey, AddressLookupTableAccount } from "@solana/web3.js";
 import { SESSION_TTL_MS } from "@/lib/creator-auth/core";
