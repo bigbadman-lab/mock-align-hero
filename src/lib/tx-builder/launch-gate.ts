@@ -14,7 +14,9 @@ export type GateConfig = { enabled: boolean; signingEnabled?: boolean; opsRecipi
 export type BuilderCall = (op: "prepare" | "inspect", body: unknown) => Promise<{ status: number; body: any }>;
 /** Saved draft as owned by the session wallet (null = not theirs / missing). Metadata URI must exist. */
 export type GateDraft = { id: string; revision: number; templateId: string; name: string; symbol: string; uri: string | null };
-export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number; loadDraft?: (wallet: string, id: string) => Promise<GateDraft | null> };
+/** canonicalMint: the official $MCP mint from the site's rewards config (mcpx_rw_config.mint). Every child pairs with it;
+ *  missing or unreadable fails closed so a mistyped builder MCPX_QUOTE_MINT can never pair children with another token. */
+export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number; loadDraft?: (wallet: string, id: string) => Promise<GateDraft | null>; canonicalMint?: () => Promise<string | null> };
 export type GateResult = { http: number; body: Record<string, unknown> };
 
 const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -33,8 +35,15 @@ function precheck(session: GateSession, connected: unknown, d: GateDeps): GateRe
 }
 
 /** The MAC-bound binding must name the session wallet at 60% and the server's own 25/15 wallets. */
-function bindingMatches(b: any, ctx: BindingContext, mint?: string): string | null {
+async function canonical(d: GateDeps): Promise<string | GateResult> {
+  let m: string | null = null;
+  try { m = d.canonicalMint ? await d.canonicalMint() : null; } catch { return err(503, "CANONICAL_MINT_UNAVAILABLE"); }
+  return m && B58.test(m) ? m : err(503, "CANONICAL_MINT_NOT_CONFIGURED");
+}
+
+function bindingMatches(b: any, ctx: BindingContext, mint: string | undefined, quoteMint: string): string | null {
   if (!b || typeof b !== "object") return "BINDING_MISSING";
+  if (b.quoteMint !== quoteMint) return "QUOTE_MINT_NOT_CANONICAL";
   if (b.creator !== ctx.sessionWallet) return "CREATOR_CHANGED_SINCE_PREPARE";
   if (mint !== undefined && b.mint !== mint) return "MINT_MISMATCH";
   const want = [[ctx.sessionWallet, 6000], [ctx.opsRecipient, 2500], [ctx.platformRecipient, 1500]];
@@ -72,13 +81,15 @@ export async function gatePrepareDraft(input: { draftId?: unknown; revision?: un
 export async function gatePrepare(input: PrepareInput, session: GateSession, d: GateDeps): Promise<GateResult> {
   const ctx = precheck(session, input.connectedWallet, d);
   if ("http" in ctx) return ctx;
+  const q = await canonical(d);
+  if (typeof q !== "string") return q;
   const { connectedWallet: _c, ...body } = input;
   const bound = bindLaunchCreator(body, ctx);
   if (!bound.ok) return err(bound.code === "FEE_RECIPIENTS_NOT_CONFIGURED" ? 503 : 403, bound.code);
   let r;
   try { r = await d.builder("prepare", bound.request); } catch { return err(503, "BUILDER_UNREACHABLE"); }
   if (r.status !== 200 || r.body?.status !== "UNSIGNED_CANDIDATE") return err(502, String(r.body?.code ?? r.body?.blockers?.[0] ?? "BUILDER_REFUSED"));
-  const bad = bindingMatches(r.body.binding, ctx, input.mint);
+  const bad = bindingMatches(r.body.binding, ctx, input.mint, q);
   if (bad) return err(502, `BUILDER_${bad}`);
   return { http: 200, body: { ok: true, creator: ctx.sessionWallet, messageBase64: r.body.messageBase64, binding: r.body.binding, bindingMac: r.body.bindingMac } };
 }
@@ -92,7 +103,9 @@ export async function gateVerify(input: VerifyInput, session: GateSession, d: Ga
   if (!ctx.connectedWallet) return err(403, "WALLET_DISCONNECTED");
   if (ctx.connectedWallet !== ctx.sessionWallet) return err(403, "CONNECTED_WALLET_MISMATCH");
   if (typeof input.messageBase64 !== "string" || typeof input.bindingMac !== "string") return err(400, "INVALID_INPUT");
-  const bad = bindingMatches(input.binding, ctx);
+  const q = await canonical(d);
+  if (typeof q !== "string") return q;
+  const bad = bindingMatches(input.binding, ctx, undefined, q);
   if (bad) return err(403, bad);
   // Draft-bound launches: the stored draft must be unchanged and still describe exactly this token.
   if (input.draftId !== undefined) {

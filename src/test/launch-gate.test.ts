@@ -5,10 +5,10 @@ import { gatePrepare, gateVerify, type GateDeps, type BuilderCall } from "@/lib/
 
 const k = () => Keypair.generate().publicKey.toBase58();
 const NOW = 1_800_000_000_000;
-const me = k(), ops = k(), plat = k(), deployer = k(), mint = k();
+const me = k(), ops = k(), plat = k(), deployer = k(), mint = k(), mcp = k();
 const fresh = (wallet = me, ageMs = 60_000) => ({ wallet, expiresAt: new Date(NOW - ageMs + SESSION_TTL_MS).toISOString() });
 const input = { idempotencyKey: "launch-0001", mint, name: "Child", symbol: "CHD", uri: "https://mcpx.fun/m.json", initialBuy: null, format: "v0_alt" as const, connectedWallet: me };
-const binding = (creator = me) => ({ creator, mint, shareholders: [{ address: creator, bps: 6000 }, { address: ops, bps: 2500 }, { address: plat, bps: 1500 }] });
+const binding = (creator = me) => ({ creator, mint, quoteMint: mcp, shareholders: [{ address: creator, bps: 6000 }, { address: ops, bps: 2500 }, { address: plat, bps: 1500 }] });
 const okChecks = { payerIsCreator: true, signersExactlyCreatorAndMint: true, feeSharesExact: true };
 
 function deps(over: Partial<GateDeps> = {}, calls: any[] = []): GateDeps {
@@ -17,7 +17,7 @@ function deps(over: Partial<GateDeps> = {}, calls: any[] = []): GateDeps {
     if (op === "prepare") return { status: 200, body: { status: "UNSIGNED_CANDIDATE", messageBase64: "AA==", binding: binding(body.creator), bindingMac: "m" } };
     return { status: 200, body: { valid: body.bindingMac === "m" && body.messageBase64 === "AA==", code: "X", checks: okChecks } };
   };
-  return { config: { enabled: true, opsRecipient: ops, platformRecipient: plat, nativeDeployer: deployer }, builder, now: () => NOW, ...over };
+  return { config: { enabled: true, opsRecipient: ops, platformRecipient: plat, nativeDeployer: deployer }, builder, now: () => NOW, canonicalMint: async () => mcp, ...over };
 }
 
 describe("launch path creator binding", () => {
@@ -98,5 +98,18 @@ describe("draft-bound launch", () => {
     await gatePrepareDraft(req, fresh(), withDraft(plain));
     expect(calls[0][1]).toEqual(plain[0][1]); // token creation and 60/25/15 request byte-identical to any other template
     expect(JSON.stringify(calls[0][1])).not.toMatch(/canvas|template/i);
+  });
+});
+
+describe("canonical $MCP quote mint", () => {
+  it("refuses to prepare when the official mint is not registered", async () => {
+    expect((await gatePrepare(input, fresh(), deps({ canonicalMint: async () => null }))).body["code"]).toBe("CANONICAL_MINT_NOT_CONFIGURED");
+  });
+  it("refuses a builder candidate paired with a different quote token", async () => {
+    expect((await gatePrepare(input, fresh(), deps({ canonicalMint: async () => k() }))).body["code"]).toBe("BUILDER_QUOTE_MINT_NOT_CANONICAL");
+  });
+  it("refuses to approve signing if the binding's quote mint is not the official one", async () => {
+    const r = await gateVerify({ messageBase64: "AA==", binding: { ...binding(), quoteMint: k() }, bindingMac: "m", connectedWallet: me }, fresh(), deps());
+    expect(r.body["code"]).toBe("QUOTE_MINT_NOT_CANONICAL");
   });
 });

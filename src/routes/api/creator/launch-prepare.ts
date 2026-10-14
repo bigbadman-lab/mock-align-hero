@@ -32,7 +32,8 @@ export const Route = createFileRoute("/api/creator/launch-prepare")({
         if (!b || typeof b !== "object" || Array.isArray(b)) return reply(400, { ok: false, code: "INVALID_INPUT" });
         let session;
         try { session = await currentSession(authStore, request); } catch { return reply(503, { ok: false, code: "unavailable" }); }
-        const deps = { config: gateConfig(), builder: builderCall, now: () => Date.now(), loadDraft };
+        const { canonicalMint } = await import("@/lib/tx-builder/canonical-mint.server");
+        const deps = { config: gateConfig(), builder: builderCall, now: () => Date.now(), loadDraft, canonicalMint };
         const { op, ...rest } = b;
         const r = op === "prepare" ? await gatePrepareDraft(rest, session, deps)
           : op === "verify" ? await gateVerify(rest, session, deps)
