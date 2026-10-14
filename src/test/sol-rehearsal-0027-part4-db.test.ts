@@ -23,7 +23,9 @@ d("0027 part 4: atomic rehearsal registration (real Postgres)", () => {
     expect(await fn(sql`select public.mcpx_sol_rehearsal_reserve(${W}, ${draftId}, ${mint}) v`)).toBe("reserved");
   });
   afterAll(async () => { await sql.end(); });
-  const mkClaim = async (m: string, s: string) => (await sql`insert into public.mcpx_cf_launch_claims (draft_id, draft_revision, creator_wallet, mint, signature) values (${draftId}, 1, ${W}, ${m}, ${s}) returning id`)[0].id;
+  const mkDraft = async () => (await sql`insert into public.mcpx_launch_drafts (creator_wallet, create_key, revision, status, chain_status, template_id, template_version, settings, product_name, token_name, symbol, description, tool_description)
+      values (${W}, ${"k" + crypto.randomUUID().replace(/-/g, "")}, 1, 'DRAFT', 'NOT_STARTED', 'wallet-inspector', 1, '{}', 'Prod', 'Tok', 'TOK', 'desc', '') returning id`)[0].id;
+  const mkClaim = async (m: string, s: string, dr?: string) => (await sql`insert into public.mcpx_cf_launch_claims (draft_id, draft_revision, creator_wallet, mint, signature) values (${dr ?? draftId}, 1, ${W}, ${m}, ${s}) returning id`)[0].id;
   const reg = (c: string) => fn(sql`select public.mcpx_cf_register_rehearsal(${c}, 42, 'rehearsal:ev') v`);
   const perm = async () => (await sql`select * from public.mcpx_cf_rehearsal_permission()`)[0];
 
@@ -37,7 +39,7 @@ d("0027 part 4: atomic rehearsal registration (real Postgres)", () => {
     expect(await fn(sql`select public.mcpx_sol_rehearsal_release('RETRY', false) v`)).toBe("submitted_revoke_only");
   });
   it("an unrelated claim is never the rehearsal", async () => {
-    const other = await mkClaim(b58(44), b58(88));
+    const other = await mkClaim(b58(44), b58(88), await mkDraft());
     expect(await reg(other)).toBe("not_rehearsal");
   });
   it("concurrent duplicate registrations: one product, permission consumed, marker set", async () => {
