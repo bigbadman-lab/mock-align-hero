@@ -19,9 +19,11 @@ export function intentStore(db: Q, workerId: string): IntentStore & Omit<ExecSto
       const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports, plan_rows, plan_mint, plan_token_program, message_base64)
         select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric,$11::text::jsonb,$12,$13,$14
         where not exists (select 1 from public.mcpx_rw_intents where idempotency_key=$1)
-          and exists (select 1 from public.mcpx_rw_budget_remaining(to_timestamp($8)) b where b.evidence and b.ops >= $10::numeric and
+          -- FEE_COLLECTION moves no funds out (income is proven later from its finalized collect events): it only
+          -- needs zero amounts; its network fee is recorded as ops cost. Everything else needs the fee-backed budget.
+          and (($3 = 'FEE_COLLECTION' and $5::numeric = 0 and $9::numeric = 0) or exists (select 1 from public.mcpx_rw_budget_remaining(to_timestamp($8)) b where b.evidence and b.ops >= $10::numeric and
             case $3 when 'SOL_PAYOUT' then b.sol >= $5::numeric when 'BUYBACK' then b.buyback >= $5::numeric
-                    when 'TOKEN_PAYOUT' then $5::numeric = 0 and b.tokens >= $9::numeric else false end)
+                    when 'TOKEN_PAYOUT' then $5::numeric = 0 and b.tokens >= $9::numeric else false end))
         returning idempotency_key`;
       const p = [i.idempotencyKey, i.cycleId, i.kind, i.messageSha256, i.lamports.toString(), i.lastValidBlockHeight, workerId, i.epoch, i.tokens.toString(), i.opsCostLamports.toString(),
         i.plan ? JSON.stringify(i.plan.rows.map((r) => ({ owner: r.owner, amount: r.amount.toString() }))) : null, i.plan?.mint ?? null, i.plan?.tokenProgram ?? null, i.plan?.messageBase64 || null];

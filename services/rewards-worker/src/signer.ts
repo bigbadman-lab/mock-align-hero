@@ -6,6 +6,7 @@ import { Keypair, PublicKey, SystemProgram, ComputeBudgetProgram, VersionedMessa
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import bs58 from "bs58";
 import { createHash } from "node:crypto";
+import { checkVenueTx, type VenueOk } from "./venue-check";
 
 export const PRIVATE_KEY_ENV = "MCPX_DEPLOYER_PRIVATE_KEY";
 export const PUBLIC_KEY_ENV = "MCPX_DEPLOYER_PUBLIC_KEY";
@@ -16,7 +17,7 @@ export const MAX_TX_BYTES = 1232;
 export type SignerState = "MONITOR_ONLY" | "SIGNER_VALIDATED" | "SIGNER_INVALID";
 export type PlanKind = "SOL_PAYOUT" | "TOKEN_PAYOUT" | "FEE_COLLECTION" | "BUYBACK" | "WSOL_UNWRAP";
 /** Only these paths may be signed. The others stay blocked until built, simulated and verified on chain. */
-export const SIGNABLE_KINDS: ReadonlySet<PlanKind> = new Set(["SOL_PAYOUT", "TOKEN_PAYOUT"]);
+export const SIGNABLE_KINDS: ReadonlySet<PlanKind> = new Set(["SOL_PAYOUT", "TOKEN_PAYOUT", "FEE_COLLECTION", "BUYBACK"]);
 
 /** Technical limits (always on) + OPTIONAL operator emergency ceilings (null = not configured). Payout size itself is
  *  bounded by the verified fee-backed budget the intent store enforces, never by a fixed cap. */
@@ -34,6 +35,8 @@ export type Plan = {
   /** Exact expected recipients: SOL owners+lamports, or token owners+amount. Anything else in the tx → refused. */
   rows: readonly { owner: string; amount: bigint }[];
   mint?: string; decimals?: number;
+  /** BUYBACK only: SOL reserved from the verified buyback budget; the message's max spend must fit inside it. */
+  budgetLamports?: bigint;
 };
 export type IntentStore = {
   /** Durable reservation BEFORE signing. Must atomically refuse a key it has seen before. */
@@ -102,6 +105,13 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
   if (msg.header.numRequiredSignatures !== 1 || keys[0] !== me) return no("UNEXPECTED_SIGNER");
   if (msg.addressTableLookups.length) return no("LOOKUP_TABLES_NOT_ALLOWED");
 
+  let venue: VenueOk | null = null;
+  if (plan.kind === "FEE_COLLECTION" || plan.kind === "BUYBACK") {
+    if (plan.rows.length) return no("PLAN_ROWS_INVALID");
+    const v = checkVenueTx(plan.kind, keys, msg.compiledInstructions, me, { mint: plan.mint, budgetLamports: plan.budgetLamports, maxCuPrice: L.maxCuPriceMicroLamports });
+    if (!v.ok) return no(v.reason);
+    venue = v;
+  }
   const sys = SystemProgram.programId.toBase58(), cb = ComputeBudgetProgram.programId.toBase58();
   const tok = TOKEN_PROGRAM_ID.toBase58(), tok22 = TOKEN_2022_PROGRAM_ID.toBase58(), ata = ASSOCIATED_TOKEN_PROGRAM_ID.toBase58();
   const allowed = plan.kind === "SOL_PAYOUT" ? new Set([sys, cb]) : new Set([cb, tok, tok22, ata, sys]);
@@ -116,7 +126,7 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
     try { mintPk = new PublicKey(plan.mint); } catch { return no("MINT_INVALID"); }
   }
 
-  for (const ix of msg.compiledInstructions) {
+  for (const ix of venue ? [] : msg.compiledInstructions) {
     const prog = keys[ix.programIdIndex]; const d = ix.data; const acc = ix.accountKeyIndexes.map((i) => keys[i]);
     if (!prog || !allowed.has(prog)) return no(`PROGRAM_NOT_ALLOWED:${prog ?? "?"}`);
     if (prog === cb) {
@@ -150,6 +160,7 @@ async function signPlan(kp: Keypair, plan: Plan, ctx: SignCtx): Promise<SignResu
     seen.set(owner, amt); tokens += amt;
   }
   if (seen.size !== expect.size) return no("PLAN_ROWS_NOT_ALL_PRESENT");
+  if (venue) { cuLimit = venue.cuLimit; cuPrice = venue.cuPrice; lamports = venue.lamports; }
   if (cuLimit === null || cuLimit <= 0 || cuLimit > L.maxComputeUnits) return no("CU_LIMIT_OUT_OF_RANGE");
   const priority = (BigInt(cuLimit) * BigInt(cuPrice) + 999_999n) / 1_000_000n;
   if (priority > L.maxPriorityFeeLamports) return no("PRIORITY_FEE_TOO_HIGH");
