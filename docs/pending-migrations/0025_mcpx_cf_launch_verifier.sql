@@ -1,4 +1,4 @@
--- CANVAS-01 final (proposed, NOT applied to production). Additive only; no existing rows change.
+-- CANVAS-01 final (applied to production 2026-10-14 as drizzle 0025). Additive only; no existing rows change.
 -- Post-launch verifier storage. A creator submits a claim (draft revision + mint + signature) from the site;
 -- Rewards Worker #3 independently verifies the finalized transaction and the locked 60/25/15 sharing config,
 -- then calls mcpx_cf_register_launch through the HMAC bridge. Registration writes the verified registry row,
