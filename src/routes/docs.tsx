@@ -70,7 +70,7 @@ function Docs() {
             <ul className="divide-y divide-border rounded-lg border border-border">
               {tools.map((t) => (
                 <li key={t.id} className="p-4">
-                  <p className="text-foreground"><span className="label-mono mr-2 text-primary">{t.category}</span>{t.route ? <Link to={t.route} className="hover:underline">{t.name}</Link> : t.name}</p>
+                  <p className="text-foreground"><span className="label-mono mr-2 text-primary">{t.category}</span>{t.route ? <a href={t.route} className="hover:underline">{t.name}</a> : t.name}</p>
                   <p className="mt-1 text-sm">{t.benefit}</p>
                 </li>
               ))}
