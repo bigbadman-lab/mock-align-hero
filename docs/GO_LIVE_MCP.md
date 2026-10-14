@@ -5,14 +5,21 @@ Everything below is built. Each step that touches the chain or a live switch nee
 ## 1. Mint $MCP (deployer wallet)
 Record the canonical mint address.
 
-## 2. Lookup table (deployer wallet owns + pays, ~0.0034 SOL deposit)
-On the operator's own machine, in `services/transaction-builder`:
+## 2. Lookup table (deployer wallet 2ZrpSo3… owns + pays)
+On the operator's own machine, in `services/transaction-builder` (keypair is read only with `--send`):
 ```
-node scripts/alt-create.mjs <MCP_MINT> 5MzN9A2h4w4RdYvwDXUv8ssvJiPPJa9bnamh6yMWFqh5 CqaJhS4BKK791cv2fSsbbc75difqCrTiwkzeeR8WqJVB <deployer.json> <RPC>          # dry run
-node scripts/alt-create.mjs ... --send                                                                                                                       # create
+OPS=5MzN9A2h4w4RdYvwDXUv8ssvJiPPJa9bnamh6yMWFqh5
+PLAT=CqaJhS4BKK791cv2fSsbbc75difqCrTiwkzeeR8WqJVB
+# Now, before $MCP: 13 launch-independent addresses
+node scripts/alt-create.mjs static $OPS $PLAT                                  # dry run
+node scripts/alt-create.mjs static $OPS $PLAT <deployer.json> <RPC> --send     # create (approval)
+node scripts/alt-create.mjs verify <TABLE>                                     # read-only check
+# After LIVE <MCP_MINT>: add mint + bonding curve (2; 5 if migrated to a pool)
+node scripts/alt-create.mjs extend <TABLE> <MCP_MINT> $OPS $PLAT               # dry run
+node scripts/alt-create.mjs extend <TABLE> <MCP_MINT> $OPS $PLAT <deployer.json> <RPC> --send
 ```
-Result must be `CREATED_AND_VERIFIED`. The keypair file never goes onto any server.
-Do not freeze the table; re-run the plan and extend it if $MCP migrates from its bonding curve to a pool.
+Never freeze the table. Set `MCPX_LOOKUP_TABLE` on Builder #2 only after `extend` reports `EXTENDED_AND_VERIFIED`.
+Recorded table address: _(pending creation)_
 
 ## 3. Accept the canonical mint
 | Where | Setting |
