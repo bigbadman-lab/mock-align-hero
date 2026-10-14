@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageContainer, SectionHeading, SectionLabel, InfoCard, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
 import { TEMPLATES, ENGINES } from "@/lib/templates";
+import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,6 +79,13 @@ function Home() {
               </div>
             ))}
           </div>
+        </PageContainer>
+      </section>
+
+      <section aria-labelledby="treasury" className="border-b border-border">
+        <PageContainer className="py-20">
+          <SectionHeading label="Treasury" title={<span id="treasury">Native $MCP rewards, in the open</span>} intro="Fees collected, five-minute reward windows and finalized holder payouts — verified data only." />
+          <div className="mt-10"><TreasuryModule /></div>
         </PageContainer>
       </section>
 

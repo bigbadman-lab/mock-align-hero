@@ -14,6 +14,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
@@ -52,6 +53,10 @@ import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/pub
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
 import { Route as ApiPublicRewardsExecRouteImport } from './routes/api/public/rewards/exec'
 import { Route as ApiPublicRewardsStateRouteImport } from './routes/api/public/rewards/state'
+import { Route as ApiPublicTreasuryChildEcosystemRouteImport } from './routes/api/public/treasury/child-ecosystem'
+import { Route as ApiPublicTreasuryDistributionsRouteImport } from './routes/api/public/treasury/distributions'
+import { Route as ApiPublicTreasuryOverviewRouteImport } from './routes/api/public/treasury/overview'
+import { Route as ApiPublicTreasuryWindowsRouteImport } from './routes/api/public/treasury/windows'
 import { Route as ApiPublicMcpProductsCreationIdRouteImport } from './routes/api/public/mcp/products.$creationId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +82,11 @@ const LaunchRoute = LaunchRouteImport.update({
 const PairedRoute = PairedRouteImport.update({
   id: '/paired',
   path: '/paired',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreasuryRoute = TreasuryRouteImport.update({
+  id: '/treasury',
+  path: '/treasury',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpIndexRoute = McpIndexRouteImport.update({
@@ -278,6 +288,30 @@ const ApiPublicRewardsStateRoute = ApiPublicRewardsStateRouteImport.update({
   path: '/api/public/rewards/state',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTreasuryChildEcosystemRoute =
+  ApiPublicTreasuryChildEcosystemRouteImport.update({
+    id: '/api/public/treasury/child-ecosystem',
+    path: '/api/public/treasury/child-ecosystem',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTreasuryDistributionsRoute =
+  ApiPublicTreasuryDistributionsRouteImport.update({
+    id: '/api/public/treasury/distributions',
+    path: '/api/public/treasury/distributions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTreasuryOverviewRoute =
+  ApiPublicTreasuryOverviewRouteImport.update({
+    id: '/api/public/treasury/overview',
+    path: '/api/public/treasury/overview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTreasuryWindowsRoute =
+  ApiPublicTreasuryWindowsRouteImport.update({
+    id: '/api/public/treasury/windows',
+    path: '/api/public/treasury/windows',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMcpProductsCreationIdRoute =
   ApiPublicMcpProductsCreationIdRouteImport.update({
     id: '/api/public/mcp/products/$creationId',
@@ -291,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -329,6 +364,10 @@ export interface FileRoutesByFullPath {
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
+  '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
+  '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
+  '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
+  '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesByTo {
@@ -337,6 +376,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -375,6 +415,10 @@ export interface FileRoutesByTo {
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
+  '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
+  '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
+  '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
+  '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesById {
@@ -384,6 +428,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -422,6 +467,10 @@ export interface FileRoutesById {
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
   '/api/public/rewards/state': typeof ApiPublicRewardsStateRoute
+  '/api/public/treasury/child-ecosystem': typeof ApiPublicTreasuryChildEcosystemRoute
+  '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
+  '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
+  '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRouteTypes {
@@ -432,6 +481,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -470,6 +520,10 @@ export interface FileRouteTypes {
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
     | '/api/public/rewards/state'
+    | '/api/public/treasury/child-ecosystem'
+    | '/api/public/treasury/distributions'
+    | '/api/public/treasury/overview'
+    | '/api/public/treasury/windows'
     | '/api/public/mcp/products/$creationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -478,6 +532,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -516,6 +571,10 @@ export interface FileRouteTypes {
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
     | '/api/public/rewards/state'
+    | '/api/public/treasury/child-ecosystem'
+    | '/api/public/treasury/distributions'
+    | '/api/public/treasury/overview'
+    | '/api/public/treasury/windows'
     | '/api/public/mcp/products/$creationId'
   id:
     | '__root__'
@@ -524,6 +583,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -562,6 +622,10 @@ export interface FileRouteTypes {
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
     | '/api/public/rewards/state'
+    | '/api/public/treasury/child-ecosystem'
+    | '/api/public/treasury/distributions'
+    | '/api/public/treasury/overview'
+    | '/api/public/treasury/windows'
     | '/api/public/mcp/products/$creationId'
   fileRoutesById: FileRoutesById
 }
@@ -571,6 +635,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   LaunchRoute: typeof LaunchRoute
   PairedRoute: typeof PairedRoute
+  TreasuryRoute: typeof TreasuryRoute
   McpSlugRoute: typeof McpSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
@@ -609,6 +674,10 @@ export interface RootRouteChildren {
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
   ApiPublicRewardsExecRoute: typeof ApiPublicRewardsExecRoute
   ApiPublicRewardsStateRoute: typeof ApiPublicRewardsStateRoute
+  ApiPublicTreasuryChildEcosystemRoute: typeof ApiPublicTreasuryChildEcosystemRoute
+  ApiPublicTreasuryDistributionsRoute: typeof ApiPublicTreasuryDistributionsRoute
+  ApiPublicTreasuryOverviewRoute: typeof ApiPublicTreasuryOverviewRoute
+  ApiPublicTreasuryWindowsRoute: typeof ApiPublicTreasuryWindowsRoute
   ApiPublicMcpProductsCreationIdRoute: typeof ApiPublicMcpProductsCreationIdRoute
 }
 
@@ -647,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/paired'
       fullPath: '/paired'
       preLoaderRoute: typeof PairedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/treasury': {
+      id: '/treasury'
+      path: '/treasury'
+      fullPath: '/treasury'
+      preLoaderRoute: typeof TreasuryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp/': {
@@ -915,6 +991,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRewardsStateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/treasury/child-ecosystem': {
+      id: '/api/public/treasury/child-ecosystem'
+      path: '/api/public/treasury/child-ecosystem'
+      fullPath: '/api/public/treasury/child-ecosystem'
+      preLoaderRoute: typeof ApiPublicTreasuryChildEcosystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/treasury/distributions': {
+      id: '/api/public/treasury/distributions'
+      path: '/api/public/treasury/distributions'
+      fullPath: '/api/public/treasury/distributions'
+      preLoaderRoute: typeof ApiPublicTreasuryDistributionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/treasury/overview': {
+      id: '/api/public/treasury/overview'
+      path: '/api/public/treasury/overview'
+      fullPath: '/api/public/treasury/overview'
+      preLoaderRoute: typeof ApiPublicTreasuryOverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/treasury/windows': {
+      id: '/api/public/treasury/windows'
+      path: '/api/public/treasury/windows'
+      fullPath: '/api/public/treasury/windows'
+      preLoaderRoute: typeof ApiPublicTreasuryWindowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mcp/products/$creationId': {
       id: '/api/public/mcp/products/$creationId'
       path: '/api/public/mcp/products/$creationId'
@@ -931,6 +1035,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   LaunchRoute: LaunchRoute,
   PairedRoute: PairedRoute,
+  TreasuryRoute: TreasuryRoute,
   McpSlugRoute: McpSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
@@ -969,6 +1074,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
   ApiPublicRewardsExecRoute: ApiPublicRewardsExecRoute,
   ApiPublicRewardsStateRoute: ApiPublicRewardsStateRoute,
+  ApiPublicTreasuryChildEcosystemRoute: ApiPublicTreasuryChildEcosystemRoute,
+  ApiPublicTreasuryDistributionsRoute: ApiPublicTreasuryDistributionsRoute,
+  ApiPublicTreasuryOverviewRoute: ApiPublicTreasuryOverviewRoute,
+  ApiPublicTreasuryWindowsRoute: ApiPublicTreasuryWindowsRoute,
   ApiPublicMcpProductsCreationIdRoute: ApiPublicMcpProductsCreationIdRoute,
 }
 export const routeTree = rootRouteImport
