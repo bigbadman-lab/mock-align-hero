@@ -4,6 +4,7 @@ import { productProfileQuery } from "@/lib/product-profile.functions";
 import type { Availability, PublicProfile } from "@/lib/product-profile";
 import { EmptyState, PageContainer, PageHeader, RouteError, StatusMessage } from "@/components/mcpx/primitives";
 import { CopyButton, McpConnection } from "@/components/mcpx/McpConnection";
+import { TokenMarket } from "@/components/mcpx/TokenMarket";
 
 export const Route = createFileRoute("/mcp/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(productProfileQuery(params.slug)),
@@ -92,6 +93,7 @@ function Profile({ p }: { p: PublicProfile }) {
             <CopyButton text={url} label="Copy link" />
           </div>
         </section>
+        <TokenMarket slug={p.slug} />
         <p className="text-sm text-muted-foreground">Token verification and tool availability are separate: a verified token does not mean its MCP endpoint is running.</p>
         {p.endpoint && p.tool ? (
           <McpConnection endpoint={p.endpoint} tool={p.tool} />
