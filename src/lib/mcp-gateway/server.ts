@@ -31,19 +31,35 @@ export interface ExecDeps {
   toolAvailability: typeof toolAvailability;
   takeShared: typeof takeShared;
   callWorker: typeof callWorker;
+  /** Product endpoints only, and only once tool-activity tracking is switched on. Never affects results. */
+  recordActivity?: ActivityRecorder;
+}
+export type ActivityRecorder = (e: { creationId: string; toolId: string; outcome: "ok" | "error"; ref: string }) => Promise<void>;
+const ACTIVITY_TIMEOUT_MS = 1500;
+/** One record per external call. Failures/timeouts are swallowed: no retry of the tool, no change to its result. */
+export async function track(rec: ActivityRecorder | undefined, creationId: string, toolId: string, outcome: "ok" | "error"): Promise<void> {
+  if (!rec) return;
+  const ref = crypto.randomUUID();
+  try {
+    await Promise.race([rec({ creationId, toolId, outcome, ref }), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ACTIVITY_TIMEOUT_MS))]);
+  } catch {
+    console.warn(JSON.stringify({ mcp: `product:${creationId}`, activity: "record_failed" }));
+  }
 }
 export const productionExecDeps: ExecDeps = { workerConfig, toolAvailability, takeShared, callWorker };
 
 interface ToolEntry { adapter: TemplateAdapter; settings: ProductSettings; description: string; scope: string;
   /** Present only on product endpoints whose creator BYOK is active: adds optional `ai_summary` input. */
-  ai?: { deps: AiDeps; creationId: string } }
+  ai?: { deps: AiDeps; creationId: string };
+  /** Set only for product endpoints: the canonical creation id activity is recorded against. */
+  productId?: string }
 
 function buildServer(info: { name: string; title: string }, entries: ToolEntry[], request: Request, exec: ExecDeps) {
   const server = new McpServer(
     { name: info.name, title: info.title, version: "0.3.1" },
     { instructions: "MCPX endpoint. Read-only Solana mainnet tools. Results are on-demand reads, not monitoring." },
   );
-  for (const { adapter: a, settings, description, scope, ai } of entries) {
+  for (const { adapter: a, settings, description, scope, ai, productId } of entries) {
     const schema = ai ? a.inputSchema.extend({ ai_summary: z.boolean().optional().describe("Also return a short plain-English AI summary (uses the product creator's OpenAI key; counted against the product's AI limits).") }) : a.inputSchema;
     server.registerTool(
       a.toolName,
@@ -65,8 +81,10 @@ function buildServer(info: { name: string; title: string }, entries: ToolEntry[]
         if (lim === "limited") return fail("rate_limited: shared quota reached, retry later");
         if (lim === "unavailable") return fail("unavailable: rate limiter unavailable");
         const r = await exec.callWorker(cfg, a.toWorkerPayload(input, settings), request);
+        const execOk = r.ok && a.validOutput(r.out, input, settings);
+        if (productId) await track(exec.recordActivity, productId, a.workerToolId, execOk ? "ok" : "error");
         if (!r.ok) return fail(r.error);
-        if (!a.validOutput(r.out, input, settings)) return fail("bad_response");
+        if (!execOk) return fail("bad_response");
         let out = r.out as Record<string, unknown>;
         if (ai && wantAi === true) {
           const o = await summarise(ai.deps, ai.creationId, out).catch(() => ({ status: "unavailable" as const }));
@@ -159,6 +177,7 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
     settings: p.settings,
     description: `${p.displayName} — ${p.adapter.description}`,
     scope: `product:${p.creationId}`,
+    productId: p.creationId,
     ...(aiDeps && (await aiActive(aiDeps, p.creationId)) ? { ai: { deps: aiDeps, creationId: p.creationId } } : {}),
   };
   return serve(() => buildServer({ name: `mcpx-product-${p.creationId}`, title: p.displayName }, [entry], request, exec), request);
@@ -192,6 +211,8 @@ async function handleCanvasProduct(id: string, displayName: string, token: strin
           ...(ai && aiDeps ? { summarise: (o: unknown) => summarise(aiDeps, id, o) } : {}),
         });
         console.log(JSON.stringify({ mcp: `product:${id}`, tool: CANVAS_TOOL, canvasVersion: pv.version }));
+        // One external Canvas request = one record, however many steps ran (steps are not recorded separately).
+        if (!(r as { invalidInput?: boolean }).invalidInput) await track(exec.recordActivity, id, "canvas", (r as { isError?: boolean }).isError ? "error" : "ok");
         return r;
       });
     return server;

@@ -53,6 +53,8 @@ import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/tok
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
+import { Route as ApiCreatorDashboardActivityRouteImport } from './routes/api/creator/dashboard.activity'
+import { Route as ApiCreatorDashboardEarningsRouteImport } from './routes/api/creator/dashboard.earnings'
 import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/public/launch-assets.$'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
 import { Route as ApiPublicRewardsExecRouteImport } from './routes/api/public/rewards/exec'
@@ -290,6 +292,18 @@ const ApiToolsWhaleWatchRoute = ApiToolsWhaleWatchRouteImport.update({
   path: '/api/tools/whale-watch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCreatorDashboardActivityRoute =
+  ApiCreatorDashboardActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => ApiCreatorDashboardRoute,
+  } as any)
+const ApiCreatorDashboardEarningsRoute =
+  ApiCreatorDashboardEarningsRouteImport.update({
+    id: '/earnings',
+    path: '/earnings',
+    getParentRoute: () => ApiCreatorDashboardRoute,
+  } as any)
 const ApiPublicLaunchAssetsSplatRoute =
   ApiPublicLaunchAssetsSplatRouteImport.update({
     id: '/api/public/launch-assets/$',
@@ -370,7 +384,7 @@ export interface FileRoutesByFullPath {
   '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
-  '/api/creator/dashboard': typeof ApiCreatorDashboardRoute
+  '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -388,6 +402,8 @@ export interface FileRoutesByFullPath {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
+  '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -425,7 +441,7 @@ export interface FileRoutesByTo {
   '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
-  '/api/creator/dashboard': typeof ApiCreatorDashboardRoute
+  '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -443,6 +459,8 @@ export interface FileRoutesByTo {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
+  '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -481,7 +499,7 @@ export interface FileRoutesById {
   '/api/creator/ai': typeof ApiCreatorAiRoute
   '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
-  '/api/creator/dashboard': typeof ApiCreatorDashboardRoute
+  '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -499,6 +517,8 @@ export interface FileRoutesById {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
+  '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -556,6 +576,8 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/creator/dashboard/activity'
+    | '/api/creator/dashboard/earnings'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -611,6 +633,8 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/creator/dashboard/activity'
+    | '/api/creator/dashboard/earnings'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -666,6 +690,8 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/api/creator/dashboard/activity'
+    | '/api/creator/dashboard/earnings'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -704,7 +730,7 @@ export interface RootRouteChildren {
   ApiCreatorAiRoute: typeof ApiCreatorAiRoute
   ApiCreatorCanvasRoute: typeof ApiCreatorCanvasRoute
   ApiCreatorCanvasDryRunRoute: typeof ApiCreatorCanvasDryRunRoute
-  ApiCreatorDashboardRoute: typeof ApiCreatorDashboardRoute
+  ApiCreatorDashboardRoute: typeof ApiCreatorDashboardRouteWithChildren
   ApiCreatorLaunchArtworkRoute: typeof ApiCreatorLaunchArtworkRoute
   ApiCreatorLaunchClaimRoute: typeof ApiCreatorLaunchClaimRoute
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
@@ -1043,6 +1069,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsWhaleWatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/creator/dashboard/activity': {
+      id: '/api/creator/dashboard/activity'
+      path: '/activity'
+      fullPath: '/api/creator/dashboard/activity'
+      preLoaderRoute: typeof ApiCreatorDashboardActivityRouteImport
+      parentRoute: typeof ApiCreatorDashboardRoute
+    }
+    '/api/creator/dashboard/earnings': {
+      id: '/api/creator/dashboard/earnings'
+      path: '/earnings'
+      fullPath: '/api/creator/dashboard/earnings'
+      preLoaderRoute: typeof ApiCreatorDashboardEarningsRouteImport
+      parentRoute: typeof ApiCreatorDashboardRoute
+    }
     '/api/public/launch-assets/$': {
       id: '/api/public/launch-assets/$'
       path: '/api/public/launch-assets/$'
@@ -1109,6 +1149,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiCreatorDashboardRouteChildren {
+  ApiCreatorDashboardActivityRoute: typeof ApiCreatorDashboardActivityRoute
+  ApiCreatorDashboardEarningsRoute: typeof ApiCreatorDashboardEarningsRoute
+}
+
+const ApiCreatorDashboardRouteChildren: ApiCreatorDashboardRouteChildren = {
+  ApiCreatorDashboardActivityRoute: ApiCreatorDashboardActivityRoute,
+  ApiCreatorDashboardEarningsRoute: ApiCreatorDashboardEarningsRoute,
+}
+
+const ApiCreatorDashboardRouteWithChildren =
+  ApiCreatorDashboardRoute._addFileChildren(ApiCreatorDashboardRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
@@ -1136,7 +1189,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorAiRoute: ApiCreatorAiRoute,
   ApiCreatorCanvasRoute: ApiCreatorCanvasRoute,
   ApiCreatorCanvasDryRunRoute: ApiCreatorCanvasDryRunRoute,
-  ApiCreatorDashboardRoute: ApiCreatorDashboardRoute,
+  ApiCreatorDashboardRoute: ApiCreatorDashboardRouteWithChildren,
   ApiCreatorLaunchArtworkRoute: ApiCreatorLaunchArtworkRoute,
   ApiCreatorLaunchClaimRoute: ApiCreatorLaunchClaimRoute,
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
