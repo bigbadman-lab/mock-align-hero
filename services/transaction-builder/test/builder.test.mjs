@@ -15,7 +15,7 @@ import { macBinding } from "../src/binding.mjs";
 
 const SECRET = "s".repeat(48);
 const QUOTE = F.FIXTURE_QUOTE.toBase58();
-const ENV = { MCPX_TX_BUILDER_SECRET: SECRET, SOLANA_RPC_URL: "https://rpc.invalid", MCPX_FEE_OPS_RECIPIENT: F.FIXTURE_OPS, MCPX_FEE_PLATFORM_RECIPIENT: F.FIXTURE_PLATFORM, MCPX_QUOTE_MINT: QUOTE, MCPX_LOOKUP_TABLE: F.kp().publicKey.toBase58() };
+const ENV = { MCPX_TX_BUILDER_SECRET: SECRET, SOLANA_RPC_URL: "https://rpc.invalid", MCPX_FEE_OPS_RECIPIENT: F.FIXTURE_OPS, MCPX_FEE_PLATFORM_RECIPIENT: F.FIXTURE_PLATFORM, MCPX_QUOTE_MINT: QUOTE, MCPX_LOOKUP_TABLE: F.kp().publicKey.toBase58(), MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: F.kp().publicKey.toBase58() };
 const parentOk = () => assessParent({ global: F.global, quoteMint: QUOTE, quoteTokenProgram: F.SPL, pumpQuote: F.parentFixture("active") });
 const MODE = { C: "buy_v2", D: "buy_v3", E: "buy_exact_quote_in_v3", F: "buy_v3" };
 const build = (cand, o = {}) => assemble({
@@ -343,4 +343,14 @@ test("B02 CREATOR_RECIPIENT_BINDING: 60% shareholder, payer and signer are all t
   const c = compile(instructions, creator, F.FIXTURE_BLOCKHASH, "v0");
   assert.equal(c.signers[0], creator.toBase58());
   assert.deepEqual(new Set(c.signers), new Set([creator.toBase58(), mint.toBase58()]));
+});
+
+test("B03 production config: deployer public key required, key material and conflicts refused", () => {
+  const { MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: _d, ...noDep } = ENV;
+  assert.ok(loadConfig(noDep).missing.includes("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY"));
+  assert.equal(loadConfig(noDep).state, "NOT_CONFIGURED");
+  assert.equal(loadConfig({ ...ENV, MCPX_DEPLOYER_PRIVATE_KEY: "x" }).state, "NOT_CONFIGURED");
+  assert.equal(loadConfig({ ...ENV, MCPX_FEE_PLATFORM_RECIPIENT: F.FIXTURE_OPS }).state, "NOT_CONFIGURED");
+  assert.equal(loadConfig({ ...ENV, MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: "not-a-key" }).state, "NOT_CONFIGURED");
+  assert.equal(loadConfig(ENV).state, "READY_FOR_PREPARE");
 });

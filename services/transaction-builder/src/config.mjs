@@ -15,9 +15,10 @@ export function loadConfig(env) {
   if (!ops) missing.push("MCPX_FEE_OPS_RECIPIENT"); else if (!isPubkey(ops)) invalid.push("MCPX_FEE_OPS_RECIPIENT");
   if (!plat) missing.push("MCPX_FEE_PLATFORM_RECIPIENT"); else if (!isPubkey(plat)) invalid.push("MCPX_FEE_PLATFORM_RECIPIENT");
   if (ops && plat && ops === plat) invalid.push("MCPX_FEE_RECIPIENTS_DUPLICATE");
-  // Optional but enforced when set: the native $MCP deployer may never be a child fee recipient.
+  // Required: the native $MCP deployer (public key only) may never be a child fee recipient or creator.
   const dep = env.MCPX_NATIVE_DEPLOYER_PUBLIC_KEY || null;
-  if (dep && !isPubkey(dep)) invalid.push("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY");
+  if (!dep) missing.push("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY");
+  else if (!isPubkey(dep)) invalid.push("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY");
   if (dep && (dep === ops || dep === plat)) invalid.push("MCPX_FEE_RECIPIENT_IS_NATIVE_DEPLOYER");
   // Optional: absence is a real economic dependency (no canonical $MCP mint), not a config error.
   const q = env.MCPX_QUOTE_MINT || null;
@@ -25,6 +26,8 @@ export function loadConfig(env) {
   // Optional: MCPX-owned, pre-warmed address lookup table. Not created in 04-A (that is an on-chain write).
   const lut = env.MCPX_LOOKUP_TABLE || null;
   if (lut && !isPubkey(lut)) invalid.push("MCPX_LOOKUP_TABLE");
+  // The builder never holds keys: any private-key-shaped variable refuses readiness.
+  for (const k of Object.keys(env)) if (/PRIVATE_KEY|SECRET_KEY|KEYPAIR|MNEMONIC|SEED_PHRASE/i.test(k) && env[k]) invalid.push(`FORBIDDEN_KEY_MATERIAL:${k}`);
   const state = missing.length || invalid.length ? "NOT_CONFIGURED" : "READY_FOR_PREPARE";
   return { state, missing, invalid, secret, rpcUrl, quoteMint: q && isPubkey(q) ? q : null, lookupTable: lut && isPubkey(lut) ? lut : null, opsRecipient: ops, platformRecipient: plat, nativeDeployer: dep && isPubkey(dep) ? dep : null, port: Number(env.PORT) || 10000 };
 }
