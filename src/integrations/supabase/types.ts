@@ -1484,8 +1484,12 @@ export type Database = {
           kind: string
           lamports: number
           last_valid_block_height: number
+          message_base64: string | null
           message_sha256: string
           ops_cost_lamports: number
+          plan_mint: string | null
+          plan_rows: Json | null
+          plan_token_program: string | null
           reserved_by: string
           send_count: number
           signature: string | null
@@ -1506,8 +1510,12 @@ export type Database = {
           kind: string
           lamports: number
           last_valid_block_height: number
+          message_base64?: string | null
           message_sha256: string
           ops_cost_lamports?: number
+          plan_mint?: string | null
+          plan_rows?: Json | null
+          plan_token_program?: string | null
           reserved_by: string
           send_count?: number
           signature?: string | null
@@ -1528,8 +1536,12 @@ export type Database = {
           kind?: string
           lamports?: number
           last_valid_block_height?: number
+          message_base64?: string | null
           message_sha256?: string
           ops_cost_lamports?: number
+          plan_mint?: string | null
+          plan_rows?: Json | null
+          plan_token_program?: string | null
           reserved_by?: string
           send_count?: number
           signature?: string | null
