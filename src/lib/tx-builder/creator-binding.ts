@@ -35,6 +35,6 @@ export function checkCandidateBinding(c: CandidateView, ctx: BindingContext & { 
   if (c.mint !== ctx.mint) return { ok: false, code: "MINT_MISMATCH" };
   if ([...c.signers].sort().join() !== [ctx.sessionWallet, ctx.mint].sort().join()) return { ok: false, code: "SIGNERS_MISMATCH" };
   const want = [[ctx.sessionWallet, 6000], [ctx.opsRecipient, 2500], [ctx.platformRecipient, 1500]];
-  if (c.shareholders.length !== 3 || c.shareholders.some((s, i) => s.address !== want[i][0] || s.bps !== want[i][1])) return { ok: false, code: "SHARES_MISMATCH" };
+  if (c.shareholders.length !== 3 || c.shareholders.some((s, i) => s.address !== want[i]![0] || s.bps !== want[i]![1])) return { ok: false, code: "SHARES_MISMATCH" };
   return { ok: true };
 }

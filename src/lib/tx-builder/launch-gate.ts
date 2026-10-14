@@ -37,7 +37,7 @@ function bindingMatches(b: any, ctx: BindingContext, mint?: string): string | nu
   if (mint !== undefined && b.mint !== mint) return "MINT_MISMATCH";
   const want = [[ctx.sessionWallet, 6000], [ctx.opsRecipient, 2500], [ctx.platformRecipient, 1500]];
   const sh = Array.isArray(b.shareholders) ? b.shareholders : [];
-  if (sh.length !== 3 || sh.some((s: any, i: number) => s?.address !== want[i][0] || s?.bps !== want[i][1])) return "SHARES_MISMATCH";
+  if (sh.length !== 3 || sh.some((s: any, i: number) => s?.address !== want[i]![0] || s?.bps !== want[i]![1])) return "SHARES_MISMATCH";
   if ([b.creator, ctx.opsRecipient, ctx.platformRecipient].includes(ctx.nativeDeployer)) return "CREATOR_IS_NATIVE_DEPLOYER";
   return null;
 }
