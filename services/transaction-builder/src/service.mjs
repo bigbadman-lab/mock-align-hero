@@ -45,8 +45,9 @@ export function createService({ cfg: baseCfg, deps, now = () => Date.now() }) {
     if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
     if (req.creator === cfg.opsRecipient || req.creator === cfg.platformRecipient) return blocked(["FEE_RECIPIENT_DUPLICATE"]);
     if (cfg.nativeDeployer && req.creator === cfg.nativeDeployer) return blocked(["CREATOR_IS_NATIVE_DEPLOYER"]);
-    // Locked 04-B decision: the optional buy is a separate, later transaction. Refused, never stripped.
-    if (req.initialBuy) return blocked(["INITIAL_BUY_MUST_BE_SEPARATE"]);
+    // $MCP launches bundle the optional first buy into the creation transaction (after the fee lock). The SOL
+    // rehearsal keeps its separate later buy. A buy that can't be built is refused, never stripped to create-only.
+    if (req.initialBuy && sol) return blocked(["INITIAL_BUY_NOT_IN_REHEARSAL"]);
     if (req.format === "v0_alt" && !cfg.lookupTable) return blocked(["ALT_NOT_CONFIGURED"]);
     const candidate = CANDIDATE_FOR[req.initialBuy ? req.initialBuy.mode : "null"];
     const evidence = { ...baseEvidence(req.format), candidate };

@@ -211,12 +211,29 @@ test("T07 any change to bound values invalidates the candidate", async () => {
   assert.equal((await ins({ binding: forged, bindingMac: macBinding(SECRET, forged) })).json.valid, false);
 });
 
-test("T08 a failing optional buy never downgrades to create-only", async () => {
+test("T08 $MCP first buy is inside the launch transaction, last, after the fee lock; never downgraded", async () => {
   const app = createApp({ cfg: loadConfig(ENV), deps: await fixtureDeps() });
-  const r = await call(app, { path: "/internal/v1/launch/prepare", body: prepBody({ initialBuy: { mode: "buy_v3", quoteAmount: "1000000000", slippageBps: 100 } }) });
-  assert.equal(r.json.status, "BLOCKED");
-  assert.deepEqual(r.json.reasons, ["INITIAL_BUY_MUST_BE_SEPARATE"], "refused explicitly, never stripped to create-only");
-  assert.equal(r.json.messageBase64, undefined);
+  for (const mode of ["buy_exact_quote_in_v3", "buy_v3"]) {
+    const ib = { mode, quoteAmount: "1000000000", slippageBps: 100 };
+    const r = await call(app, { path: "/internal/v1/launch/prepare", body: prepBody({ initialBuy: ib }) });
+    assert.equal(r.json.status, "UNSIGNED_CANDIDATE", `${mode} ${JSON.stringify(r.json.reasons)}`);
+    const names = r.json.evidence.instructions.map((i) => i.name);
+    assert.equal(names.filter((n) => n.startsWith("buy")).length, 1, "exactly one buy");
+    assert.equal(names[names.length - 1], mode, "buy is the last instruction");
+    assert.ok(names.indexOf("update_fee_shares_v2") < names.indexOf(mode), "fee shares locked before the buy");
+    assert.ok(r.json.evidence.serializedBytes <= PACKET_LIMIT, `fits: ${r.json.evidence.serializedBytes} bytes`);
+    assert.deepEqual(r.json.binding.initialBuy, ib);
+    const ins = await call(app, { path: "/internal/v1/launch/inspect", body: JSON.stringify({ schema: "mcpx.launch.inspect.v1", messageBase64: r.json.messageBase64, binding: r.json.binding, bindingMac: r.json.bindingMac }) });
+    assert.equal(ins.json.valid, true, JSON.stringify(ins.json.checks));
+    assert.equal(ins.json.checks.buyMatchesBinding, true);
+    // A binding claiming a different buy amount than the bytes is refused.
+    const lie = { ...r.json.binding, initialBuy: { ...ib, quoteAmount: "999999999999" } };
+    assert.equal((await call(app, { path: "/internal/v1/launch/inspect", body: JSON.stringify({ schema: "mcpx.launch.inspect.v1", messageBase64: r.json.messageBase64, binding: lie, bindingMac: macBinding(SECRET, lie) }) })).json.valid, false);
+  }
+  // A buy that can't be quoted is refused outright, never stripped to create-only.
+  const broken = createApp({ cfg: loadConfig(ENV), deps: await fixtureDeps({ getPumpQuote: async () => F.parentFixture("awaiting") }) });
+  const b = await call(broken, { path: "/internal/v1/launch/prepare", body: prepBody({ initialBuy: { mode: "buy_exact_quote_in_v3", quoteAmount: "1000000000", slippageBps: 100 } }) });
+  assert.equal(b.json.status, "BLOCKED"); assert.equal(b.json.messageBase64, undefined);
   await assert.rejects(assemble({ candidate: "D", creator: F.kp().publicKey.toBase58(), mint: F.kp().publicKey.toBase58(), name: "X", symbol: "X", uri: "https://x.y/z", initialBuy: null,
     quoteMint: QUOTE, quoteTokenProgram: F.SPL, opsRecipient: F.FIXTURE_OPS, platformRecipient: F.FIXTURE_PLATFORM, global: F.global, feeConfig: F.feeConfig, parent: parentOk() }), (e) => e instanceof BuildError && e.code === "INITIAL_BUY_REQUIRED");
 });
