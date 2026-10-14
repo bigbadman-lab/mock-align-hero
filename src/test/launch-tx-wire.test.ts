@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assembleTx, messageSigners, sameBytes, splitTx, verifyAllSignatures } from "@/lib/launch/tx-wire";
