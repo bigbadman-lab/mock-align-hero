@@ -11,6 +11,7 @@ import { loadSigner, readLimits, executionReadiness } from "./signer";
 import { intentStore } from "./intents";
 import { reconcileOpen, type Chain } from "./executor";
 import { runPassWindows } from "./orchestrator";
+import { sealedFromFrozen, vaultLamports, settlementChain, captureFills, pendingFills, ingestFees, deployerProvenance, creatorVaults, type RpcCall } from "./pipeline";
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
 import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapshot.pg";
@@ -58,26 +59,13 @@ async function finalizedBlockTime(rpc: string): Promise<number | null> {
   } catch { return null; } // unknown, never "zero"
 }
 
-/** Read-only chain adapter for reconciliation. Settlement proof verification is not wired yet → null → HELD_NO_PROOF,
- *  so nothing is ever marked LANDED without balance-delta proof. */
-function rpcChain(rpc: string): Chain {
-  const call = async (method: string, params: unknown[]) => {
+/** Plain finalized JSON-RPC call (read-only). Errors throw; callers map them to UNKNOWN, never to zero. */
+function rpcCall(rpc: string): RpcCall {
+  return async (method, params) => {
     const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(8000) });
-    const j = (await r.json()) as { result?: unknown; error?: unknown };
-    if (!r.ok || j.error !== undefined) throw new Error("rpc_error");
+    const j = (await r.json()) as { result?: unknown; error?: { message?: string } };
+    if (!r.ok || j.error !== undefined) throw new Error(j.error?.message ?? "rpc_error");
     return j.result;
-  };
-  return {
-    async signatureStatus(sig) {
-      try {
-        const v = ((await call("getSignatureStatuses", [[sig], { searchTransactionHistory: true }])) as { value: ({ slot: number; err: unknown; confirmationStatus: string } | null)[] }).value[0];
-        if (!v) return { status: "NOT_FOUND", slot: null };
-        if (v.confirmationStatus !== "finalized") return { status: "UNKNOWN", slot: null };
-        return { status: v.err ? "FINALIZED_ERR" : "FINALIZED_OK", slot: v.slot };
-      } catch { return { status: "UNKNOWN", slot: null }; }
-    },
-    async finalizedBlockHeight() { try { return Number(await call("getBlockHeight", [{ commitment: "finalized" }])); } catch { return null; } },
-    async settlement() { return null; },
   };
 }
 
@@ -178,22 +166,39 @@ async function main() {
         if (w !== null) lastPlanned = w;
         log({ event: "pass", correlationId, outcome: r.kind, window: w, classes: classify(r) });
       }
-      // EXEC-01B: reconcile any persisted signed intents (no sender in this gate → never broadcasts). Execution of new
-      // collect/buy/pay plans runs only when executionReadiness reports READY, which it cannot in this bundle.
-      const rec = await reconcileOpen(intentStore(db, workerId), rpcChain(env("MCPX_REWARDS_RPC_URL")!), null);
-      // EXEC-01C: five-minute financial orchestration over sealed windows. Readiness is computed from real checks and is
-      // never READY in this gate, so every window reports HELD:EXECUTION_NOT_READY before any money stage runs.
+      // EXEC-01D: one pass = reconcile → fees → fills → windows. All reads finalized; no sender exists (null) so
+      // nothing is ever broadcast in this bundle. Readiness is computed from real checks and is not READY here.
+      const call = rpcCall(env("MCPX_REWARDS_RPC_URL")!);
+      const deployer = cfg.deployerWallet!;
+      const rec = await reconcileOpen(intentStore(db, workerId), settlementChain(call, db, deployer), null);
+      const prov = await deployerProvenance(call, deployer);
+      const fees = await ingestFees(db, store, {
+        signatures: async (a, o) => (await call("getSignaturesForAddress", [a, { commitment: "finalized", limit: o.limit, ...(o.until ? { until: o.until } : {}), ...(o.before ? { before: o.before } : {}) }])) as never,
+        transaction: async (sig) => call("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]),
+      }, { mint: cfg.mint!, deployer, provenance: prov,
+        wsolOwner: async (ata) => { try { const i = (await call("getAccountInfo", [ata, { commitment: "finalized", encoding: "jsonParsed" }])) as { value: { data: { parsed: { info: { owner: string; mint: string } } } } | null };
+          return i.value ? { owner: i.value.data.parsed.info.owner, mint: i.value.data.parsed.info.mint } : null; } catch { return null; } } });
+      let decimals: number | null = null;
+      try { decimals = ((await call("getTokenSupply", [cfg.mint, { commitment: "finalized" }])) as { value: { decimals: number } }).value.decimals; } catch { /* unknown */ }
+      const fills = decimals === null ? [] : await captureFills(db, call, { deployer, mint: cfg.mint!, decimals });
+      const vaults = await creatorVaults(deployer);
       if (lastPlanned !== null) {
+        const budgetOf = async (w: number) => { const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [w])).rows[0];
+          return b ? { sol: BigInt(String(b["sol"])), buyback: BigInt(String(b["buyback"])), tokens: BigInt(String(b["tokens"])), ops: BigInt(String(b["ops"])), evidence: !!b["evidence"] } : null; };
         const fin = await runPassWindows({
           readiness: () => readiness, maxRecipientsPerTx: 20,
-          sealed: async () => null, openForCycle: async (c) => Number((await db.query("select count(*)::int n from public.mcpx_rw_intents where cycle_id=$1 and state='SIGNED'", [c])).rows[0]?.["n"] ?? 0),
-          vaultLamports: async () => null, pendingFills: async () => 0,
-          budget: async (w) => { const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [w])).rows[0];
-            return b ? { sol: BigInt(String(b["sol"])), buyback: BigInt(String(b["buyback"])), tokens: BigInt(String(b["tokens"])), ops: BigInt(String(b["ops"])), evidence: !!b["evidence"] } : null; },
-          submit: async () => "REFUSED",
+          sealed: async (w) => { if (!(await windowPayableForPlanning(db, cfg.mint!, w))) return null;
+            const b = await budgetOf(w);
+            return sealedFromFrozen(await loadFrozen(db, cfg.mint!, w), { deployer, excluded: [vaults.curveVault, vaults.ammAuthority, vaults.ammWsolVault], solTotal: b?.sol ?? 0n, minPayable: cfg.minPayableLamports }); },
+          openForCycle: async (c) => Number((await db.query("select count(*)::int n from public.mcpx_rw_intents where cycle_id=$1 and state='SIGNED'", [c])).rows[0]?.["n"] ?? 0),
+          vaultLamports: async () => (await vaultLamports(call, deployer))?.total ?? null,
+          pendingFills: (w) => pendingFills(db, w),
+          budget: budgetOf,
+          submit: async () => "REFUSED", // unreachable while readiness ≠ READY; building+signing is the rehearsal gate
         }, [lastPlanned], 1);
         log({ event: "financial_cycle", correlationId, windows: fin.map((x) => ({ window: x.window, last: x.stages.at(-1) })) });
       }
+      log({ event: "fees", correlationId, provenance: prov.createdMints === null ? "UNKNOWN" : prov.createdMints.length, result: fees.kind, events: "events" in fees ? fees.events.length : 0, fills: fills.map((f) => f.result) });
       log({ event: "execution", correlationId, readiness: readiness.state, blockers: readiness.blockers, reconciled: rec.length, actions: rec.map((x) => x.action) });
       backoff = pollMs;
     } catch (e) {
