@@ -47,7 +47,7 @@ function Treasury() {
                   <Stat label="FDV" value={v.market?.fdvUsd != null ? formatUsd(v.market.fdvUsd) : "—"} note="Fully diluted — not market cap" />
                   <Stat label="24h volume" value={v.market ? formatUsd(v.market.volume24hUsd) : "—"} />
                 </div>
-                <p className="mt-3 text-[11px] text-subtle">{v.market ? `Source: DexScreener, ${v.market.pairCount} pair(s) for this exact mint · USD · fetched ${new Date(v.market.fetchedAt).toUTCString().slice(17, 25)} UTC` : v.marketError ? "Market data provider unavailable — values hidden, not zero." : v.mint ? "No market pairs found for this exact mint yet." : "Market data appears once $MCP is minted."}</p>
+                <p className="mt-3 text-[11px] text-subtle">{v.market ? `Source: ${v.market.source === "birdeye" ? "Birdeye" : "DexScreener"}, ${v.market.pairCount} market(s) for this exact mint · USD · fetched ${new Date(v.market.fetchedAt).toUTCString().slice(17, 25)} UTC` : v.marketError ? "Market data provider unavailable — values hidden, not zero." : v.mint ? "No market pairs found for this exact mint yet." : "Market data appears once $MCP is minted."}</p>
               </div>
               <div className="rounded-lg border border-border bg-card p-6">
                 <WindowClock o={v} large />

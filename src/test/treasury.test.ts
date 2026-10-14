@@ -66,3 +66,13 @@ describe("reader load", () => {
     expect(r.every((x) => x === 1)).toBe(true);
   });
 });
+
+import { pickBirdeye } from "@/lib/treasury/market.server";
+describe("birdeye market", () => {
+  const A = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN";
+  it("maps exact-mint overview", () => {
+    const m = pickBirdeye(A, { success: true, data: { address: A, price: 0.5, marketCap: 10, fdv: 20, v24hUSD: 3, liquidity: 4, holder: 7, numberMarkets: 2 } }, "t");
+    expect(m).toMatchObject({ source: "birdeye", priceUsd: "0.5", marketCapUsd: 10, fdvUsd: 20, volume24hUsd: 3, holders: 7 });
+  });
+  it("rejects a different mint", () => expect(pickBirdeye(A, { success: true, data: { address: "x", price: 1 } }, "t")).toBeNull());
+});

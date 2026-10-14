@@ -10,12 +10,14 @@ export type Mode = "PRELAUNCH" | "PRODUCTION" | "REHEARSAL";
 export type WindowStatus = "NOT_LAUNCHED" | "AWAITING_DATA" | "WINDOW_UPCOMING" | "PROCESSING" | "DELAYED";
 
 export interface MarketSnapshot {
-  source: "dexscreener";
+  source: "birdeye" | "dexscreener";
   quote: "USD";
   priceUsd: string | null;
   volume24hUsd: number | null;
   marketCapUsd: number | null; // provider-reported market cap (circulating basis as reported); never FDV
   fdvUsd: number | null;
+  liquidityUsd: number | null;
+  holders: number | null;
   pairCount: number;
   fetchedAt: string;
 }
