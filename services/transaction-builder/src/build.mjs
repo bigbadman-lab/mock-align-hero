@@ -1,5 +1,5 @@
 // Candidate assembly from official SDK instruction builders. Pure: all chain state is passed in.
-// Order (fee-first): create_v2 → create_fee_sharing_config → update_fee_shares_v2 → [optional buy].
+// Order (fee-first): create_v2 → create_fee_sharing_config → creator-vault quote ATA → update_fee_shares_v2 → [optional buy].
 import { pump, web3, spl, BN, PROGRAMS, instructionName } from "./sdk.mjs";
 import { FEE_SPLIT_BPS } from "./config.mjs";
 import { createRequire } from "node:module";
@@ -85,7 +85,14 @@ export async function assemble(x) {
     authority: creator, mint, currentShareholders: [creator], newShareholders: shares,
     quoteMint, quoteTokenProgram: qtp, bondingCurveComplete: false,
   }));
-  const fee = [cfgIx, updIx];
+  // Non-native quote ($MCP is Token-2022): update_fee_shares_v2 CPIs distribute_creator_fees_v2, which
+  // requires the sharing-config creator vault's quote ATA to exist. A brand-new coin has none, so the
+  // three-instruction form fails with InvalidAccountData (CHILD-FEES-01 local mainnet-clone execution).
+  // Created idempotently, paid by the creator, inside the same atomic transaction.
+  const vault = pump.creatorVaultPda(pump.feeSharingConfigPda(mint));
+  const vaultAtaIx = spl.createAssociatedTokenAccountIdempotentInstruction(
+    creator, spl.getAssociatedTokenAddressSync(quoteMint, vault, true, qtp), vault, quoteMint, qtp);
+  const fee = [cfgIx, vaultAtaIx, updIx];
   if (x.candidate === "B") return { instructions: [createIx, ...fee], shares };
 
   const ib = x.initialBuy;

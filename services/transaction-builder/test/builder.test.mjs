@@ -136,8 +136,14 @@ test("T02 exact 60/25/15 with fixed distinct recipients", async () => {
 test("T03 fee-secured B: exact order and signers", async () => {
   const creator = F.kp().publicKey, mint = F.kp().publicKey;
   const { instructions } = await build("B", { creator: creator.toBase58(), mint: mint.toBase58() });
-  assert.deepEqual(instructions.map(instructionName), ["create_v2", "create_fee_sharing_config", "update_fee_shares_v2"]);
+  assert.deepEqual(instructions.map(instructionName), ["create_v2", "create_fee_sharing_config", "ata_create_idempotent", "update_fee_shares_v2"]);
   assert.ok(feeFirst(instructions));
+  // CHILD-FEES-01: the pre-created ATA is exactly the sharing-config creator vault's quote ATA, paid by the creator.
+  const vault = pump.creatorVaultPda(pump.feeSharingConfigPda(mint));
+  const ata = instructions[2];
+  assert.equal(ata.keys[0].pubkey.toBase58(), creator.toBase58());
+  assert.equal(ata.keys[2].pubkey.toBase58(), vault.toBase58());
+  assert.equal(ata.keys[3].pubkey.toBase58(), F.FIXTURE_QUOTE.toBase58());
   const c = compile(instructions, creator, F.FIXTURE_BLOCKHASH, "v0");
   assert.deepEqual(new Set(c.signers), new Set([creator.toBase58(), mint.toBase58()]));
 });

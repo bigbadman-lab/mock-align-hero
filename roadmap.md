@@ -19,3 +19,5 @@
 - [ ] L7-B activation: apply 0015, set MCPX_BYOK_ENABLED=1, publish (needs approval)
 - [x] REWARDS-EXEC-01D — 0020 applied, pipeline wired (PARTIAL)
 - [x] REWARDS-EXEC-01E — sign fee collection + buybacks (PARTIAL; no deploy/broadcast)
+
+- [x] CHILD-FEES-01 audit + builder fix (PARTIAL; real-mint proofs pending)
