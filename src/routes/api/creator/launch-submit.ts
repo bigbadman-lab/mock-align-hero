@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { checkMutation, currentSession } from "@/lib/creator-auth/core";
 import { authStore, takeAuthBudget } from "@/lib/creator-auth/store.server";
 import { reply } from "@/lib/creator-auth/http.server";
-import { gateVerify } from "@/lib/tx-builder/launch-gate";
+import { gateVerify, modeFor } from "@/lib/tx-builder/launch-gate";
 import { builderCall, gateConfig } from "@/lib/tx-builder/client.server";
 import { b64, sameBytes, verifyAllSignatures } from "@/lib/launch/tx-wire";
 
@@ -27,7 +27,10 @@ export const Route = createFileRoute("/api/creator/launch-submit")({
         const bad = checkMutation(request, { maxBytes: 64_000 });
         if (bad) return reply(bad === "forbidden" ? 403 : 400, { ok: false, code: bad });
         const config = gateConfig();
-        if (!config.enabled || !config.signingEnabled || process.env["MCPX_LAUNCH_VERIFIER"] !== "1") return reply(503, { ok: false, code: "LAUNCH_SIGNING_NOT_ENABLED" });
+        const { rehearsalDeps, checkAlt } = await import("@/lib/tx-builder/rehearsal.server");
+        const rehearsal = rehearsalDeps();
+        // Normal launches need both launch switches; the rehearsal needs MCPX_SOL_REHEARSAL (checked per session below).
+        if ((!(config.enabled && config.signingEnabled) && !rehearsal.enabled) || process.env["MCPX_LAUNCH_VERIFIER"] !== "1") return reply(503, { ok: false, code: "LAUNCH_SIGNING_NOT_ENABLED" });
         let b: any;
         try { b = JSON.parse(await request.text()); } catch { return reply(400, { ok: false, code: "INVALID_INPUT" }); }
         if (!b || typeof b.signedTxBase64 !== "string" || typeof b.messageBase64 !== "string" || typeof b.mint !== "string" || !B58.test(b.mint)) return reply(400, { ok: false, code: "INVALID_INPUT" });
@@ -35,10 +38,15 @@ export const Route = createFileRoute("/api/creator/launch-submit")({
         let session;
         try { session = await currentSession(authStore, request); } catch { return reply(503, { ok: false, code: "unavailable" }); }
         if (!session) return reply(401, { ok: false, code: "CREATOR_SESSION_REQUIRED" });
+        const baseDeps = { config, builder: builderCall, now: () => Date.now(), loadDraft, rehearsal, checkAlt };
+        const mode = await modeFor(session, baseDeps);
+        if (mode.kind === "blocked") return reply(403, { ok: false, code: mode.code });
+        const sol = mode.kind === "sol";
+        if (!sol && !(config.enabled && config.signingEnabled)) return reply(503, { ok: false, code: "LAUNCH_SIGNING_NOT_ENABLED" });
 
         // 1. Same checks as immediately before signing.
         const v = await gateVerify({ messageBase64: b.messageBase64, binding: b.binding, bindingMac: b.bindingMac, connectedWallet: session.wallet, draftId: b.draftId, revision: b.revision },
-          session, { config, builder: builderCall, now: () => Date.now(), loadDraft, canonicalMint: (await import("@/lib/tx-builder/canonical-mint.server")).canonicalMint });
+          session, { ...baseDeps, canonicalMint: (await import("@/lib/tx-builder/canonical-mint.server")).canonicalMint });
         if (v.http !== 200) return reply(v.http, v.body);
         if (b.binding?.mint !== b.mint) return reply(403, { ok: false, code: "MINT_MISMATCH" });
 
@@ -48,6 +56,13 @@ export const Route = createFileRoute("/api/creator/launch-submit")({
         if (!sameBytes(checked.message, b64.dec(b.messageBase64))) return reply(403, { ok: false, code: "MESSAGE_ALTERED" });
         if (!checked.ok) return reply(403, { ok: false, code: "SIGNATURE_INVALID" });
         if (checked.signers.length !== 2 || checked.signers[0] !== session.wallet || checked.signers[1] !== b.mint) return reply(403, { ok: false, code: "SIGNERS_MISMATCH" });
+
+        // 3a. Rehearsal: atomically move the one-use permission RESERVED → SUBMITTED, bound to this signature.
+        if (sol) {
+          let st: string;
+          try { st = await rehearsal.submit(session.wallet, b.mint, checked.firstSignature); } catch { return reply(503, { ok: false, code: "REHEARSAL_UNAVAILABLE" }); }
+          if (st !== "submitted" && st !== "already_submitted") return reply(409, { ok: false, code: "REHEARSAL_SUBMIT_REFUSED" });
+        }
 
         // 3. File the claim first (so a broadcast launch is always tracked), then broadcast.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

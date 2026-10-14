@@ -37,6 +37,7 @@ import { Route as ApiCreatorCanvasRouteImport } from './routes/api/creator/canva
 import { Route as ApiCreatorCanvasDryRunRouteImport } from './routes/api/creator/canvas-dry-run'
 import { Route as ApiCreatorDashboardRouteImport } from './routes/api/creator/dashboard'
 import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creator/launch-artwork'
+import { Route as ApiCreatorLaunchBuyRouteImport } from './routes/api/creator/launch-buy'
 import { Route as ApiCreatorLaunchClaimRouteImport } from './routes/api/creator/launch-claim'
 import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
 import { Route as ApiCreatorLaunchPrepareRouteImport } from './routes/api/creator/launch-prepare'
@@ -205,6 +206,11 @@ const ApiCreatorDashboardRoute = ApiCreatorDashboardRouteImport.update({
 const ApiCreatorLaunchArtworkRoute = ApiCreatorLaunchArtworkRouteImport.update({
   id: '/api/creator/launch-artwork',
   path: '/api/creator/launch-artwork',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCreatorLaunchBuyRoute = ApiCreatorLaunchBuyRouteImport.update({
+  id: '/api/creator/launch-buy',
+  path: '/api/creator/launch-buy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCreatorLaunchClaimRoute = ApiCreatorLaunchClaimRouteImport.update({
@@ -386,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-buy': typeof ApiCreatorLaunchBuyRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
@@ -443,6 +450,7 @@ export interface FileRoutesByTo {
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-buy': typeof ApiCreatorLaunchBuyRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/dashboard': typeof ApiCreatorDashboardRouteWithChildren
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
+  '/api/creator/launch-buy': typeof ApiCreatorLaunchBuyRoute
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
@@ -560,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/creator/canvas-dry-run'
     | '/api/creator/dashboard'
     | '/api/creator/launch-artwork'
+    | '/api/creator/launch-buy'
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/api/creator/canvas-dry-run'
     | '/api/creator/dashboard'
     | '/api/creator/launch-artwork'
+    | '/api/creator/launch-buy'
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/api/creator/canvas-dry-run'
     | '/api/creator/dashboard'
     | '/api/creator/launch-artwork'
+    | '/api/creator/launch-buy'
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
@@ -732,6 +744,7 @@ export interface RootRouteChildren {
   ApiCreatorCanvasDryRunRoute: typeof ApiCreatorCanvasDryRunRoute
   ApiCreatorDashboardRoute: typeof ApiCreatorDashboardRouteWithChildren
   ApiCreatorLaunchArtworkRoute: typeof ApiCreatorLaunchArtworkRoute
+  ApiCreatorLaunchBuyRoute: typeof ApiCreatorLaunchBuyRoute
   ApiCreatorLaunchClaimRoute: typeof ApiCreatorLaunchClaimRoute
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
   ApiCreatorLaunchPrepareRoute: typeof ApiCreatorLaunchPrepareRoute
@@ -955,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/api/creator/launch-artwork'
       fullPath: '/api/creator/launch-artwork'
       preLoaderRoute: typeof ApiCreatorLaunchArtworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/creator/launch-buy': {
+      id: '/api/creator/launch-buy'
+      path: '/api/creator/launch-buy'
+      fullPath: '/api/creator/launch-buy'
+      preLoaderRoute: typeof ApiCreatorLaunchBuyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/creator/launch-claim': {
@@ -1191,6 +1211,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorCanvasDryRunRoute: ApiCreatorCanvasDryRunRoute,
   ApiCreatorDashboardRoute: ApiCreatorDashboardRouteWithChildren,
   ApiCreatorLaunchArtworkRoute: ApiCreatorLaunchArtworkRoute,
+  ApiCreatorLaunchBuyRoute: ApiCreatorLaunchBuyRoute,
   ApiCreatorLaunchClaimRoute: ApiCreatorLaunchClaimRoute,
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
   ApiCreatorLaunchPrepareRoute: ApiCreatorLaunchPrepareRoute,

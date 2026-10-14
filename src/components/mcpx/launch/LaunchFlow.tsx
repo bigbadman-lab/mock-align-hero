@@ -9,6 +9,7 @@ import logo from "@/assets/mcp-monitor-logo.png.asset.json";
 import type { DraftView } from "./DraftPersistence";
 import { useWallet } from "@/lib/wallet/context";
 import { assembleTx, b64, messageSigners, sameBytes, splitTx } from "@/lib/launch/tx-wire";
+import { RehearsalBanner, RehearsalBuy } from "./RehearsalBuy";
 import { BLOCKER_TEXT, STAGES, claimOutcome, launchBlocker, type LaunchStage } from "@/lib/launch/launch-flow";
 
 const post = (url: string, body: unknown) => fetch(url, {
@@ -22,6 +23,14 @@ const MESSAGES: Record<string, string> = {
   CREATOR_SESSION_REQUIRED: "Sign in as a creator first.",
   DRAFT_CHANGED: "Your launch details changed. Press Review again.",
   METADATA_NOT_PREPARED: "Your token details aren't ready yet. Press Review again.",
+  REHEARSAL_BUSY: "The one-time rehearsal is already reserved for another attempt. Nothing was signed. Ask the MCPX operator to release it.",
+  REHEARSAL_ALREADY_SUBMITTED: "The rehearsal launch was already sent. It can't be launched twice.",
+  REHEARSAL_USED: "The one-time rehearsal has already been used.",
+  REHEARSAL_UNAVAILABLE: "The rehearsal permission couldn't be checked, so nothing was signed.",
+  ALT_UNAVAILABLE: "The lookup table couldn't be read right now, so nothing was signed. Try again shortly.",
+  ALT_DEACTIVATED: "The lookup table is not active, so nothing was signed.",
+  ALT_INSUFFICIENT: "The lookup table is missing addresses this launch needs, so nothing was signed.",
+  TX_TOO_LARGE: "The launch transaction is too large, so nothing was signed.",
 };
 const CLAIM_KEY = "mcpx:launch-claim";
 
@@ -35,9 +44,13 @@ type Run =
 export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: DraftView | null; signedInWallet: string | null; connectedWallet: string | null }) {
   const w = useWallet();
   const [enabled, setEnabled] = useState(false);
+  const [rehearsal, setRehearsal] = useState(false);
   const [run, setRun] = useState<Run>({ s: "idle" });
   const poll = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => { fetch("/api/creator/launch-prepare").then((r) => r.json()).then((b) => setEnabled(b?.enabled === true), () => setEnabled(false)); }, []);
+  // Rehearsal: the one-time mint key stays in memory for this page so a declined signature can retry the same reservation.
+  const mintKey = useRef<{ draftId: string; kp: CryptoKeyPair; mint: string } | null>(null);
+  // The server decides rehearsal from the signed-in session; the browser only displays it.
+  useEffect(() => { fetch("/api/creator/launch-prepare", { credentials: "same-origin" }).then((r) => r.json()).then((b) => { setEnabled(b?.enabled === true || b?.rehearsal === true); setRehearsal(b?.rehearsal === true); }, () => setEnabled(false)); }, [signedInWallet]);
 
   // Resume a launch that was already submitted (e.g. after a page reload).
   const watch = (claimId: string) => {
@@ -68,8 +81,13 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
     setRun({ s: "running", stage: "preparing" });
     try {
       const bs58 = (await import("bs58")).default;
-      const kp = (await crypto.subtle.generateKey({ name: "Ed25519" } as any, true, ["sign", "verify"])) as CryptoKeyPair;
-      const mint = bs58.encode(new Uint8Array(await crypto.subtle.exportKey("raw", kp.publicKey)));
+      let kp: CryptoKeyPair, mint: string;
+      if (rehearsal && mintKey.current?.draftId === saved.id) ({ kp, mint } = mintKey.current);
+      else {
+        kp = (await crypto.subtle.generateKey({ name: "Ed25519" } as any, true, ["sign", "verify"])) as CryptoKeyPair;
+        mint = bs58.encode(new Uint8Array(await crypto.subtle.exportKey("raw", kp.publicKey)));
+        if (rehearsal) mintKey.current = { draftId: saved.id, kp, mint };
+      }
       const p = await post("/api/creator/launch-prepare", { op: "prepare", draftId: saved.id, revision: saved.revision, mint, idempotencyKey: crypto.randomUUID(), connectedWallet });
       if (p.status !== 200) { setRun({ s: "failed", msg: MESSAGES[p.body.code] ?? "We couldn't prepare your launch. Try again." }); return; }
       setRun({ s: "running", stage: "checking" });
@@ -104,15 +122,23 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
     }
   };
 
+  const showBuy = rehearsal && (run.s === "running" && run.stage === "confirming" || run.s === "live");
   if (run.s === "idle") {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
+        {rehearsal && <RehearsalBanner />}
         <button type="button" className={buttonPrimary} disabled={!!blocker} onClick={launch}>Launch token</button>
         {blocker && <p className="text-sm text-muted-foreground">{BLOCKER_TEXT[blocker]}</p>}
       </div>
     );
   }
-  return <LaunchProgress run={run} onRetry={() => setRun({ s: "idle" })} />;
+  return (
+    <div className="space-y-3">
+      {rehearsal && <RehearsalBanner />}
+      <LaunchProgress run={run} onRetry={() => setRun({ s: "idle" })} />
+      {showBuy && <RehearsalBuy connectedWallet={connectedWallet} />}
+    </div>
+  );
 }
 
 function LaunchProgress({ run, onRetry }: { run: Exclude<Run, { s: "idle" }>; onRetry: () => void }) {

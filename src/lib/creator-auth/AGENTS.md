@@ -1,0 +1,3 @@
+# Creator auth rules
+
+- Creator auth: server-built SIWS-style message + single-use 5-min nonce (mcpx_auth_challenges, consumed atomically before signature check) → Ed25519 verify via WebCrypto → opaque session whose SHA-256 is stored in mcpx_creator_sessions, sent only as `__Host-mcpx_creator` HttpOnly Secure SameSite=Strict cookie; mutations require same-origin Origin + `x-mcpx-csrf: 1` + JSON. Logic in src/lib/creator-auth/core.ts (injectable store), persistence in store.server.ts. Management (/api/creator/products) re-checks session wallet == mcp_creations.creator_wallet every request; session cookies never authenticate MCP endpoints and bearer keys never authenticate management.

@@ -15,6 +15,8 @@ export interface LaunchPrepareContractV1 {
   uri: string;
   initialBuy: null | { mode: BuyMode; quoteAmount: string; slippageBps: number };
   format: TxFormat;
+  /** Set only by the server-side launch gate for the one-time SOL rehearsal. */
+  rehearsal?: "SOL";
 }
 
 export type BuilderStatus =
