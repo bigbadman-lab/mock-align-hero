@@ -32,8 +32,8 @@ describe("CREATOR_RECIPIENT_BINDING", () => {
   });
   it("refuses tampered candidates", () => {
     const x = { ...ctx, mint };
-    expect(checkCandidateBinding({ ...good, shareholders: [{ address: deployer, bps: 6000 }, good.shareholders[1], good.shareholders[2]] }, x)).toMatchObject({ code: "SHARES_MISMATCH" });
-    expect(checkCandidateBinding({ ...good, shareholders: [{ address: me, bps: 7000 }, good.shareholders[1], { address: plat, bps: 500 }] }, x)).toMatchObject({ code: "SHARES_MISMATCH" });
+    expect(checkCandidateBinding({ ...good, shareholders: [{ address: deployer, bps: 6000 }, good.shareholders[1]!, good.shareholders[2]!] }, x)).toMatchObject({ code: "SHARES_MISMATCH" });
+    expect(checkCandidateBinding({ ...good, shareholders: [{ address: me, bps: 7000 }, good.shareholders[1]!, { address: plat, bps: 500 }] }, x)).toMatchObject({ code: "SHARES_MISMATCH" });
     expect(checkCandidateBinding({ ...good, feePayer: k() }, x)).toMatchObject({ code: "FEE_PAYER_NOT_CREATOR" });
     expect(checkCandidateBinding({ ...good, signers: [k(), mint] }, x)).toMatchObject({ code: "SIGNERS_MISMATCH" });
     expect(checkCandidateBinding({ ...good, mint: k() }, x)).toMatchObject({ code: "MINT_MISMATCH" });
