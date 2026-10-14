@@ -8,6 +8,8 @@ const URL = process.env["MCPX_TEST_PG_URL"];
 const d = URL ? describe : describe.skip;
 const W = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const OTHER = "7EYnhQoR9YM3N7UoaKRoA44Uy8JeaZV3qyouov87awMs";
+const B = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const b58 = (n: number) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (x) => B[x % 58]).join("");
 const cfg = { catalogVersion: 1, steps: [{ capabilityId: "token.supply", version: 1 }, { capabilityId: "verify.account", version: 1, from: { step: 0, output: "largest_token_account" } }] };
 
 d("0024 Canvas products (real Postgres)", () => {
@@ -17,7 +19,7 @@ d("0024 Canvas products (real Postgres)", () => {
   const draft = async (wallet = W) => (await sql`insert into public.mcpx_launch_drafts (creator_wallet, create_key, revision, status, chain_status, template_id, template_version, settings, product_name, token_name, symbol, description, tool_description, canvas_config)
     values (${wallet}, ${"k" + crypto.randomUUID().replace(/-/g, "")}, 1, 'DRAFT', 'NOT_STARTED', 'canvas', 1, '{}', 'P', 'T', 'TT', 'd', '', ${sql.json(cfg)}) returning id, status`)[0];
   const creation = async (tpl: string, wallet = W) => (await sql`insert into public.mcp_creations (slug, template_id, template_version, display_name, ticker, description, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
-    values (${"s" + crypto.randomUUID().slice(0, 8)}, ${tpl}, 1, 'C', 'CC', 'd', ${wallet}, ${"M" + crypto.randomUUID().replace(/-/g, "")}, 'Q', 'solana-mainnet', ${"sig" + crypto.randomUUID()}, 1, now()) returning id`)[0].id;
+    values (${"s" + crypto.randomUUID().slice(0, 8)}, ${tpl}, 1, 'C', 'CC', 'd', ${wallet}, ${b58(44)}, ${b58(44)}, 'solana-mainnet', ${b58(88)}, 1, now()) returning id`)[0].id;
   const bind = async (c: string, dr: string, r = 1) => (await sql`select public.mcpx_canvas_bind(${c}, ${dr}, ${r}) v`)[0].v;
   const put = async (c: string, w: string, e: number) => (await sql`select public.mcpx_canvas_put_version(${c}, ${w}, ${sql.json(cfg)}, 1, ${e}) v`)[0].v;
 
