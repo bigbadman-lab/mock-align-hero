@@ -293,6 +293,58 @@ function Launch() {
   );
 }
 
+// Friendly review of everything the creator is about to sign. Same facts as draftSummary (kept for
+// the copy-to-clipboard text), presented as a card instead of a raw text dump.
+function ReviewCard({ draft, wallet, settings, artworkUrl }: { draft: Draft; wallet: string | null; settings: string[]; artworkUrl: string | null }) {
+  const t = LIBRARY.find((x) => x.id === draft.templateId);
+  const row = (k: string, v: React.ReactNode, mono = false) => (
+    <div className="flex items-start justify-between gap-4 px-4 py-2.5">
+      <dt className="shrink-0 text-sm text-subtle">{k}</dt>
+      <dd className={`min-w-0 break-words text-right text-sm text-foreground ${mono ? "font-mono text-xs" : ""}`}>{v}</dd>
+    </div>
+  );
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-4 border-b border-border bg-surface-2 p-4">
+        {artworkUrl
+          ? <img src={artworkUrl} alt="Token artwork" className="h-16 w-16 shrink-0 rounded-full border border-border object-cover" />
+          : <span aria-hidden className="grid h-16 w-16 shrink-0 place-items-center rounded-full border border-border bg-background font-mono text-lg text-primary">{draft.symbol.slice(0, 2)}</span>}
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold text-foreground">{draft.tokenName} <span className="font-mono text-sm font-normal text-primary">${draft.symbol}</span></p>
+          <p className="text-sm text-muted-foreground">{t ? `${t.name} template` : draft.templateName}{draft.link ? <> · <a href={draft.link} target="_blank" rel="noreferrer" className="text-primary underline">{draft.link.replace(/^https?:\/\//, "")}</a></> : null}</p>
+        </div>
+      </div>
+      <dl className="divide-y divide-border">
+        {row("Tool product", draft.productName)}
+        {draft.toolDescription && row("Tool description", draft.toolDescription)}
+        {row("Description", draft.description)}
+        {settings.map((s, i) => row(i === 0 ? "How the tool runs" : "", s))}
+        {draft.canvas && row("Canvas pipeline", draft.canvas.steps.map((s) => CAPABILITY_BY_ID[s.capabilityId]?.name ?? s.capabilityId).join(" → "))}
+        {row("Creator wallet", wallet ? `${wallet.slice(0, 4)}…${wallet.slice(-4)}` : "Not connected", true)}
+        <div className="px-4 py-2.5">
+          <dt className="text-sm text-subtle">Fee split <span className="text-xs">(fixed by MCPX)</span></dt>
+          <dd className="mt-2">
+            <div aria-hidden className="flex h-2 overflow-hidden rounded-full">
+              {FEE_SPLIT.map((f, i) => <span key={f.role} className={["bg-primary", "bg-primary/60", "bg-primary/35"][i]} style={{ width: `${f.bps / 100}%` }} />)}
+            </div>
+            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {FEE_SPLIT.map((f, i) => (
+                <li key={f.role} className="flex items-center gap-1.5">
+                  <span aria-hidden className={`h-2 w-2 rounded-sm ${["bg-primary", "bg-primary/60", "bg-primary/35"][i]}`} />
+                  <span className="font-mono text-foreground">{f.bps / 100}%</span> {f.role.toLowerCase()}
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+        {row("Initial buy", draft.initialBuy
+          ? `${draft.initialBuy.amountMcp} $MCP (max ${draft.initialBuy.slippageBps / 100}% slippage) — a separate purchase later, with your approval`
+          : "None")}
+      </dl>
+    </div>
+  );
+}
+
 function FieldError({ id, msg }: { id: string; msg?: string | undefined }) {
   return <span id={`${id}-err`} className="mt-1 block text-xs text-warning" aria-live="polite">{msg ?? ""}</span>;
 }
