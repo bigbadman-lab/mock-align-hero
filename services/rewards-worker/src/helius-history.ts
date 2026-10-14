@@ -1,3 +1,4 @@
+import { freshFetch } from "./fresh-fetch";
 // Phase 05-H — Helius (Developer plan) finalized history source for the holder index. READ-ONLY.
 // Completeness argument (per mint, up to a fixed finalized slot C):
 //  1. Every token account of a mint is created by an instruction that references the mint (InitializeAccount*/ATA create),
@@ -16,7 +17,7 @@ export type Rpc = (method: string, params: unknown[]) => Promise<any>;
 export function heliusRpc(url: string, meter: Meter): Rpc {
   return async (method, params) => {
     for (let attempt = 0; ; attempt++) {
-      const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" },
+      const r = await freshFetch(url, { method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(60_000) });
       if (r.status === 429 && attempt < 6) { await new Promise((s) => setTimeout(s, 500 * 2 ** attempt)); continue; }
       const j = (await r.json()) as { result?: any; error?: { message: string } };

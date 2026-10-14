@@ -65,13 +65,20 @@ async function finalizedBlockTime(rpc: string): Promise<number | null> {
   } catch { return null; } // unknown, never "zero"
 }
 
-/** Plain finalized JSON-RPC call (read-only). Errors throw; callers map them to UNKNOWN, never to zero. */
+/** Plain finalized JSON-RPC call (read-only). Errors throw; callers map them to UNKNOWN, never to zero.
+ *  Fresh connection per call (same stale keep-alive failure as the site bridge: first pass ok, then timeouts). */
 function rpcCall(rpc: string): RpcCall {
   return async (method, params) => {
-    const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(8000) });
-    const j = (await r.json()) as { result?: unknown; error?: { message?: string } };
-    if (!r.ok || j.error !== undefined) throw new Error(j.error?.message ?? "rpc_error");
-    return j.result;
+    try {
+      const r = await freshFetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(15_000) });
+      const j = (await r.json()) as { result?: unknown; error?: { message?: string } };
+      if (!r.ok || j.error !== undefined) throw new Error(j.error?.message ?? `rpc_http_${r.status}`);
+      return j.result;
+    } catch (e) {
+      // Never log the RPC URL (it carries the provider key).
+      log({ level: "warn", event: "rpc_failed", method, error: e instanceof Error ? `${e.name}:${e.message}`.slice(0, 160) : "unknown" });
+      throw e;
+    }
   };
 }
 
