@@ -47,7 +47,7 @@ function Home() {
 
       <section aria-labelledby="treasury" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="Treasury" title={<span id="treasury">Native $MCP rewards, in the open</span>} intro="Fees collected, five-minute reward windows and finalized holder payouts — verified data only." />
+          <SectionHeading label="Treasury" title={<span id="treasury">Every fee. Every reward. Fully transparent.</span>} intro="Track native $MCP creator fees, five-minute reward cycles and verified holder distributions — all in one place." />
           <div className="mt-10"><TreasuryModule /></div>
         </PageContainer>
       </section>
