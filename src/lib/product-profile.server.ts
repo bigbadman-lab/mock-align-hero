@@ -7,7 +7,7 @@ export const productionProfileDeps: ProfileDeps = {
   async getCreationBySlug(slug) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin.from("mcp_creations")
-      .select("id, slug, template_id, template_version, display_name, ticker, description, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at")
+      .select("id, slug, template_id, template_version, display_name, ticker, description, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at, pair_kind")
       .eq("slug", slug).limit(1).abortSignal(T()).maybeSingle();
     if (error) throw new Error("unavailable");
     return data;

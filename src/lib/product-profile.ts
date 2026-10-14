@@ -14,6 +14,8 @@ export interface ProfileCreationRow {
   id: string; slug: string; template_id: string; template_version: number; display_name: string; ticker: string;
   description: string; creator_wallet: string; child_mint: string; quote_mint: string; network: string;
   verified_tx_signature: string; verified_slot: number; verified_at: string;
+  /** 'SOL_REHEARSAL' marks a permanent pre-$MCP SOL-paired test product. */
+  pair_kind?: string | null;
 }
 export interface ProfileConfigRow {
   creation_id: string; template_id: string; template_version: string; tool_config: unknown;
@@ -32,6 +34,8 @@ export interface PublicProfile {
   templateId: string; templateName: string; engine: string | null; templateVersion: number;
   creatorWallet: string; childMint: string; quoteMint: string; network: string;
   verifiedTx: string; verifiedSlot: number; verifiedAt: string;
+  /** Permanent SOL rehearsal marker (not $MCP-paired). */
+  rehearsal: boolean;
   availability: Availability;
   tool: PublicTool | null;
   /** Present only when the product endpoint can actually serve this product. */
@@ -76,6 +80,7 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
       templateId: c.template_id, templateName: tpl?.name ?? c.template_id, engine: tpl?.engine ?? null, templateVersion: c.template_version,
       creatorWallet: c.creator_wallet, childMint: c.child_mint, quoteMint: c.quote_mint, network: c.network,
       verifiedTx: c.verified_tx_signature, verifiedSlot: c.verified_slot, verifiedAt: c.verified_at,
+      rehearsal: c.pair_kind === "SOL_REHEARSAL",
       availability, tool,
       endpoint: availability === "active" && tool ? PRODUCT_ENDPOINT_BASE + c.id : null,
     },
