@@ -29,6 +29,9 @@ describe("SOL rehearsal confirmation (Worker #3)", () => {
     expect(await runRehearsalVerifier(deps({}, log), a)).toEqual([{ claim: "c1", result: "registered:p1" }]);
     expect(log).toEqual(["register:c1:42"]);
   });
+  it("accepts Pump's default-pubkey quote for a native-SOL curve", () => {
+    expect(verifyRehearsalLaunch(claim, perm, tx(), chain({ curveQuoteMint: "11111111111111111111111111111111" }), a, sc).ok).toBe(true);
+  });
   it("only the claim matching the submitted permission is the rehearsal; unrelated SOL tokens never are", () => {
     expect(rehearsalClaimOf(perm, [{ ...claim, mint: k() }])).toBeNull();
     expect(rehearsalClaimOf(perm, [{ ...claim, creator: k() }])).toBeNull();
