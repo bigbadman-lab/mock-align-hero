@@ -123,3 +123,14 @@ describe("token scanner result formatting", () => {
     expect(supplyCheckText({ status: "not_applicable", slot: null, supplyRaw: null, matches: null }).tone).toBe("na");
   });
 });
+
+import { WEB_RUNNABLE } from "@/lib/product-run";
+import { hasWebInterface } from "@/components/mcpx/product-run";
+import { ADAPTERS } from "@/lib/mcp-gateway/registry";
+describe("interface coverage", () => {
+  it("every server-runnable template has a website interface and an MCP adapter; Canvas stays MCP-only", () => {
+    for (const t of WEB_RUNNABLE) { expect(hasWebInterface(t)).toBe(true); expect(ADAPTERS.some((a) => a.templateId === t)).toBe(true); }
+    expect(hasWebInterface("canvas")).toBe(false);
+    expect(WEB_RUNNABLE).toHaveLength(7);
+  });
+});
