@@ -12,7 +12,7 @@ export const LAUNCH_AUTH_FRESH_MS = 10 * 60_000;
 
 export type GateSession = { wallet: string; expiresAt: string } | null;
 export type GateConfig = { enabled: boolean; signingEnabled?: boolean; opsRecipient: string | null; platformRecipient: string | null; nativeDeployer: string | null };
-export type BuilderCall = (op: "prepare" | "inspect", body: unknown) => Promise<{ status: number; body: any }>;
+export type BuilderCall = (op: "prepare" | "inspect" | "prepare-buy" | "status", body: unknown) => Promise<{ status: number; body: any }>;
 /** Saved draft as owned by the session wallet (null = not theirs / missing). Metadata URI must exist. */
 export type GateDraft = { id: string; revision: number; templateId: string; name: string; symbol: string; uri: string | null };
 /** canonicalMint: the official $MCP mint from the site's rewards config (mcpx_rw_config.mint). Every child pairs with it;

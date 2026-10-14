@@ -2,7 +2,7 @@
 // Uses WebCrypto so it runs on workerd. The secret never leaves the server.
 import type { BuilderCall, GateConfig } from "./launch-gate";
 
-const SCOPE = { prepare: "launch.prepare", inspect: "launch.inspect" } as const;
+const SCOPE = { prepare: "launch.prepare", inspect: "launch.inspect", "prepare-buy": "launch.prepare_buy", status: "launch.status" } as const;
 const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const pk = (v: string | undefined) => (v && B58.test(v) ? v : null);
