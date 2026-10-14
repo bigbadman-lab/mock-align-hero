@@ -20,6 +20,20 @@ export default defineConfig({
   vite: {
     plugins: [
       {
+        // @solana/web3.js is browser-only here (wallet signing, operator preview). Its rpc-websockets
+        // dependency has no server-runtime export, so server builds get a stub that throws if ever called.
+        name: "mcpx-web3-client-only",
+        enforce: "pre",
+        resolveId(id: string) {
+          if (id === "@solana/web3.js" && this.environment?.name !== "client") return "\0mcpx-web3-stub";
+          return null;
+        },
+        load(id: string) {
+          if (id !== "\0mcpx-web3-stub") return null;
+          return 'const no = () => { throw new Error("@solana/web3.js is browser-only"); };\nexport const VersionedTransaction = { deserialize: no };\nexport const PublicKey = no; export const AddressLookupTableProgram = { createLookupTable: no, extendLookupTable: no };\nexport const TransactionMessage = no; export const TransactionInstruction = no;\nexport default {};';
+        },
+      },
+      {
         // Wallet SDK deps (safe-buffer, borsh, @solana/*) call require("buffer").Buffer at module init.
         // Without this, production client builds resolve "buffer" to an empty browser stub and crash.
         name: "mcpx-browser-buffer" /* also resolves events */,
