@@ -175,7 +175,7 @@ export const ADAPTERS: Record<string, TemplateAdapter> = {
   ...Object.fromEntries(AI_TOOLS.map((d): [string, TemplateAdapter] => [d.templateId, {
     templateId: d.templateId, version: "1.0.0", toolName: d.toolId, workerToolId: d.toolId, engine: "ai",
     title: `${d.name} (entertainment AI)`, description: `${d.description} Platform-funded; shared rate limits and AI spend caps apply.`,
-    inputSchema: d.inputSchema, ...noSettings,
+    inputSchema: d.inputSchema, ...noSettings, describeSettings: () => ["No product-level settings: every caller gets the same personality."],
     toWorkerPayload: (i) => JSON.stringify(i), // never sent to the Solana worker
     validOutput: (out) => isAiResult(out, d),
   }])),
