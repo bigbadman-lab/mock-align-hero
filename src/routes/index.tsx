@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PageContainer, SectionHeading, SectionLabel, InfoCard, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
-import { TEMPLATES, ENGINES } from "@/lib/templates";
+import { PageContainer, SectionHeading, SectionLabel, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
+import { ToolRail } from "@/components/mcpx/ToolRail";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
@@ -21,6 +21,12 @@ const FLOW = [
   { n: "02", t: "Configure it", d: "Set the name, details and pipeline. Saved as your draft.", s: "Available now", live: true },
   { n: "03", t: "Create the token", d: "A child token paired to $MCP, fees split 60/25/15.", s: "Not live yet", live: false },
   { n: "04", t: "Run it", d: "Use it on site or connect it from an MCP client.", s: "Available now", live: true },
+];
+
+const CAPS = [
+  { tag: "Build", t: "Build a tool that runs today", d: "Ten read-only Solana tools run live on site. Chain 2–4 of them into a Canvas pipeline that passes real addresses from one step to the next.", s: "Available now", live: true },
+  { tag: "Connect", t: "Plug it into any AI client", d: "Each tool exposes its own MCP endpoint, so MCP-compatible clients and agents can call it directly. Six are wired up today; the rest follow.", s: "6 of 10 live", live: true },
+  { tag: "Pair", t: "Pair it with a $MCP token", d: "Launch a tool with a child token paired to $MCP. Fees actually collected split 60% creator, 25% operations, 15% platform.", s: "Not live yet", live: false },
 ];
 
 function Home() {
@@ -76,29 +82,26 @@ function Home() {
             <SectionHeading label="Tool library" title={<span id="tpl">Ten live tools, plus Canvas</span>} intro="Read-only Solana tools you can run today, and Canvas to chain 2–4 of them into one pipeline." />
             <Link to="/mcp" className={buttonOutline}>View all templates</Link>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {ENGINES.map((e) => (
-              <div key={e.id} className="rounded-lg border border-border bg-card p-6">
-                <p className="label-mono text-primary">{e.id}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{e.blurb}</p>
-                <ul className="mt-4 space-y-1">
-                  {TEMPLATES.filter((t) => t.engine === e.id).map((t) => (
-                    <li key={t.id} className="font-mono text-sm text-foreground">{t.name}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <ToolRail />
         </PageContainer>
       </section>
 
       <section aria-labelledby="vision" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="Planned capability" title={<span id="vision">Useful in two places</span>} />
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <InfoCard label="On site" title="Run tools in the browser">Each created tool is intended to have a permanent profile page where anyone can use it.</InfoCard>
-            <InfoCard label="Via MCP" title="Use tools from AI clients">Each tool is intended to get its own MCP endpoint for MCP-compatible clients. Not available yet.</InfoCard>
+          <SectionHeading label="What you can build" title={<span id="vision">Build a live tool. Pair it. Plug it into AI.</span>} intro="Tools run on live Solana data today. Pairing one to a $MCP token is the last piece still in front of you." />
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {CAPS.map((c) => (
+              <div key={c.tag} className="flex flex-col rounded-lg border border-border bg-card p-6">
+                <p className="label-mono text-primary">{c.tag}</p>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">{c.t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.d}</p>
+                <span className={`label-mono mt-auto pt-6 inline-flex items-center gap-2 ${c.live ? "text-primary" : "text-warning"}`}>
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />{c.s}
+                </span>
+              </div>
+            ))}
           </div>
+          <p className="mt-4 text-xs text-subtle">Bring your own AI key to finish a Canvas pipeline with a summary — that step unlocks when your Canvas launches.</p>
         </PageContainer>
       </section>
 
