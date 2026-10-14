@@ -9,3 +9,4 @@
 
 - Child launch signing: browser mint key + wallet signTransaction; /api/creator/launch-submit re-runs gateVerify, checks byte-identical message + both Ed25519 sigs, files claim before broadcast; gated by MCPX_CHILD_LAUNCH_SIGNING=1 separately from MCPX_CHILD_LAUNCH_ENABLED — signing can never turn on by enabling preparation.
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.
+- Public launch assets are immutable, so /api/public/launch-assets/* serves from a per-isolate memory cache + edge cache before touching DB/storage — post-launch indexer bursts must never reach the database. The launch page shows "Token created" from the claim GET's on-chain signature status while Worker #3 registration is pending; "live" still requires a registered product.
