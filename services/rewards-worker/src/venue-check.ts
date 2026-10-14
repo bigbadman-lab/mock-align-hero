@@ -33,6 +33,8 @@ export function checkVenueTx(kind: "FEE_COLLECTION" | "BUYBACK", keys: readonly 
   const no = (reason: string) => ({ ok: false as const, reason });
   if (kind === "BUYBACK" && (!x.mint || !x.budgetLamports || x.budgetLamports <= 0n)) return no("BUYBACK_BOUNDS_UNSET");
   const meWsol = getAssociatedTokenAddressSync(new PublicKey(WSOL), new PublicKey(me), false, new PublicKey(TOK)).toBase58();
+  // PumpSwap creator vault authority: the SDK idempotently creates ITS WSOL ATA (payer = deployer) before collecting.
+  const vaultAuth = PublicKey.findProgramAddressSync([Buffer.from("creator_vault"), new PublicKey(me).toBuffer()], new PublicKey(PUMP_AMM))[0].toBase58();
   let cuLimit: number | null = null, cuPrice = 0, wrap = 0n, spend = 0n, collects = 0, buys = 0;
   let venue: VenueOk["venue"] = null;
   for (const ix of ixs) {
@@ -42,7 +44,9 @@ export function checkVenueTx(kind: "FEE_COLLECTION" | "BUYBACK", keys: readonly 
       else if (d[0] === 3 && d.length === 9) { const p = u64(d, 1); if (p > BigInt(x.maxCuPrice)) return no("CU_PRICE_TOO_HIGH"); cuPrice = Number(p); }
       else return no("COMPUTE_BUDGET_IX_NOT_ALLOWED");
     } else if (prog === ATA) {
-      if (d.length !== 1 || d[0] !== 1 || acc[0] !== me || acc[2] !== me || !(acc[3] === WSOL || (x.mint && acc[3] === x.mint))) return no("ATA_IX_NOT_ALLOWED");
+      const ownOk = acc[2] === me && (acc[3] === WSOL || (!!x.mint && acc[3] === x.mint));
+      const vaultOk = kind === "FEE_COLLECTION" && acc[2] === vaultAuth && acc[3] === WSOL;
+      if (d.length !== 1 || d[0] !== 1 || acc[0] !== me || !(ownOk || vaultOk)) return no("ATA_IX_NOT_ALLOWED");
     } else if (prog === SYS) {
       if (kind !== "BUYBACK") return no("SYSTEM_IX_NOT_ALLOWED");
       if (d.length !== 12 || u32(d, 0) !== 2 || acc[0] !== me || acc[1] !== meWsol) return no("SYSTEM_IX_NOT_WRAP_TO_OWN_WSOL");
