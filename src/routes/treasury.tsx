@@ -5,7 +5,7 @@ import { PageContainer, PageHeader, RouteError, SectionHeading, EmptyState } fro
 import { CopyText, DISCLAIMER, ModeBadge, Stat, Updated, WindowClock, explorer } from "@/components/mcpx/treasury/parts";
 import { childQuery, distributionsQuery, overviewQuery, windowsQuery } from "@/lib/treasury/queries";
 import { B58, CHILD_SPLIT, SPLIT, formatUnits, formatUsd, lamportsToSol, short, type DistributionRow } from "@/lib/treasury/core";
-import { useWallet } from "@/lib/wallet";
+import { useWallet } from "@/lib/wallet/context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/treasury")({

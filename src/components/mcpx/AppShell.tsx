@@ -10,6 +10,7 @@ export const NAV = [
   { to: "/mcp", label: "MCP" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/paired", label: "Paired" },
+  { to: "/treasury", label: "Treasury" },
   { to: "/docs", label: "Docs" },
   { to: "/launch", label: "Launch" },
 ] as const;
