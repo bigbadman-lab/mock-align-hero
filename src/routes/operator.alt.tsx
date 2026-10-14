@@ -1,10 +1,11 @@
-// Operator-only lookup-table preview. READ-ONLY: builds the two unsigned transactions for display; there is
-// no sign or send button in this phase. Data comes only from /api/operator/alt (deployer sign-in required).
+// Operator-only lookup-table creation. Transactions are built here, checked + simulated by the server, signed
+// only in the operator's wallet, then relayed. Data comes only from /api/operator/alt (deployer sign-in required).
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline } from "@/components/mcpx/primitives";
 import { useWallet } from "@/lib/wallet/context";
-import { ALT_AUTHORITY, type ExistingTable } from "@/lib/operator/alt-manifest";
+import { type ExistingTable } from "@/lib/operator/alt-manifest";
+import { SignPanel } from "@/components/mcpx/operator/AltSignPanel";
 
 export const Route = createFileRoute("/operator/alt")({
   head: () => ({
@@ -27,14 +28,12 @@ type Status = {
   balanceLamports?: number; rentLamports?: number; feeLamports?: number; finalizedSlot?: number; rpcError?: string;
   tables: ExistingTable[] | null; next: { step: string; table?: string };
 };
-type Preview = { table: string; createBytes: number; extendBytes: number; createIx: string; extendIx: string };
 
 const sol = (l?: number) => (l === undefined ? "—" : `${(l / 1e9).toFixed(6)} SOL`);
 
 function OperatorAlt() {
   const w = useWallet();
   const [st, setSt] = useState<{ s: "loading" } | { s: "forbidden" } | { s: "error" } | { s: "ok"; d: Status }>({ s: "loading" });
-  const [preview, setPreview] = useState<Preview | null>(null);
   useEffect(() => {
     fetch("/api/operator/alt", { credentials: "same-origin" }).then(async (r) => {
       if (r.status === 403) return setSt({ s: "forbidden" });
@@ -43,24 +42,10 @@ function OperatorAlt() {
     }, () => setSt({ s: "error" }));
   }, []);
 
-  // Unsigned preview only. The real slot/blockhash are taken again at signing time in the next phase.
-  useEffect(() => {
-    if (st.s !== "ok" || st.d.finalizedSlot === undefined || st.d.next.step !== "create") return;
-    void (async () => {
-      const web3 = await import("@solana/web3.js");
-      const auth = new web3.PublicKey(ALT_AUTHORITY);
-      const [createIx, table] = web3.AddressLookupTableProgram.createLookupTable({ authority: auth, payer: auth, recentSlot: st.d.finalizedSlot! });
-      const extendIx = web3.AddressLookupTableProgram.extendLookupTable({ lookupTable: table, authority: auth, payer: auth, addresses: st.d.entries.map((e) => new web3.PublicKey(e.address)) });
-      const bh = "11111111111111111111111111111111";
-      const size = (ix: InstanceType<typeof web3.TransactionInstruction>) => new web3.VersionedTransaction(new web3.TransactionMessage({ payerKey: auth, recentBlockhash: bh, instructions: [ix] }).compileToV0Message()).serialize().length;
-      setPreview({ table: table.toBase58(), createBytes: size(createIx), extendBytes: size(extendIx), createIx: `CreateLookupTable (authority + payer = deployer, recent slot ${st.d.finalizedSlot})`, extendIx: `ExtendLookupTable (+${st.d.entries.length} addresses)` });
-    })();
-  }, [st]);
-
   const connected = w.address ?? null;
   return (
     <>
-      <PageHeader label="Operator" title="Static lookup table" intro="Read-only preview. Nothing here can sign or send a transaction." className="py-8 sm:py-10" />
+      <PageHeader label="Operator" title="Static lookup table" intro="Create the MCPX lookup table from the deployer wallet. Each transaction needs your approval in the wallet." className="py-8 sm:py-10" />
       <PageContainer className="space-y-4 py-8">
         {st.s === "loading" && <p className="text-sm text-muted-foreground">Checking operator access…</p>}
         {st.s === "error" && <StatusMessage tone="warning" title="Couldn't load operator status. Try again." />}
@@ -92,16 +77,7 @@ function OperatorAlt() {
                 : <ul className="mt-2 space-y-1 font-mono text-xs">{st.d.tables.map((t) => <li key={t.address}>{t.address} · {t.entries} entries · {t.active ? "active" : "deactivated"} · {t.frozen ? "frozen" : "extendable"} · {t.hasAllStatic ? "has all 13" : "missing static entries"}</li>)}</ul>}
             </div>
 
-            {preview && (
-              <div className="rounded-lg border border-border bg-card p-4 text-sm">
-                <p className="text-foreground">Transactions (unsigned preview)</p>
-                <ol className="mt-2 space-y-1 text-muted-foreground">
-                  <li>1 · {preview.createIx} · {preview.createBytes} bytes</li>
-                  <li>2 · {preview.extendIx} · {preview.extendBytes} bytes</li>
-                </ol>
-                <p className="mt-2 font-mono text-xs text-subtle">Table address at this slot: {preview.table} (changes with the slot used at signing)</p>
-              </div>
-            )}
+            <SignPanel d={st.d} connected={connected} />
 
             <div className="overflow-x-auto rounded-lg border border-border bg-card">
               <table className="w-full text-left font-mono text-xs">
@@ -112,7 +88,6 @@ function OperatorAlt() {
               </table>
             </div>
 
-            <p className="rounded-md border border-border-strong p-3 text-sm text-muted-foreground">Preview mode. Wallet signing is not enabled in this phase.</p>
             <button type="button" className={buttonOutline} onClick={() => location.reload()}>Refresh</button>
           </>
         )}

@@ -20,7 +20,7 @@ export const STATIC_ALT_ENTRIES: readonly { address: string; role: string }[] = 
   { address: "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA", role: "PumpSwap AMM program" },
 ];
 
-export type ExistingTable = { address: string; entries: number; active: boolean; frozen: boolean; lastExtendedSlot: number; hasAllStatic: boolean };
+export type ExistingTable = { address: string; entries: number; active: boolean; frozen: boolean; lastExtendedSlot: number; hasAllStatic: boolean; addresses?: string[]; authority?: string | null };
 
 /** Resume rule: never create a second table while one owned by the authority exists. */
 export function nextAltStep(tables: ExistingTable[] | null): { step: "check_failed" | "create" | "extend" | "done" | "conflict"; table?: string } {

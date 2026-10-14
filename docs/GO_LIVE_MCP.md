@@ -36,3 +36,10 @@ Optional: `MCPX_SOLANA_RPC_URL` (private RPC for broadcasting; defaults to publi
 
 ## 5. Rehearsal
 One real child launch with a test token; confirm "Your token is live" appears and links to `/mcp/<slug>`.
+
+## Lookup table via browser wallet (/operator/alt)
+1. Sign in on the Dashboard with the deployer wallet (2ZrpSo3…), open /operator/alt.
+2. Transaction 1: "Prepare & simulate" → review details → "Approve in wallet" → wait for "finalized".
+3. Transaction 2 (page resumes automatically on the existing table): same three clicks.
+4. Verification panel must show PASS; record the shown `MCPX_LOOKUP_TABLE=` value for Builder #2.
+Server refuses a second create while any deployer table exists (confirmed) or the deployer sent anything in the last 3 minutes.
