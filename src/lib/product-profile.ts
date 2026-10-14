@@ -92,7 +92,8 @@ async function resolveInner(deps: ProfileDeps, rawSlug: string): Promise<Profile
   let imageUrl: string | null = null;
   try {
     const u = deps.getArtworkUrl ? await deps.getArtworkUrl(c.child_mint) : null;
-    imageUrl = u && /^https:\/\/(www\.)?mcpx\.fun\/api\/public\/launch-assets\/artwork\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(u) ? u : null;
+    imageUrl = u && (/^https:\/\/(www\.)?mcpx\.fun\/api\/public\/launch-assets\/artwork\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(u)
+      || /^https:\/\/[a-z0-9-]+\.mypinata\.cloud\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{20,100})$/.test(u)) ? u : null;
   } catch { imageUrl = null; }
   const result: ProfileResult = {
     status: "ok",
