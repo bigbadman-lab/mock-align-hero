@@ -1,7 +1,7 @@
 // Public product profile contract (pure logic; data sources are injected so tests use fixtures only).
 // Only allowlisted, evidence-backed fields leave the server. Raw tool_config, keys, audit events never do.
 import * as z from "zod/v4";
-import { adapterExact } from "@/lib/mcp-gateway/registry";
+import { adapterExact, type ProductSettings, type TemplateAdapter } from "@/lib/mcp-gateway/registry";
 import { TEMPLATES } from "@/lib/templates";
 
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
