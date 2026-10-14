@@ -1,15 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { PageContainer, PageHeader, FeatureAvailability, RouteError } from "@/components/mcpx/primitives";
-import { TEMPLATES } from "@/lib/templates";
+import { LIBRARY } from "@/lib/templates";
 
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
       { title: "Docs — MCPX" },
-      { name: "description", content: "Accurate documentation of the planned MCPX product and its current phase." },
+      { name: "description", content: "How MCPX works today: the tool library, Canvas, creator sign-in, MCP endpoints, launches, fees and $MCP rewards." },
       { property: "og:title", content: "Docs — MCPX" },
-      { property: "og:description", content: "What MCPX is, how templates, launches, fees and rewards are intended to work." },
+      { property: "og:description", content: "What is live on MCPX today, and how launches, fee splits and $MCP holder rewards are designed to work." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Docs,
@@ -18,12 +20,13 @@ export const Route = createFileRoute("/docs")({
 
 const TOC = [
   ["what", "What is MCPX?"],
-  ["templates", "Templates & execution"],
+  ["tools", "Tool library"],
+  ["canvas", "Canvas"],
+  ["signin", "Creator sign-in"],
+  ["endpoints", "MCP endpoints"],
   ["launch-flow", "Launch flow"],
-  ["tokens", "Token relationships"],
-  ["fees", "Creator fee split"],
-  ["rewards", "$MCP rewards concept"],
-  ["endpoints", "MCP endpoint model"],
+  ["fees", "Child token fees"],
+  ["rewards", "$MCP holder rewards"],
   ["status", "Current availability"],
 ] as const;
 
@@ -32,17 +35,22 @@ function Doc({ id, title, planned, children }: { id: string; title: string; plan
     <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-b border-border pb-12">
       <div className="flex flex-wrap items-center gap-3">
         <h2 id={`${id}-h`} className="text-2xl font-semibold tracking-tight">{title}</h2>
-        {planned && <FeatureAvailability>Design intent · not live</FeatureAvailability>}
+        {planned && <FeatureAvailability>Not live yet</FeatureAvailability>}
       </div>
       <div className="mt-4 space-y-4 text-base leading-relaxed text-muted-foreground">{children}</div>
     </section>
   );
 }
 
+const Code = ({ children }: { children: string }) => (
+  <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">{children}</pre>
+);
+
 function Docs() {
+  const tools = LIBRARY.filter((t) => t.id !== "canvas");
   return (
     <>
-      <PageHeader label="Documentation" title="MCPX docs" intro="Sections marked “design intent” describe planned behaviour, not functionality you can use today." />
+      <PageHeader label="Documentation" title="MCPX docs" intro="What you can use today, and how the parts marked “Not live yet” are designed to work." />
       <PageContainer className="grid gap-12 py-16 lg:grid-cols-[200px_1fr]">
         <nav aria-label="Docs sections" className="lg:sticky lg:top-24 lg:self-start">
           <p className="label-mono mb-3 text-subtle">On this page</p>
@@ -54,53 +62,68 @@ function Docs() {
         </nav>
         <div className="min-w-0 max-w-3xl space-y-12">
           <Doc id="what" title="What is MCPX?">
-            <p>MCPX is being built as a platform where each token powers a real tool. A creator picks a template, configures it and launches a child token paired to native $MCP. The tool then reads Solana data for anyone who uses it.</p>
+            <p>MCPX is a platform for MCP tools on Solana. Anyone can run the tools on this site today. Creators will be able to launch a child token paired to $MCP, the native MCPX token, and each child token comes with its own working MCP tool that AI assistants can connect to.</p>
           </Doc>
-          <Doc id="templates" title="Templates and on-demand execution" planned>
-            <p>Six templates are defined across three engines. Every tool is planned to run on demand, when someone asks. There is no continuous monitoring or autonomous alerting.</p>
+
+          <Doc id="tools" title="Tool library">
+            <p>Ten read-only tools run on real Solana data. Each runs only when you ask: there is no background monitoring or alerting, and no tool can sign or send anything. Each visitor gets 3 free tests per tool per day.</p>
             <ul className="divide-y divide-border rounded-lg border border-border">
-              {TEMPLATES.map((t) => (
+              {tools.map((t) => (
                 <li key={t.id} className="p-4">
-                  <p className="text-foreground"><span className="label-mono mr-2 text-primary">{t.engine}</span>{t.name}</p>
-                  <p className="mt-1 text-sm">{t.purpose} {t.details.join(" ")}</p>
+                  <p className="text-foreground"><span className="label-mono mr-2 text-primary">{t.category}</span>{t.route ? <a href={t.route} className="hover:underline">{t.name}</a> : t.name}</p>
+                  <p className="mt-1 text-sm">{t.benefit}</p>
                 </li>
               ))}
             </ul>
           </Doc>
-          <Doc id="launch-flow" title="How the launch flow is intended to work" planned>
-            <p>The builder collects a template, name, ticker, artwork, mission, presets, display style and an optional initial buy in $MCP. One successful launch is meant to produce one verifiable token, one tool configuration, one MCP endpoint and one permanent profile.</p>
+
+          <Doc id="canvas" title="Canvas">
+            <p>Canvas is Template 11. It chains 2–4 compatible tools into one fixed-order pipeline, passing an address from one step to the next only through approved connections. No custom code or outside web addresses are allowed.</p>
+            <p>Signed-in creators can configure Canvas inside the launch form, save and reopen drafts, and run test runs on the real tools. Canvas is not a standalone product: it becomes a public MCP tool only after its child token launch is verified onchain. An optional AI summary step can use the creator's own OpenAI key.</p>
           </Doc>
-          <Doc id="tokens" title="Token relationships" planned>
-            <p>$MCP is the native MCPX token. Each tool's child token is intended to be quoted in $MCP rather than SOL, through a custom pairing. $MCP has not been minted, and no contract address exists.</p>
+
+          <Doc id="signin" title="Creator sign-in">
+            <p>Connecting a wallet only shows your public address. To use creator features, you sign in on the Dashboard by signing a readable message with your wallet. This is a message, not a transaction: it costs nothing and moves no funds. The session lasts up to 24 hours.</p>
+            <p>Only the wallet recorded as a product's verified onchain creator can manage that product.</p>
           </Doc>
-          <Doc id="fees" title="Planned creator fee split" planned>
-            <p>Each child token's eligible, actually collected creator fees are planned to be split:</p>
+
+          <Doc id="endpoints" title="MCP endpoints">
+            <p><span className="text-foreground">Platform test endpoint (invite-only):</span> a working MCP server that proves external AI clients can call MCPX tools. It needs a private access key issued by the MCPX team and shares the website's rate limits.</p>
+            <Code>{`https://mcpx.fun/api/public/mcp/platform-demo
+Authorization: Bearer <key issued by MCPX>`}</Code>
+            <p><span className="text-foreground">Product endpoints:</span> each launched product gets its own endpoint, shown on its product page only once the product is active.</p>
+            <Code>{"https://mcpx.fun/api/public/mcp/products/{product-id}"}</Code>
+            <p>Each product uses its own secret key, added once in your MCP client's settings as an <code className="font-mono">Authorization: Bearer</code> header. A key works only for its own product, can be revoked or replaced, and is shown once only; a lost key can be replaced but not recovered. No products have launched yet, so no product endpoint is accepting connections today.</p>
+          </Doc>
+
+          <Doc id="launch-flow" title="Launch flow" planned>
+            <p>The launch form collects a template, name, ticker, artwork, description, settings and an optional first buy by the creator, entered in $MCP. Signed-in creators can fill it in and save drafts today. One successful launch creates one child token, one tool configuration, one MCP endpoint and one permanent product page. A draft is only marked as launched after the token creation is verified onchain.</p>
+            <p>Traders buy child tokens with SOL; each child token is paired to $MCP.</p>
+          </Doc>
+
+          <Doc id="fees" title="Child token fee split" planned>
+            <p>Creator fees actually collected on each child token are split:</p>
             <ul className="grid gap-2 sm:grid-cols-3">
-              {[["60%", "Creator"], ["25%", "Tool operations"], ["15%", "Platform"]].map(([p, l]) => (
+              {[["60%", "Creator"], ["25%", "Tool operations"], ["15%", "MCPX platform"]].map(([p, l]) => (
                 <li key={l} className="rounded-md border border-border bg-card p-4"><span className="font-mono text-xl text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
               ))}
             </ul>
-            <p>These are shares of fees actually collected, not a fee rate or a share of trading volume. The split is subject to final onchain verification before any launch.</p>
+            <p>These are shares of fees actually collected, not a fee rate or a share of trading volume. The split is locked onchain at launch.</p>
           </Doc>
-          <Doc id="rewards" title="Native $MCP rewards concept" planned>
-            <p>Of the creator fees actually collected on $MCP itself, 60% is planned for holders and 40% for the protocol. The holder portion would be split equally between SOL payouts and $MCP bought with SOL.</p>
-            <p>This is not live. There is no APY and no guaranteed return.</p>
+
+          <Doc id="rewards" title="$MCP holder rewards" planned>
+            <p>Creator fees actually collected on $MCP itself are split:</p>
+            <ul className="grid gap-2 sm:grid-cols-3">
+              {[["30%", "Holders, paid in SOL"], ["30%", "$MCP buybacks, distributed to holders"], ["40%", "Operations"]].map(([p, l]) => (
+                <li key={l} className="rounded-md border border-border bg-card p-4"><span className="font-mono text-xl text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
+              ))}
+            </ul>
+            <p>Rewards are processed in five-minute cycles, and only payouts confirmed onchain appear on the <Link to="/treasury" className="text-foreground hover:underline">Treasury</Link> page. Bought-back $MCP goes to eligible holders; it is not burned or held. There is no APY and no guaranteed return.</p>
           </Doc>
-          <Doc id="endpoints" title="MCP endpoint model">
-            <p><span className="text-foreground">Platform test endpoint (invite-only):</span> a real MCP server (Streamable HTTP, stateless) used to prove external clients can call Wallet Inspector. It needs a private access token issued by the MCPX team; there is no public access and no token is published here.</p>
-            <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">{`https://mcpx.fun/api/public/mcp/platform-demo
-Authorization: Bearer <token issued by MCPX>
-Tool: wallet_inspector  { "address": "<Solana public address>" }`}</pre>
-            <p>This is a platform test endpoint, not a user-created product. It shares the website's rate limits.</p>
-            <p><span className="text-foreground">Terms:</span> a <em>template</em> is one of the tool designs listed on this site. A <em>created product</em> is a template launched by a creator and independently verified on-chain; its permanent ID never changes. A <em>product page</em> is the human-readable page for that product. An <em>MCP endpoint</em> is the address an AI assistant connects to — each product exposes exactly one tool with its own fixed settings.</p>
-            <p><span className="text-foreground">Planned per-product endpoints:</span> each created product is planned to have its own endpoint in this form. These are not available; nothing responds at this address today, and there are currently zero created products.</p>
-            <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">https://mcp.mcpx.fun/{"{creation-id}"}/mcp</pre>
-            <p><span className="text-foreground">Planned access keys:</span> each product will use its own secret key, entered once in your MCP client's server settings as an <code className="font-mono">Authorization: Bearer</code> header. A key works only for the one product it was issued for — never for other products or the platform test endpoint. Keys can expire and can be revoked or replaced; a revoked key stops working on the next request. MCPX stores only a protected fingerprint, so a lost key cannot be recovered, only replaced. This is manual key setup, not the automatic sign-in (OAuth) some MCP clients support.</p>
-            <p>No keys have been issued and there are no created products, so no product endpoint accepts connections today. Creators can sign in on the Dashboard by signing a readable message with their wallet (not a transaction); the session lasts up to 24 hours and ends if the wallet disconnects or changes. Only the wallet recorded as a product's verified on-chain creator can manage that product's keys, and a new key is shown once only. Six templates are implemented; ten are planned before public launches.</p>
-          </Doc>
+
           <Doc id="status" title="Current availability">
-            <p><span className="text-foreground">Available now:</span> this website, the six template definitions, this documentation, Solana wallet connection (shows your public address only — not a sign-in, nothing is signed), and a read-only registry of verified creations shown on the Paired page.</p>
-            <p><span className="text-foreground">Not available:</span> token launching, public or per-product MCP endpoints, market listings, creator earnings and $MCP rewards.</p>
+            <p><span className="text-foreground">Available now:</span> the ten read-only tools, Canvas setup with saved drafts and test runs, wallet connection, creator sign-in, launch drafts, the invite-only platform test endpoint, and the Treasury page.</p>
+            <p><span className="text-foreground">Not live yet:</span> $MCP has not been minted and has no contract address. Token launches, product endpoints, creator earnings and $MCP holder rewards start once $MCP launches.</p>
           </Doc>
         </div>
       </PageContainer>
