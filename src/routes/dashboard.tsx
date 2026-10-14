@@ -42,32 +42,33 @@ export function Dashboard() {
       <PageHeader
         label="Account"
         title="Dashboard"
+        className="py-8 sm:py-10"
         intro={signedIn
           ? "Your signed-in wallet. Creations, earnings, rewards and tool activity will appear here once they exist."
           : "Sign in with your wallet to open your dashboard."}
       />
-      <PageContainer className="space-y-8 py-16">
+      <PageContainer className="space-y-4 py-8">
         <WalletPanel />
         <CreatorSignIn onSessionChange={onSessionChange} />
 
         {signedIn ? (
           <>
             <CanvasWorkspace />
-            <section aria-labelledby="d-creations" className="rounded-lg border border-border bg-card p-6">
+            <section aria-labelledby="d-creations" className="rounded-lg border border-border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="d-creations" className="text-sm font-semibold">Verified MCP creations</h2>
                 <FeatureAvailability>Public registry only</FeatureAvailability>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Creations linked to your wallet are not shown here yet. All verified creations are listed publicly on the Paired page.
               </p>
-              <Link to="/paired" className={`${buttonOutline} mt-4`}>Open the verified registry</Link>
+              <Link to="/paired" className={`${buttonOutline} mt-3`}>Open the verified registry</Link>
             </section>
             <section aria-labelledby="d-later" className="rounded-lg border border-border bg-card">
-              <h2 id="d-later" className="border-b border-border px-6 py-4 text-sm font-semibold">Coming in later phases</h2>
+              <h2 id="d-later" className="border-b border-border px-4 py-3 text-sm font-semibold">Coming in later phases</h2>
               <ul>
                 {UNAVAILABLE.map((s) => (
-                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4 last:border-0">
+                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0">
                     <div>
                       <p className="text-sm text-foreground">{s.title}</p>
                       <p className="text-sm text-muted-foreground">{s.reason}</p>
@@ -79,15 +80,15 @@ export function Dashboard() {
             </section>
           </>
         ) : (
-          <section aria-labelledby="d-locked" className="rounded-lg border border-border bg-card p-6">
+          <section aria-labelledby="d-locked" className="rounded-lg border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 id="d-locked" className="text-sm font-semibold">Your dashboard areas</h2>
               <FeatureAvailability>Sign-in required</FeatureAvailability>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               These open once you're signed in with your wallet. Some are still being built and will show their status plainly when they do.
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li>Canvas workspace — edit the pipeline of your launched Canvas products</li>
               <li>Verified MCP creations — products linked to your wallet</li>
               <li>Creator earnings, native rewards and tool activity</li>
