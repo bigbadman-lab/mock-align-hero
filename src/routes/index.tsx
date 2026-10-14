@@ -38,8 +38,8 @@ function Home() {
               Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders — 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link to="/mcp" className={buttonPrimary}>Explore MCP templates</Link>
-              <Link to="/docs" className={buttonOutline}>Read the docs</Link>
+              <Link to="/dashboard" className={buttonPrimary}>My Rewards</Link>
+              <Link to="/mcp" className={buttonOutline}>MCP Library</Link>
             </div>
           </div>
         </PageContainer>
