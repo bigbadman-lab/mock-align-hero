@@ -20,6 +20,16 @@ const STATUS = {
 } as const;
 
 export function CapabilityRow({ t }: { t: LibraryTemplate }) {
+  if (t.id === "canvas") {
+    // Template 11: builder + dry runs are live; its MCP product exists only after a verified child-token launch.
+    return (
+      <dl className="grid grid-cols-3 gap-2 text-center">
+        <Capability label="Builder" value={<span className="text-primary">Available</span>} on />
+        <Capability label="MCP" value="After launch" />
+        <Capability label="Launch" value="Draft" on />
+      </dl>
+    );
+  }
   return (
     <dl className="grid grid-cols-3 gap-2 text-center">
       <Capability label="Run" value={t.toolId ? <ExecutionState toolId={t.toolId} /> : "Not built"} />
@@ -31,7 +41,7 @@ export function CapabilityRow({ t }: { t: LibraryTemplate }) {
 
 /** Shown only for templates the launch form accepts; the link carries the canonical id. */
 export function LaunchLink({ t }: { t: LibraryTemplate }) {
-  if (!t.tokenLaunch) return null;
+  if (!t.tokenLaunch || t.id === "canvas") return null;
   return (
     <Link to="/launch" search={{ template: t.id }} className="text-sm text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary">
       Launch with token<span className="sr-only">: {t.name}</span>
@@ -40,6 +50,13 @@ export function LaunchLink({ t }: { t: LibraryTemplate }) {
 }
 
 export function TemplateAction({ t }: { t: LibraryTemplate }) {
+  if (t.id === "canvas") {
+    return (
+      <Link to="/launch" search={{ template: "canvas" }} className="inline-flex min-h-10 items-center rounded-md border border-border-strong px-4 text-sm text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        Configure Canvas <span aria-hidden className="ml-2">→</span>
+      </Link>
+    );
+  }
   return t.route && t.toolId ? <ToolAction t={t} toolId={t.toolId} route={t.route} /> : <span className="font-mono text-xs text-subtle">Not available yet — no tool to run</span>;
 }
 
