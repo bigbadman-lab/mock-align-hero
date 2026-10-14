@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageContainer, SectionHeading, SectionLabel, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
 import { ToolRail } from "@/components/mcpx/ToolRail";
-import { LiveFlow, ChildFlow } from "@/components/mcpx/LiveFlow";
+import { FlowToggle } from "@/components/mcpx/LiveFlow";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
@@ -55,8 +55,7 @@ function Home() {
       <section aria-labelledby="status" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Live flow" title={<span id="status">From every trade to every holder</span>} intro="Fees collected from native $MCP trades flow into MCPX, then out to eligible wallets in SOL and bought-back $MCP." />
-          <div className="mt-8"><LiveFlow /></div>
-          <div className="mt-6"><ChildFlow /></div>
+          <div className="mt-8"><FlowToggle /></div>
         </PageContainer>
       </section>
 

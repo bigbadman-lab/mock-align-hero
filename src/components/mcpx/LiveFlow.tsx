@@ -1,3 +1,4 @@
+import { useState } from "react";
 import logo from "@/assets/mcp-monitor-logo.png.asset.json";
 
 type Node = { x: number; y: number; label: string; sub: string };
@@ -161,6 +162,40 @@ export function ChildFlow() {
           ))}
         </svg>
       </div>
+    </div>
+  );
+}
+
+const TABS = [
+  { id: "native", label: "$MCP flow" },
+  { id: "child", label: "Child token flow" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+/** Toggles between the native $MCP fee flow and the child-token fee flow. */
+export function FlowToggle() {
+  const [tab, setTab] = useState<TabId>("native");
+  return (
+    <div>
+      <div role="tablist" aria-label="Fee flow type" className="mb-6 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-card/60 p-1">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={`label-mono rounded-md px-4 py-2 transition-colors ${
+              tab === t.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === "native" ? <LiveFlow /> : <ChildFlow />}
     </div>
   );
 }
