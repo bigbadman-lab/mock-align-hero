@@ -6,6 +6,7 @@ import { ADAPTERS } from "@/lib/mcp-gateway/registry";
 import { WW_THRESHOLDS, WW_DEFAULT_THRESHOLD } from "@/lib/tools/whale-watch";
 import { useWallet } from "@/lib/wallet/context";
 import { shortAddress } from "@/lib/wallet/state";
+import { useCreatorSession } from "@/lib/creator-auth/use-creator-session";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
 import type { ReadinessItem, ReadyState } from "@/lib/launch/readiness";
 import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
@@ -50,23 +51,6 @@ function settingsText(templateId: string, settings: Record<string, string>) {
   return a.describeSettings(settings);
 }
 
-function useCreatorSession() {
-  const [s, setS] = useState<"checking" | "signed_in" | "signed_out" | "unavailable">("checking");
-  const [wallet, setWallet] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
-    fetch("/api/auth/session", { credentials: "same-origin" })
-      .then(async (r) => {
-        if (!live) return;
-        if (!r.ok) return setS("unavailable");
-        const b = (await r.json()) as { signedIn?: boolean; wallet?: string };
-        if (b.signedIn && b.wallet) { setWallet(b.wallet); setS("signed_in"); } else setS("signed_out");
-      })
-      .catch(() => live && setS("unavailable"));
-    return () => { live = false; };
-  }, []);
-  return { s, wallet };
-}
 
 function Launch() {
   const readiness = Route.useLoaderData();

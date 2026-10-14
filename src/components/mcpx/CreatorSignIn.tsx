@@ -18,40 +18,54 @@ const post = (url: string, body: unknown) =>
   fetch(url, { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json", "x-mcpx-csrf": "1" }, body: JSON.stringify(body) });
 const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
 
-export function CreatorSignIn() {
+export function CreatorSignIn({ onSessionChange }: { onSessionChange?: (signedIn: boolean) => void }) {
   const w = useWallet();
   const [s, setS] = useState<State>({ kind: "checking" });
   const signedWallet = s.kind === "signed_in" ? s.wallet : null;
 
+  // Report the settled session state upward so gated pages (e.g. the dashboard) can react
+  // without polling. Only fires when the signed-in answer actually changes.
+  const notify = useRef(onSessionChange);
+  notify.current = onSessionChange;
+  const lastTold = useRef<boolean | null>(null);
+  const set = useCallback((next: State) => {
+    setS(next);
+    if (next.kind === "checking" || next.kind === "pending") return;
+    const signed = next.kind === "signed_in";
+    if (lastTold.current === signed) return;
+    lastTold.current = signed;
+    notify.current?.(signed);
+  }, []);
+
   const loadProducts = useCallback(async (wallet: string, expiresAt: string) => {
     try {
       const r = await fetch("/api/creator/products", { credentials: "same-origin" });
-      if (r.status === 401) return setS({ kind: "signed_out", note: "Your session ended. Sign in again to continue." });
+      if (r.status === 401) return set({ kind: "signed_out", note: "Your session ended. Sign in again to continue." });
       const b = (await r.json()) as { products?: Product[] };
-      setS({ kind: "signed_in", wallet, expiresAt, products: r.ok ? b.products ?? [] : null, productsError: !r.ok });
+      set({ kind: "signed_in", wallet, expiresAt, products: r.ok ? b.products ?? [] : null, productsError: !r.ok });
     } catch {
-      setS({ kind: "signed_in", wallet, expiresAt, products: null, productsError: true });
+      set({ kind: "signed_in", wallet, expiresAt, products: null, productsError: true });
     }
-  }, []);
+  }, [set]);
 
   useEffect(() => {
     let live = true;
     fetch("/api/auth/session", { credentials: "same-origin" })
       .then(async (r) => {
         if (!live) return;
-        if (!r.ok) return setS({ kind: "unavailable" });
+        if (!r.ok) return set({ kind: "unavailable" });
         const b = (await r.json()) as { signedIn: boolean; wallet?: string; expiresAt?: string };
         if (b.signedIn && b.wallet && b.expiresAt) void loadProducts(b.wallet, b.expiresAt);
-        else setS({ kind: "signed_out" });
+        else set({ kind: "signed_out" });
       })
-      .catch(() => live && setS({ kind: "unavailable" }));
+      .catch(() => live && set({ kind: "unavailable" }));
     return () => { live = false; };
-  }, [loadProducts]);
+  }, [loadProducts, set]);
 
   const signOut = useCallback(async (note?: string) => {
-    setS({ kind: "signed_out", ...(note ? { note } : {}) }); // clear UI immediately
+    set({ kind: "signed_out", ...(note ? { note } : {}) }); // clear UI immediately
     await post("/api/auth/session", { action: "sign_out" }).catch(() => {});
-  }, []);
+  }, [set]);
 
   // Wallet disconnected, switched account or left mainnet → end the creator session.
   const lastWallet = useRef<string | null>(null);
@@ -68,13 +82,13 @@ export function CreatorSignIn() {
   async function signIn() {
     if (w.status !== "connected_mainnet" || !w.address || !w.signMessage) return;
     const address = w.address;
-    setS({ kind: "pending", step: "Requesting a sign-in message…" });
+    set({ kind: "pending", step: "Requesting a sign-in message…" });
     try {
       const c = await post("/api/auth/challenge", { address });
-      if (c.status === 429) return setS({ kind: "signed_out", note: "Too many attempts. Wait a minute and try again." });
-      if (!c.ok) return setS({ kind: c.status >= 500 ? "unavailable" : "signed_out", note: "Couldn't start sign-in." });
+      if (c.status === 429) return set({ kind: "signed_out", note: "Too many attempts. Wait a minute and try again." });
+      if (!c.ok) return set({ kind: c.status >= 500 ? "unavailable" : "signed_out", note: "Couldn't start sign-in." });
       const { nonce, message } = (await c.json()) as { nonce: string; message: string };
-      setS({ kind: "pending", step: "Approve the message in your wallet. It is not a transaction." });
+      set({ kind: "pending", step: "Approve the message in your wallet. It is not a transaction." });
       let sig: Uint8Array;
       try {
         sig = await w.signMessage(new TextEncoder().encode(message));
@@ -84,17 +98,17 @@ export function CreatorSignIn() {
         console.warn("[mcpx] wallet signMessage failed", { code, msg, e });
         const unsupported = msg === "unsupported_wallet";
         const declined = code === 4001 || /reject|declin|denied|cancel/i.test(msg);
-        return setS({ kind: "signed_out", note: unsupported ? "This wallet can't sign messages. Try another wallet."
+        return set({ kind: "signed_out", note: unsupported ? "This wallet can't sign messages. Try another wallet."
           : declined ? "You declined the signature. Nothing was signed in."
           : `The wallet couldn't show the sign-in request (${msg.slice(0, 120)}). Nothing was signed in.` });
       }
-      setS({ kind: "pending", step: "Checking signature…" });
+      set({ kind: "pending", step: "Checking signature…" });
       const v = await post("/api/auth/verify", { address, nonce, signature: b64(sig) });
-      if (!v.ok) return setS({ kind: v.status >= 500 ? "unavailable" : "signed_out", note: "Sign-in failed. Please try again." });
+      if (!v.ok) return set({ kind: v.status >= 500 ? "unavailable" : "signed_out", note: "Sign-in failed. Please try again." });
       const b = (await v.json()) as { wallet: string; expiresAt: string };
       await loadProducts(b.wallet, b.expiresAt);
     } catch {
-      setS({ kind: "unavailable" });
+      set({ kind: "unavailable" });
     }
   }
 
@@ -125,7 +139,7 @@ export function CreatorSignIn() {
             <p className="text-foreground">Signed in as <span className="font-mono">{shortAddress(s.wallet)}</span> until {new Date(s.expiresAt).toLocaleString()}.</p>
             {s.productsError ? <p>Couldn't load your products. Try again later.</p>
               : s.products && s.products.length === 0 ? <p>No verified MCPX products to manage.</p>
-              : <ul className="space-y-3">{s.products?.map((p) => <ProductKeys key={`${s.wallet}:${p.creationId}`} creationId={p.creationId} displayName={p.displayName} onSessionEnded={() => setS({ kind: "signed_out", note: "Your session ended. Sign in again to continue." })} />)}</ul>}
+              : <ul className="space-y-3">{s.products?.map((p) => <ProductKeys key={`${s.wallet}:${p.creationId}`} creationId={p.creationId} displayName={p.displayName} onSessionEnded={() => set({ kind: "signed_out", note: "Your session ended. Sign in again to continue." })} />)}</ul>}
             <button type="button" onClick={() => void signOut()} className={buttonOutline}>Sign out</button>
           </>
         )}

@@ -42,3 +42,5 @@
   - [x] Footer: tighter links + user mission statement replaces status note
 - [x] Child token flow: traders buy with SOL (not $MCP)
 - [x] MCP page header: heading 'Explore the MCP Tool Library' + new intro copy
+- [x] Dashboard: workspace areas hidden until a signed-in wallet session (verified signed-out + signed-in live)
+- [ ] Docs page: "optional initial buy in $MCP" — confirm whether it should say SOL (awaiting user)
