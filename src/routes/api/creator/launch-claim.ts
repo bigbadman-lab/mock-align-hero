@@ -12,6 +12,27 @@ const B58 = (min: number, max: number) => new RegExp(`^[1-9A-HJ-NP-Za-km-z]{${mi
 export const Route = createFileRoute("/api/creator/launch-claim")({
   server: {
     handlers: {
+      // Status of one of the signed-in creator's own claims; a product slug appears only once verified.
+      GET: async ({ request }) => {
+        const id = new URL(request.url).searchParams.get("id") ?? "";
+        if (!UUID.test(id)) return reply(400, { error: "invalid_input" });
+        if (process.env["MCPX_LAUNCH_VERIFIER"] !== "1") return reply(503, { error: "launch_verifier_not_enabled" });
+        try {
+          const s = await currentSession(authStore, request);
+          if (!s) return reply(401, { error: "unauthorized" });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const db: any = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+          const { data: c, error } = await db.from("mcpx_cf_launch_claims").select("status, mint, creation_id").eq("id", id).eq("creator_wallet", s.wallet).maybeSingle();
+          if (error) return reply(503, { error: "unavailable" });
+          if (!c) return reply(404, { error: "not_found" });
+          let slug: string | null = null;
+          if (c.status === "VERIFIED" && c.creation_id) {
+            const p = await db.from("mcp_creations").select("slug").eq("id", c.creation_id).maybeSingle();
+            slug = p.data?.slug ?? null;
+          }
+          return reply(200, { status: c.status, mint: c.mint, slug }, { "cache-control": "no-store" });
+        } catch { return reply(503, { error: "unavailable" }); }
+      },
       POST: async ({ request }) => {
         if (request.headers.get("authorization")) return reply(401, { error: "unauthorized" });
         const b = await readMutation(request, ["draftId", "revision", "mint", "signature"]);
