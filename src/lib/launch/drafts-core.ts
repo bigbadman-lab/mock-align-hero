@@ -2,7 +2,7 @@
 import type { DraftState } from "./lifecycle";
 import { validateDraft, type Draft, type DraftInput, type FieldErrors } from "./draft";
 
-export const DRAFT_BODY_MAX = 8192;
+export const DRAFT_BODY_MAX = 12288;
 export const MAX_ACTIVE_DRAFTS = 20;
 export const MAX_ARTIFACTS_PER_WALLET = 80;
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -19,11 +19,12 @@ export type Parsed =
 function input(v: unknown): DraftInput | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
   const o = v as Record<string, unknown>;
-  const keys = Object.keys(o).filter((k) => k !== "toolDescription").sort().join(",");
+  const keys = Object.keys(o).filter((k) => k !== "toolDescription" && k !== "canvas").sort().join(",");
   if (keys !== INPUT_KEYS) return null;
   if ("toolDescription" in o && (typeof o["toolDescription"] !== "string" || (o["toolDescription"] as string).length > 1000)) return null;
   for (const k of ["templateId", "productName", "tokenName", "symbol", "description", "link", "buyAmount", "slippageBps"]) if (typeof o[k] !== "string" || (o[k] as string).length > 1000) return null;
   if (typeof o["buyEnabled"] !== "boolean") return null;
+  if ("canvas" in o && o["canvas"] !== null && (typeof o["canvas"] !== "object" || JSON.stringify(o["canvas"]).length > 4096)) return null;
   const s = o["settings"];
   if (!s || typeof s !== "object" || Array.isArray(s) || Object.keys(s).length > 4 || Object.values(s).some((x) => typeof x !== "string" || x.length > 40)) return null;
   return o as unknown as DraftInput;
@@ -63,6 +64,7 @@ export function toInput(d: Draft): DraftInput {
     templateId: d.templateId, settings: d.settings, productName: d.productName, toolDescription: d.toolDescription ?? "", tokenName: d.tokenName, symbol: d.symbol,
     description: d.description, link: d.link ?? "", buyEnabled: !!d.initialBuy, buyAmount: d.initialBuy?.amountMcp ?? "",
     slippageBps: String(d.initialBuy?.slippageBps ?? 100),
+    ...(d.canvas ? { canvas: d.canvas } : {}),
   };
 }
 

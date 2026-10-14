@@ -12,6 +12,7 @@ const ERR: Record<string, string> = {
   stale_revision: "This draft changed in another tab or window. Reload it before saving again.",
   not_found: "This draft no longer exists.",
   too_many_drafts: "You have the maximum of 20 open drafts. Abandon one first.",
+  canvas_storage_unavailable: "Canvas drafts can't be saved yet: storage for Canvas pipelines is waiting on a database update. You can still build and dry-run the pipeline.",
   storage_limit: "You've reached the artwork storage limit for your account.",
   artwork_required: "Add artwork before publishing metadata.",
   uri_too_long: "The metadata address would be too long for the token record.",
