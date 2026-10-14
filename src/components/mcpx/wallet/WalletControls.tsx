@@ -70,11 +70,6 @@ function WalletMenu({ className }: { className?: string | undefined }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard aria-hidden />Dashboard</Link></DropdownMenuItem>
-        {!verified && (
-          <DropdownMenuItem disabled={!!session.pending} onSelect={() => void session.signIn()}>
-            <ShieldCheck aria-hidden />{session.pending ? "Check your wallet…" : "Verify wallet"}
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); void copy(addr); }}>
           {msg === "Copied" ? <Check aria-hidden /> : <Copy aria-hidden />}{msg === "Copied" ? "Copied" : "Copy address"}
         </DropdownMenuItem>
