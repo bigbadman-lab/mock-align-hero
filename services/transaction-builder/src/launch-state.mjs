@@ -32,12 +32,23 @@ export function verifyCreated(st, { mint, creator, cfg }) {
 }
 
 /** Decodes Anchor events from simulation logs ("Program data: <base64>"), tolerant of discriminator framing. */
-function decodeEvents(logs, decoder) {
-  const out = [];
+// Anchor event discriminators (sha256("event:<Name>")[0..8]). SDK decoders do not check them, so we do.
+export const EVENT_DISC = { create: "8569aac8b874fb58", update: "15bac4b85be4e1cb" };
+function decodeEvents(logs, decoder, cpiEvents = [], disc = null) {
+  const out = [], seen = new Set();
+  // The same event can surface both as a self-CPI and as a "Program data:" log; count identical bytes once.
+  const once = (b) => { const h = b.toString("hex"); if (seen.has(h)) return false; seen.add(h); return true; };
+  for (const buf of cpiEvents) {
+    if (!disc || buf.length <= 8 || buf.subarray(0, 8).toString("hex") !== disc) continue;
+    if (!once(buf)) continue;
+    try { const ev = decoder(buf.subarray(8)); if (ev) out.push(ev); } catch { /* malformed */ }
+  }
   for (const l of logs ?? []) {
     if (!l.startsWith("Program data: ")) continue;
     const buf = Buffer.from(l.slice(14), "base64");
-    for (const d of [buf, buf.subarray(8)]) { try { const ev = decoder(d); if (ev) { out.push(ev); break; } } catch { /* not this event */ } }
+    if (disc && (buf.length <= 8 || buf.subarray(0, 8).toString("hex") !== disc)) continue;
+    if (disc && !once(buf)) continue;
+    for (const d of disc ? [buf.subarray(8)] : [buf, buf.subarray(8)]) { try { const ev = decoder(d); if (ev) { out.push(ev); break; } } catch { /* not this event */ } }
   }
   return out;
 }
@@ -46,10 +57,10 @@ function decodeEvents(logs, decoder) {
  * Fee-first proof from a real simulation: the config starts as creator=10000 and the update leaves
  * exactly the fixed 60/25/15 set. Returns null when verified, else a reason code.
  */
-export function verifySimulationEvents(logs, { mint, creator, cfg }) {
+export function verifySimulationEvents(logs, { mint, creator, cfg }, cpiEvents = []) {
   const sdk = pump.PUMP_SDK;
-  const created = decodeEvents(logs, (d) => { const e = sdk.decodeCreateFeeSharingConfigEvent(d); return e?.initialShareholders ? e : null; });
-  const updated = decodeEvents(logs, (d) => { const e = sdk.decodeUpdateFeeSharesEvent(d); return e?.newShareholders ? e : null; });
+  const created = decodeEvents(logs, (d) => { const e = sdk.decodeCreateFeeSharingConfigEvent(d); return e?.initialShareholders ? e : null; }, cpiEvents, EVENT_DISC.create);
+  const updated = decodeEvents(logs, (d) => { const e = sdk.decodeUpdateFeeSharesEvent(d); return e?.newShareholders ? e : null; }, cpiEvents, EVENT_DISC.update);
   if (created.length !== 1 || updated.length !== 1) return "SIMULATION_EVENTS_MISSING";
   const c = created[0], u = updated[0];
   if (c.mint.toBase58() !== mint || u.mint.toBase58() !== mint) return "SIMULATION_EVENT_MINT_MISMATCH";

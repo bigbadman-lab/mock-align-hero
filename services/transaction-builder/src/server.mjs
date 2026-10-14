@@ -23,13 +23,15 @@ export function readyReport(cfg) {
     rpcConfigured: Boolean(cfg.rpcUrl), quoteMint: cfg.quoteMint ? "CONFIGURED" : "QUOTE_MINT_MISSING",
     feeRecipients: cfg.opsRecipient && cfg.platformRecipient && !cfg.invalid.some((i) => i.startsWith("MCPX_FEE")) ? "CONFIGURED" : "MISSING",
     feeSplitBps: FEE_SPLIT_BPS, lookupTable: cfg.lookupTable ? "CONFIGURED" : "NOT_CONFIGURED",
-    // Operational readiness never implies launch readiness: these stay listed until later phases prove them.
-    launchBlocked: true,
+    // Config blockers only. Fee-first simulation runs on every prepare (a candidate is returned only when the
+    // simulated pfee events show creator 10000 → exact 60/25/15); metadata and signing are enforced by the website.
+    // The builder never enables launches itself.
+    launchBlocked: !(cfg.quoteMint && cfg.lookupTable),
     launchBlockers: [
       ...(cfg.quoteMint ? [] : ["QUOTE_MINT_MISSING"]),
       ...(cfg.lookupTable ? [] : ["LOOKUP_TABLE_NOT_CONFIGURED"]),
-      "FULL_FEE_FIRST_SIMULATION_NOT_VERIFIED", "METADATA_STORAGE_NOT_CONFIGURED", "SIGNING_FLOW_NOT_APPROVED",
     ],
+    launchGates: { feeFirstSimulation: "ENFORCED_PER_PREPARE", metadata: "ENFORCED_BY_SITE", signing: "SITE_SWITCH_MCPX_CHILD_LAUNCH_SIGNING" },
     launchEnabled: false, capabilities: ["launch.prepare", "launch.inspect", "launch.prepare_buy", "launch.status"],
     simulationSupport: "READ_ONLY_SIMULATE_SIGVERIFY_OFF",
   };

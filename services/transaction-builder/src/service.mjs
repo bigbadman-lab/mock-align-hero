@@ -81,7 +81,7 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
       evidence.simulation = { status: sim.err ? "FAIL" : "PASS", unitsConsumed: sim.unitsConsumed, slot: sim.slot, sigVerify: false };
       evidence.compute = sim.unitsConsumed != null ? { measuredUnits: sim.unitsConsumed } : "COMPUTE_NOT_MEASURED";
       if (sim.err) return blocked(["SIMULATION_FAILED"], { evidence: { ...evidence, simulationError: sim.err, logsTail: sim.logs.slice(-8) } });
-      const evErr = verifySimulationEvents(sim.logs, { mint: req.mint, creator: req.creator, cfg });
+      const evErr = verifySimulationEvents(sim.logs, { mint: req.mint, creator: req.creator, cfg }, sim.cpiEvents ?? []);
       if (evErr) return blocked([evErr], { evidence });
       feeConfigVerified = true;
       evidence.chainAcceptance = "SIMULATED_NOT_SENT";
