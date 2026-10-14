@@ -33,8 +33,26 @@ export function verifyChild(c: ChildRecord, o: OnchainChild, canonicalQuote: str
   if (new Set([c.creator, c.ops, c.platform]).size !== 3) return { ok: false, code: "RECIPIENT_DUPLICATE" };
   if (sc.shareholders.length !== 3) return { ok: false, code: "SHARES_MISMATCH" };
   for (let i = 0; i < 3; i++) {
-    if (sc.shareholders[i].address !== want[i][0] || sc.shareholders[i].shareBps !== want[i][1]) return { ok: false, code: "SHARES_MISMATCH" };
+    const s = sc.shareholders[i]!, w = want[i]!;
+    if (s.address !== w[0] || s.shareBps !== w[1]) return { ok: false, code: "SHARES_MISMATCH" };
   }
+  return { ok: true };
+}
+
+/** CREATOR_RECIPIENT_BINDING (keeper side): before any distribution the locked on-chain shareholders must
+ * equal [registered product creator wallet 60%, server-authorized ops 25%, server-authorized platform 15%].
+ * Every input must be present; anything missing is incomplete evidence and holds the child. */
+export type AuthorizedRecipients = { ops: string | null; platform: string | null; nativeDeployer: string | null };
+export function verifyRecipients(c: ChildRecord, o: OnchainChild, registeredCreator: string | null, a: AuthorizedRecipients): VerifyResult {
+  if (!a.ops || !a.platform || !a.nativeDeployer) return { ok: false, code: "AUTHORIZED_RECIPIENTS_UNSET" };
+  if (!registeredCreator) return { ok: false, code: "REGISTERED_CREATOR_MISSING" };
+  const sh = o.sharingConfig?.shareholders;
+  if (!sh || sh.length !== 3 || sh.some((x) => !x || typeof x.address !== "string" || typeof x.shareBps !== "number")) return { ok: false, code: "SHARES_EVIDENCE_INCOMPLETE" };
+  if (registeredCreator === a.nativeDeployer || sh.some((x) => x.address === a.nativeDeployer)) return { ok: false, code: "NATIVE_DEPLOYER_AS_RECIPIENT" };
+  const [s0, s1, s2] = sh as [Shareholder, Shareholder, Shareholder];
+  if (s0.address !== registeredCreator || s0.shareBps !== CHILD_SPLIT.creator || c.creator !== registeredCreator) return { ok: false, code: "CREATOR_RECIPIENT_MISMATCH" };
+  if (s1.address !== a.ops || s1.shareBps !== CHILD_SPLIT.ops || c.ops !== a.ops) return { ok: false, code: "OPS_RECIPIENT_MISMATCH" };
+  if (s2.address !== a.platform || s2.shareBps !== CHILD_SPLIT.platform || c.platform !== a.platform) return { ok: false, code: "PLATFORM_RECIPIENT_MISMATCH" };
   return { ok: true };
 }
 
@@ -135,7 +153,19 @@ export type KeeperDeps = {
   vaultOwner: (c: ChildRecord) => string;
   childByMint: (mint: string) => ChildRecord | undefined;
   store: ChildStore;
+  authorized: AuthorizedRecipients;                 // server env, never from the DB record
+  registeredCreator: (mint: string) => Promise<string | null>; // mcp_creations.creator_wallet
 };
+
+async function recipientsOk(d: KeeperDeps, c: ChildRecord): Promise<VerifyResult & { onchain?: OnchainChild }> {
+  try {
+    const onchain = await d.readChild(c);
+    const v = verifyChild(c, onchain, d.canonicalQuote);
+    if (!v.ok) return v;
+    const r = verifyRecipients(c, onchain, await d.registeredCreator(c.mint), d.authorized);
+    return r.ok ? { ok: true, onchain } : r;
+  } catch { return { ok: false, code: "EVIDENCE_UNAVAILABLE" }; }
+}
 
 export type ChildOutcome = { mint: string; result: string };
 
@@ -151,7 +181,12 @@ export async function reconcileChildren(d: KeeperDeps): Promise<ChildOutcome[]> 
     if (s.state === "MISMATCH" && tx) { await d.store.finalize(i.key, "FAILED", { code: s.code, slot: tx.slot }); out.push({ mint: i.mint, result: `FAILED:${s.code}` }); continue; }
     // Unknown: expire only once provably past the blockhash's validity at finalized height.
     if (!tx && height !== null && i.lastValidBlockHeight !== undefined && height > i.lastValidBlockHeight) { await d.store.finalize(i.key, "EXPIRED", { height }); out.push({ mint: i.mint, result: "EXPIRED" }); continue; }
-    if (d.send && i.signedBase64) await d.send(i.signedBase64).catch(() => {}); // resend identical bytes only
+    // Restart recovery: re-verify recipients before re-sending; a mismatch holds the identical bytes unsent.
+    if (d.send && i.signedBase64) {
+      const rv = c ? await recipientsOk(d, c) : { ok: false as const, code: "CHILD_UNKNOWN" };
+      if (!rv.ok) { out.push({ mint: i.mint, result: `HELD:${rv.code}` }); continue; }
+      await d.send(i.signedBase64).catch(() => {}); // resend identical bytes only
+    }
     out.push({ mint: i.mint, result: d.send ? "RESENT_SAME_BYTES" : "SIGNED_HELD" });
   }
   return out;
@@ -165,10 +200,9 @@ export async function runChildFeePass(d: KeeperDeps): Promise<ChildOutcome[]> {
   const open = new Set((await d.store.open()).map((i) => i.mint));
   for (const c of children) {
     if (open.has(c.mint)) { out.push({ mint: c.mint, result: "SKIP:OPEN_INTENT" }); continue; }
-    let v: VerifyResult;
-    try { v = verifyChild(c, await d.readChild(c), d.canonicalQuote); } catch { v = { ok: false, code: "RPC_UNAVAILABLE" }; }
+    const v = await recipientsOk(d, c);
     if (!v.ok) { out.push({ mint: c.mint, result: `HELD:${v.code}` }); continue; }
-    const onchain = await d.readChild(c);
+    const onchain = v.onchain!;
     const b = await d.balances(c).catch(() => ({ curveVaultQuote: null, ammVaultQuote: null }));
     const cost = await d.estimateCost(c);
     const remaining = d.dailyGasLamports - (await d.store.gasSpentToday());
