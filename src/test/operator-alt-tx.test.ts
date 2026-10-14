@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { AddressLookupTableProgram, TransactionInstruction, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { validateAltMessage } from "@/lib/operator/alt-tx";
