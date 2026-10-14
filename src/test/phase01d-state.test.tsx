@@ -45,7 +45,7 @@ describe("wallet display contract", () => {
   it("header and panel show the same address; account switch and disconnect clear the old one", () => {
     const { rerender } = render(<Both view={{ status: "connected_mainnet", address: A }} />);
     expect(screen.getByText(A)).toBeTruthy();
-    expect(screen.getByRole("button", { name: new RegExp(A) })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /So11…1112, not verified/ })).toBeTruthy();
     rerender(<Both view={{ status: "connected_mainnet", address: B }} />);
     expect(screen.queryByText(A)).toBeNull();
     expect(screen.getByText(B)).toBeTruthy();
