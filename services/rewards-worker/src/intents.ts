@@ -17,7 +17,7 @@ export function intentStore(db: Q, workerId: string): IntentStore & Omit<ExecSto
       // One sealed transaction: config-row lock (serialises concurrent workers), then insert only if the key is
       // new AND the persisted fee-backed budget covers it. Budget is derived in SQL from finalized records only.
       const ins = `insert into public.mcpx_rw_intents (idempotency_key, cycle_id, kind, message_sha256, lamports, last_valid_block_height, reserved_by, epoch_start, token_amount, ops_cost_lamports, plan_rows, plan_mint, plan_token_program, message_base64)
-        select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric,$11::jsonb,$12,$13,$14
+        select $1,$2,$3,$4,$5::numeric,$6,$7,to_timestamp($8),$9::numeric,$10::numeric,$11::text::jsonb,$12,$13,$14
         where not exists (select 1 from public.mcpx_rw_intents where idempotency_key=$1)
           and exists (select 1 from public.mcpx_rw_budget_remaining(to_timestamp($8)) b where b.evidence and b.ops >= $10::numeric and
             case $3 when 'SOL_PAYOUT' then b.sol >= $5::numeric when 'BUYBACK' then b.buyback >= $5::numeric
