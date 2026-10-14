@@ -149,7 +149,7 @@ export function TokenScannerApp({ slug, defaultMint, ticker }: { slug: string; d
         <p id="ps-help" className="text-xs text-muted-foreground">
           {touched && trimmed && !valid
             ? <span className="text-warning">That isn't a valid Solana address. Check for missing or extra characters.</span>
-            : <>SPL Token or Token-2022 mint, Solana mainnet. 3 free scans per day, shared with the Tool Library version; resets at midnight UTC. <button type="button" className="underline underline-offset-4" onClick={() => { setMint(defaultMint); setTouched(true); }}>Use ${ticker}'s mint</button></>}
+            : <>SPL Token or Token-2022 mint, Solana mainnet. <button type="button" className="underline underline-offset-4" onClick={() => { setMint(defaultMint); setTouched(true); }}>Use ${ticker}'s mint</button></>}
         </p>
       </form>
 
