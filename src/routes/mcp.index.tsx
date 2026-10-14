@@ -27,7 +27,7 @@ function McpPage() {
   const [cat, setCat] = useState<Filter>("All");
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return LIBRARY.filter((t) => (cat === "All" || t.category === cat) && (!s || `${t.name} ${t.tagline} ${t.benefit} ${t.category}`.toLowerCase().includes(s)));
+    return LIBRARY.filter((t) => !t.hidden && (cat === "All" || t.category === cat) && (!s || `${t.name} ${t.tagline} ${t.benefit} ${t.category}`.toLowerCase().includes(s)));
   }, [q, cat]);
 
   return (
@@ -50,7 +50,7 @@ function McpPage() {
               className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground placeholder:text-subtle focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
           </label>
         </div>
-        <p className="mt-4 font-mono text-xs text-subtle" aria-live="polite">{list.length} of {LIBRARY.length} templates</p>
+        <p className="mt-4 font-mono text-xs text-subtle" aria-live="polite">{list.length} of {LIBRARY.filter((t) => !t.hidden).length} templates</p>
         {list.length === 0 ? (
           <p className="mt-10 text-sm text-muted-foreground">No templates match that search.</p>
         ) : (
