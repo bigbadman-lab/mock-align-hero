@@ -7,7 +7,7 @@ import { useWallet } from "@/lib/wallet/context";
 import { explorerAccountUrl, shortAddress } from "@/lib/wallet/state";
 import { walletInspectorStatusQuery } from "@/lib/tools/status";
 import { WI_CLIENT_TIMEOUT_MS, WI_ENDPOINT, isValidSolanaAddress, type ToolErrorKind, type WalletInspectorResult } from "@/lib/tools/wallet-inspector";
-import { WalletInspectorResult } from "@/components/mcpx/results/wallet-inspector";
+import { WalletInspectorResultView } from "@/components/mcpx/results/wallet-inspector";
 
 export const Route = createFileRoute("/tools/wallet-inspector")({
   head: () => ({
@@ -39,7 +39,7 @@ const ERROR_TEXT: Record<ToolErrorKind, string> = {
 
 class ToolError extends Error { constructor(public kind: ToolErrorKind) { super(kind); } }
 
-async function runInspect(address: string, signal: AbortSignal): Promise<WalletInspectorResult> {
+async function runInspect(address: string, signal: AbortSignal): Promise<WalletInspectorResultView> {
   let r: Response;
   try {
     r = await fetch(WI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address }), signal: AbortSignal.any([signal, AbortSignal.timeout(WI_CLIENT_TIMEOUT_MS)]) });
@@ -120,7 +120,7 @@ function WalletInspectorPage() {
               {run.variables && <button className="mt-2 underline" onClick={() => run.mutate(run.variables!)} disabled={run.isPending}>Retry</button>}
             </StatusMessage>
           )}
-          {run.data && <WalletInspectorResult r={run.data} />}
+          {run.data && <WalletInspectorResultView r={run.data} />}
         </div>
 
         <p className="text-sm text-muted-foreground"><Link to="/mcp" className="underline underline-offset-4">Back to templates</Link></p>

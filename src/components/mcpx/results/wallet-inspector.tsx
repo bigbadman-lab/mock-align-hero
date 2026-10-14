@@ -13,7 +13,7 @@ const PROGRAM_LABEL: Record<string, string> = {
   TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb: "Token-2022",
 };
 const PAGE = 50;
-export function WalletInspectorResult({ r }: { r: WalletInspectorResult }) {
+export function WalletInspectorResultView({ r }: { r: WalletInspectorResult }) {
   const [shown, setShown] = useState(PAGE);
   const url = explorerAccountUrl(r.address);
   const tokensKnown = r.coverage.splToken && r.coverage.token2022;
