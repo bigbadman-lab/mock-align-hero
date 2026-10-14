@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { verifyChild, planChild, verifyChildSettlement, memoryChildStore, runChildFeePass, childIntentKey, TOKEN_2022, type ChildRecord, type OnchainChild, type KeeperDeps, type FinalTx } from "../../services/rewards-worker/src/child-fees";
+import { verifyRecipients, verifyChild, planChild, verifyChildSettlement, memoryChildStore, runChildFeePass, childIntentKey, TOKEN_2022, type ChildRecord, type OnchainChild, type KeeperDeps, type FinalTx } from "../../services/rewards-worker/src/child-fees";
 
 const k = () => Keypair.generate().publicKey.toBase58();
 const MCP = k();
+const DEPLOYER = k();
 const mk = (): ChildRecord => ({ mint: k(), creator: k(), ops: k(), platform: k(), quoteMint: MCP, quoteTokenProgram: TOKEN_2022, sharingConfig: k() });
 const onchain = (c: ChildRecord, over: Partial<OnchainChild> = {}): OnchainChild => ({
   sharingConfig: { mint: c.mint, adminRevoked: true, shareholders: [{ address: c.creator, shareBps: 6000 }, { address: c.ops, shareBps: 2500 }, { address: c.platform, shareBps: 1500 }] },
@@ -70,7 +71,8 @@ describe("keeper durability", () => {
     now: () => 1_800_000_000, canonicalQuote: MCP, keeper: k(), dailyGasLamports: 1_000_000n, minDistributable: 1n,
     children: async () => [c], readChild: async () => onchain(c), balances: async () => ({ curveVaultQuote: 5000n, ammVaultQuote: 0n }),
     estimateCost: async () => 20_000n, buildAndSign: async () => ({ signature: "sig-" + c.mint, signedBase64: "AA==", lastValidBlockHeight: 100 }),
-    send: null, fetchFinal: async () => null, finalizedBlockHeight: async () => 50, vaultOwner: () => k(), childByMint: (m) => (m === c.mint ? c : undefined), store, ...over,
+    send: null, fetchFinal: async () => null, finalizedBlockHeight: async () => 50, vaultOwner: () => k(), childByMint: (m) => (m === c.mint ? c : undefined), store,
+    authorized: { ops: c.ops, platform: c.platform, nativeDeployer: DEPLOYER }, registeredCreator: async (m) => (m === c.mint ? c.creator : null), ...over,
   });
   it("20 parallel workers reserve exactly one intent per child window", async () => {
     const store = memoryChildStore(), c = mk();
@@ -95,6 +97,38 @@ describe("keeper durability", () => {
     const c = mk();
     expect(await runChildFeePass(deps(memoryChildStore(), c, { dailyGasLamports: null }))).toContainEqual({ mint: "*", result: "SKIP:GAS_BUDGET_NOT_CONFIGURED" });
     expect(await runChildFeePass(deps(memoryChildStore(), c, { readChild: async () => onchain(c, { sharingConfig: { ...onchain(c).sharingConfig!, adminRevoked: false } }) }))).toContainEqual({ mint: c.mint, result: "HELD:SHARES_NOT_LOCKED" });
-    expect(await runChildFeePass(deps(memoryChildStore(), c, { readChild: async () => { throw new Error("rpc"); } }))).toContainEqual({ mint: c.mint, result: "HELD:RPC_UNAVAILABLE" });
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { readChild: async () => { throw new Error("rpc"); } }))).toContainEqual({ mint: c.mint, result: "HELD:EVIDENCE_UNAVAILABLE" });
+  });
+
+  it("holds when the registered creator differs from the locked 60% shareholder", async () => {
+    const c = mk();
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { registeredCreator: async () => k() }))).toContainEqual({ mint: c.mint, result: "HELD:CREATOR_RECIPIENT_MISMATCH" });
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { registeredCreator: async () => null }))).toContainEqual({ mint: c.mint, result: "HELD:REGISTERED_CREATOR_MISSING" });
+  });
+  it("holds when ops/platform differ from server-authorized wallets or are unset", async () => {
+    const c = mk();
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { authorized: { ops: k(), platform: c.platform, nativeDeployer: DEPLOYER } }))).toContainEqual({ mint: c.mint, result: "HELD:OPS_RECIPIENT_MISMATCH" });
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { authorized: { ops: c.ops, platform: k(), nativeDeployer: DEPLOYER } }))).toContainEqual({ mint: c.mint, result: "HELD:PLATFORM_RECIPIENT_MISMATCH" });
+    expect(await runChildFeePass(deps(memoryChildStore(), c, { authorized: { ops: c.ops, platform: c.platform, nativeDeployer: null } }))).toContainEqual({ mint: c.mint, result: "HELD:AUTHORIZED_RECIPIENTS_UNSET" });
+  });
+  it("never accepts the native deployer as a child recipient", () => {
+    const c = { ...mk() }; const o = onchain(c);
+    expect(verifyRecipients(c, o, c.creator, { ops: c.ops, platform: c.platform, nativeDeployer: c.creator })).toMatchObject({ code: "NATIVE_DEPLOYER_AS_RECIPIENT" });
+    expect(verifyRecipients(c, { ...o, sharingConfig: { ...o.sharingConfig!, shareholders: o.sharingConfig!.shareholders.slice(0, 2) } }, c.creator, { ops: c.ops, platform: c.platform, nativeDeployer: DEPLOYER })).toMatchObject({ code: "SHARES_EVIDENCE_INCOMPLETE" });
+  });
+  it("mismatch never builds or signs anything", async () => {
+    const c = mk(); let built = 0; const store = memoryChildStore();
+    await runChildFeePass(deps(store, c, { registeredCreator: async () => k(), buildAndSign: async () => { built++; return { signature: "x", signedBase64: "AA==", lastValidBlockHeight: 1 }; } }));
+    expect(built).toBe(0); expect(store.rows.size).toBe(0);
+  });
+  it("restart recovery re-verifies before re-sending identical bytes", async () => {
+    const store = memoryChildStore(), c = mk(); const sent: string[] = [];
+    await runChildFeePass(deps(store, c));
+    const r = await runChildFeePass(deps(store, c, { send: async (b) => { sent.push(b); }, registeredCreator: async () => k() }));
+    expect(r).toContainEqual({ mint: c.mint, result: "HELD:CREATOR_RECIPIENT_MISMATCH" });
+    expect(sent).toEqual([]);
+    const ok = await runChildFeePass(deps(store, c, { send: async (b) => { sent.push(b); } }));
+    expect(ok).toContainEqual({ mint: c.mint, result: "RESENT_SAME_BYTES" });
+    expect(sent).toEqual(["AA=="]);
   });
 });
