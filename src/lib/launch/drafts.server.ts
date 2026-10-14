@@ -135,10 +135,12 @@ export async function saveArtwork(wallet: string, origin: string, id: string, re
   if ((await artifactCount(wallet)) >= MAX_ARTIFACTS_PER_WALLET) throw new Conflict("storage_limit");
   const db = await admin();
   const path = `artwork/${crypto.randomUUID()}.${IMAGE_EXT[img.type]}`;
-  const url = assetUrl(origin, path);
-  if (!checkUri(url).ok) throw new Conflict("uri_too_long");
   const up = await db.storage.from(BUCKET).upload(path, bytes, { contentType: img.type, upsert: false, cacheControl: "31536000" });
   fail(up.error);
+  // Storage copy stays the integrity source; the public URL is IPFS when Pinata accepts it.
+  const { pinBytes } = await import("./pinata.server");
+  const url = (await pinBytes(bytes, path.split("/")[1]!, img.type)) ?? assetUrl(origin, path);
+  if (!checkUri(url).ok) throw new Conflict("uri_too_long");
   const { data: art, error } = await db.from("mcpx_launch_artifacts").insert({
     creator_wallet: wallet, draft_id: id, draft_revision: revision + 1, kind: "artwork", object_path: path, public_url: url,
     sha256: hash, content_type: img.type, bytes: bytes.length, width: img.width, height: img.height,
@@ -167,10 +169,11 @@ export async function prepareMetadata(wallet: string, origin: string, id: string
   if (!metaId) {
     if ((await artifactCount(wallet)) >= MAX_ARTIFACTS_PER_WALLET) throw new Conflict("storage_limit");
     const path = `metadata/${crypto.randomUUID()}.json`;
-    const url = assetUrl(origin, path);
-    if (!checkUri(url).ok) throw new Conflict("uri_too_long");
     const up = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "application/json", upsert: false, cacheControl: "31536000" });
     fail(up.error);
+    const { pinBytes } = await import("./pinata.server");
+    const url = (await pinBytes(bytes, path.split("/")[1]!, "application/json")) ?? assetUrl(origin, path);
+    if (!checkUri(url).ok) throw new Conflict("uri_too_long");
     const ins = await db.from("mcpx_launch_artifacts").insert({
       creator_wallet: wallet, draft_id: id, draft_revision: revision, kind: "metadata", object_path: path, public_url: url,
       sha256: hash, content_type: "application/json", bytes: bytes.length,
