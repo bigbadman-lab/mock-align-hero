@@ -16,7 +16,9 @@ export type BuilderCall = (op: "prepare" | "inspect", body: unknown) => Promise<
 export type GateDraft = { id: string; revision: number; templateId: string; name: string; symbol: string; uri: string | null };
 /** canonicalMint: the official $MCP mint from the site's rewards config (mcpx_rw_config.mint). Every child pairs with it;
  *  missing or unreadable fails closed so a mistyped builder MCPX_QUOTE_MINT can never pair children with another token. */
-export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number; loadDraft?: (wallet: string, id: string) => Promise<GateDraft | null>; canonicalMint?: () => Promise<string | null> };
+export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number; loadDraft?: (wallet: string, id: string) => Promise<GateDraft | null>; canonicalMint?: () => Promise<string | null>;
+  /** Re-reads the stored metadata at `uri` (hash-checked) and returns null only if it is our own artifact naming this exact draft. */
+  checkMetadata?: (uri: string, draft: GateDraft) => Promise<string | null> };
 export type GateResult = { http: number; body: Record<string, unknown> };
 
 const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -73,6 +75,10 @@ export async function gatePrepareDraft(input: { draftId?: unknown; revision?: un
   if (!dr) return err(404, "DRAFT_NOT_FOUND");
   if (dr.revision !== input.revision) return err(409, "DRAFT_CHANGED");
   if (!dr.uri) return err(409, "METADATA_NOT_PREPARED");
+  if (!d.checkMetadata) return err(503, "METADATA_CHECK_UNAVAILABLE");
+  let mErr: string | null;
+  try { mErr = await d.checkMetadata(dr.uri, dr); } catch { return err(503, "METADATA_UNAVAILABLE"); }
+  if (mErr) return err(409, mErr);
   const r = await gatePrepare({ idempotencyKey: input.idempotencyKey, mint: input.mint, name: dr.name, symbol: dr.symbol, uri: dr.uri, initialBuy: null, format: "v0_alt", creator: input.creator, connectedWallet: input.connectedWallet }, session, d);
   if (r.http !== 200) return r;
   return { http: 200, body: { ...r.body, draft: { id: dr.id, revision: dr.revision, templateId: dr.templateId } } };

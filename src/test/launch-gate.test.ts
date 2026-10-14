@@ -65,11 +65,11 @@ describe("launch path creator binding", () => {
   });
 });
 
-import { gatePrepareDraft, type GateDraft } from "@/lib/tx-builder/launch-gate";
+import { gatePrepareDraft, gatePrepareDraft as gatePrepareDraft2, type GateDraft } from "@/lib/tx-builder/launch-gate";
 describe("draft-bound launch", () => {
   const draftId = "11111111-1111-4111-8111-111111111111", key = "22222222-2222-4222-8222-222222222222";
   const dr: GateDraft = { id: draftId, revision: 3, templateId: "whale-watch", name: "Child", symbol: "CHD", uri: "https://mcpx.fun/api/public/launch-assets/metadata/x.json" };
-  const withDraft = (calls: any[] = [], d: GateDraft | null = dr) => ({ ...deps({}, calls), loadDraft: async (w: string, id: string) => (w === me && id === draftId ? d : null) });
+  const withDraft = (calls: any[] = [], d: GateDraft | null = dr) => ({ ...deps({}, calls), loadDraft: async (w: string, id: string) => (w === me && id === draftId ? d : null), checkMetadata: async () => null as string | null });
   const req = { draftId, revision: 3, mint, idempotencyKey: key, connectedWallet: me };
   it("uses the stored draft's name/symbol/uri and returns the template", async () => {
     const calls: any[] = [];
@@ -111,5 +111,19 @@ describe("canonical $MCP quote mint", () => {
   it("refuses to approve signing if the binding's quote mint is not the official one", async () => {
     const r = await gateVerify({ messageBase64: "AA==", binding: { ...binding(), quoteMint: k() }, bindingMac: "m", connectedWallet: me }, fresh(), deps());
     expect(r.body["code"]).toBe("QUOTE_MINT_NOT_CANONICAL");
+  });
+});
+
+
+describe("pre-sign metadata check", () => {
+  const draftId = "3f1c2b4a-1d2e-4f30-8a1b-0c9d8e7f6a5b";
+  const dr = { id: draftId, revision: 1, templateId: "wallet-inspector", name: "Child", symbol: "CHD", uri: "https://mcpx.fun/api/public/launch-assets/metadata/a.json" };
+  const req = { draftId, revision: 1, mint, idempotencyKey: "0d6c5c1e-8f0a-4b8e-9d3c-2a1b0c9d8e7f", connectedWallet: me };
+  const base = (check?: GateDeps["checkMetadata"]): GateDeps => { const d: GateDeps = { ...deps(), loadDraft: async () => dr }; if (check) d.checkMetadata = check; return d; };
+  it("refuses to prepare when metadata cannot be re-checked", async () => {
+    expect((await gatePrepareDraft2(req, fresh(), base(undefined))).body["code"]).toBe("METADATA_CHECK_UNAVAILABLE");
+  });
+  it("refuses to prepare when stored metadata no longer matches the draft", async () => {
+    expect((await gatePrepareDraft2(req, fresh(), base(async () => "METADATA_DRAFT_MISMATCH"))).body["code"]).toBe("METADATA_DRAFT_MISMATCH");
   });
 });

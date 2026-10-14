@@ -33,7 +33,8 @@ export const Route = createFileRoute("/api/creator/launch-prepare")({
         let session;
         try { session = await currentSession(authStore, request); } catch { return reply(503, { ok: false, code: "unavailable" }); }
         const { canonicalMint } = await import("@/lib/tx-builder/canonical-mint.server");
-        const deps = { config: gateConfig(), builder: builderCall, now: () => Date.now(), loadDraft, canonicalMint };
+        const { checkMetadata } = await import("@/lib/launch/metadata-check.server");
+        const deps = { config: gateConfig(), builder: builderCall, now: () => Date.now(), loadDraft, canonicalMint, checkMetadata };
         const { op, ...rest } = b;
         const r = op === "prepare" ? await gatePrepareDraft(rest, session, deps)
           : op === "verify" ? await gateVerify(rest, session, deps)

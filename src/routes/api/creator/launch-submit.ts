@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/creator/launch-submit")({
         if (ins.error?.code === "23505") return reply(409, { ok: false, code: "already_claimed" });
         if (ins.error) return reply(503, { ok: false, code: "unavailable" });
 
-        const rpc = process.env["MCPX_SOLANA_RPC_URL"] || "https://api.mainnet-beta.solana.com";
+        const rpc = (await import("@/lib/solana-rpc.server")).siteRpcUrl();
         try {
           const r = await fetch(rpc, { method: "POST", headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(20_000),
             body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "sendTransaction", params: [b.signedTxBase64, { encoding: "base64", preflightCommitment: "confirmed", maxRetries: 5 }] }) });

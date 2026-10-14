@@ -309,10 +309,12 @@ test("B04 separate buy only after verified 60/25/15 creation; needs explicit app
 
 test("D02 /ready: operational readiness never lifts launch blockers; nothing secret is reported", async () => {
   const full = readyReport(loadConfig(ENV));
-  assert.equal(full.ready, true); assert.equal(full.launchBlocked, true); assert.equal(full.launchEnabled, false);
-  assert.deepEqual(full.launchBlockers, ["FULL_FEE_FIRST_SIMULATION_NOT_VERIFIED", "METADATA_STORAGE_NOT_CONFIGURED", "SIGNING_FLOW_NOT_APPROVED"]);
+  assert.equal(full.ready, true); assert.equal(full.launchBlocked, false); assert.equal(full.launchEnabled, false);
+  assert.deepEqual(full.launchBlockers, []);
+  assert.equal(full.launchGates.feeFirstSimulation, "ENFORCED_PER_PREPARE");
   const bare = readyReport(loadConfig({ ...ENV, MCPX_QUOTE_MINT: "", MCPX_LOOKUP_TABLE: "" }));
   assert.ok(bare.launchBlockers.includes("QUOTE_MINT_MISSING") && bare.launchBlockers.includes("LOOKUP_TABLE_NOT_CONFIGURED"));
+  assert.equal(bare.launchBlocked, true);
   const txt = JSON.stringify(full);
   for (const v of [SECRET, ENV.SOLANA_RPC_URL, F.FIXTURE_OPS, F.FIXTURE_PLATFORM, QUOTE, ENV.MCPX_LOOKUP_TABLE]) assert.ok(!txt.includes(v));
 });
@@ -353,4 +355,33 @@ test("B03 production config: deployer public key required, key material and conf
   assert.equal(loadConfig({ ...ENV, MCPX_FEE_PLATFORM_RECIPIENT: F.FIXTURE_OPS }).state, "NOT_CONFIGURED");
   assert.equal(loadConfig({ ...ENV, MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: "not-a-key" }).state, "NOT_CONFIGURED");
   assert.equal(loadConfig(ENV).state, "READY_FOR_PREPARE");
+});
+
+
+// Pump fee program emits its events by self-CPI (anchor emit_cpi), not "Program data:" logs. The real mainnet
+// simulation (stand-in parents) produced exactly these discriminators; decoders don't check them, so we do.
+import { verifySimulationEvents, EVENT_DISC } from "../src/launch-state.mjs";
+import { cpiEventsOf } from "../src/chain.mjs";
+test("S01 fee-first events: self-CPI decoding, discriminator-checked, duplicates counted once", () => {
+  const sdk = pump.PUMP_SDK;
+  assert.equal(EVENT_DISC.create, "8569aac8b874fb58"); assert.equal(EVENT_DISC.update, "15bac4b85be4e1cb");
+  assert.deepEqual(cpiEventsOf([{ instructions: [{ programId: "x", data: "1" }] }], "pfee"), []);
+  // No events at all → never verified.
+  assert.equal(verifySimulationEvents([], { mint: "m", creator: "c", cfg: { opsRecipient: "o", platformRecipient: "p" } }, []), "SIMULATION_EVENTS_MISSING");
+  // An event with the wrong discriminator is ignored even if a decoder would accept its bytes.
+  const junk = Buffer.concat([Buffer.alloc(8, 1), Buffer.alloc(200, 0)]);
+  assert.equal(verifySimulationEvents([`Program data: ${junk.toString("base64")}`], { mint: "m", creator: "c", cfg: {} }, [junk]), "SIMULATION_EVENTS_MISSING");
+  void sdk;
+});
+
+test("S02 fee-first events: real mainnet simulation bytes (stand-in parent) verify exact 60/25/15, tampering is caught", async () => {
+  const { readFileSync } = await import("node:fs");
+  const f = JSON.parse(readFileSync(new URL("./fixtures/mainnet-sim-fee-events.json", import.meta.url)));
+  const ev = f.events.map((h) => Buffer.from(h, "hex"));
+  const cfg = { opsRecipient: f.ops, platformRecipient: f.plat };
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, ev), null);
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, [...ev, ev[0]]), null); // same bytes twice = once
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg: { ...cfg, platformRecipient: f.ops } }, ev), "SIMULATION_FINAL_SHARES_MISMATCH");
+  assert.equal(verifySimulationEvents([], { mint: f.creator, creator: f.creator, cfg }, ev), "SIMULATION_EVENT_MINT_MISMATCH");
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, [ev[0]]), "SIMULATION_EVENTS_MISSING");
 });
