@@ -1,5 +1,10 @@
 // CANVAS-01 completion: draft storage on, AI step contract, dry-run AI gating. Fixtures only (no network).
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
+// Fixture worker results: shape checks are stubbed here (covered with real schemas in canvas-01b and live runs).
+vi.mock("@/lib/canvas/adapters", async (orig) => {
+  const m = await orig<typeof import("@/lib/canvas/adapters")>();
+  return { ...m, CANVAS_ADAPTERS: Object.fromEntries(Object.entries(m.CANVAS_ADAPTERS).map(([k, a]) => [k, { ...a, check: () => true }])) };
+});
 import { validateCanvas } from "@/lib/canvas/validate";
 import { runCanvas, type RunDeps } from "@/lib/canvas/run";
 import { canvasStorageEnabled } from "@/lib/launch/drafts.server";
