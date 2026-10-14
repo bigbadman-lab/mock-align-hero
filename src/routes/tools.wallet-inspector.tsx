@@ -39,7 +39,7 @@ const ERROR_TEXT: Record<ToolErrorKind, string> = {
 
 class ToolError extends Error { constructor(public kind: ToolErrorKind) { super(kind); } }
 
-async function runInspect(address: string, signal: AbortSignal): Promise<WalletInspectorResultView> {
+async function runInspect(address: string, signal: AbortSignal): Promise<WalletInspectorResult> {
   let r: Response;
   try {
     r = await fetch(WI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address }), signal: AbortSignal.any([signal, AbortSignal.timeout(WI_CLIENT_TIMEOUT_MS)]) });
