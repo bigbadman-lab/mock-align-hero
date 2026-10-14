@@ -40,7 +40,7 @@ export function Dashboard() {
   const w = useWallet();
   const session = useCreatorSessionContext();
   const connected = w.status === "connected_mainnet" || w.status === "connected_unsupported_network";
-  const restoring = w.status === "loading" || session.s === "checking" || (session.s === "signed_in" && (w.status === "connecting" || w.status === "disconnected" && session.wallet !== null && w.status !== "disconnected"));
+  const restoring = w.status === "loading" || session.s === "checking" || (session.s === "signed_in" && w.status === "connecting");
   const authed = sessionMatchesWallet(session, w);
 
   let body: ReactNode;

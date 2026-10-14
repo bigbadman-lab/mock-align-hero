@@ -270,8 +270,13 @@ function Launch() {
               <Link to="/mcp" className={buttonOutline}>Browse templates</Link>
             </div>
             <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-              {prepErr ?? (session.s !== "signed_in" ? "Sign in as a creator from the Dashboard to launch. You can still fill in and review the form." : "")}
+              {prepErr ?? (session.s !== "signed_in" ? (session.pending ?? session.note ?? "Verify your wallet to launch. You can still fill in and review the form.") : "")}
             </p>
+            {session.s !== "signed_in" && session.s !== "checking" && (
+              mainnetWallet
+                ? <button type="button" className={buttonOutline} disabled={!!session.pending} onClick={() => void session.signIn()}>{session.pending ? "Check your wallet…" : "Verify Wallet"}</button>
+                : <button type="button" className={buttonOutline} onClick={() => wallet.open?.()}>Connect Wallet</button>
+            )}
           </form>
           <DraftSummaryAside input={input} />
           </div>
