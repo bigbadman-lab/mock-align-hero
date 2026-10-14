@@ -4,8 +4,8 @@ import { ADAPTERS } from "@/lib/mcp-gateway/registry";
 
 describe("tool library registry", () => {
   it("lists exactly ten templates with unique ids", () => {
-    expect(LIBRARY).toHaveLength(11);
-    expect(new Set(LIBRARY.map((t) => t.id)).size).toBe(11);
+    expect(LIBRARY).toHaveLength(16);
+    expect(new Set(LIBRARY.map((t) => t.id)).size).toBe(16);
   });
   it("keeps deployed ids and maps them explicitly to relay ids and routes", () => {
     const m = Object.fromEntries(LIBRARY.filter((t) => !t.planned).map((t) => [t.id, [t.toolId, t.route]]));
@@ -21,6 +21,11 @@ describe("tool library registry", () => {
       canvas: [null, null],
       "smart-money-tracker": ["smart_money_tracker", "/tools/smart-money-tracker"],
       "onchain-report-builder": ["onchain_report_builder", "/tools/onchain-report-builder"],
+      "gibberish-ai": ["gibberish_ai", "/tools/ai/gibberish-ai"],
+      "roast-bot": ["roast_bot", "/tools/ai/roast-bot"],
+      "excuse-machine": ["excuse_machine", "/tools/ai/excuse-machine"],
+      "conspiracy-potato": ["conspiracy_potato", "/tools/ai/conspiracy-potato"],
+      "argument-machine": ["argument_machine", "/tools/ai/argument-machine"],
     });
   });
   it("planned templates have no tool, route, MCP or launch", () => {

@@ -12,6 +12,8 @@ import { SmartMoneyResultView } from "@/components/mcpx/results/smart-money-trac
 import { OnchainReportView } from "@/components/mcpx/results/onchain-report-builder";
 import { TokenScannerApp } from "./TokenScannerApp";
 import { ToolApp, type ToolAppConfig } from "./ToolApp";
+import { AiProductApp } from "@/components/mcpx/ai-tools/AiToolApp";
+import { isAiTemplate } from "@/lib/ai-tools/defs";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const CONFIGS: Record<string, ToolAppConfig> = {
@@ -23,11 +25,12 @@ const CONFIGS: Record<string, ToolAppConfig> = {
   "onchain-report-builder": { title: "Onchain Report Builder", tagline: "Build a point-in-time report for a wallet or token using live onchain data.", form: "report", status: onchainReportStatusQuery as any, render: (r) => <OnchainReportView r={r as any} /> },
 };
 
-export const hasWebInterface = (templateId: string) => templateId === "token-scanner" || Object.hasOwn(CONFIGS, templateId);
+export const hasWebInterface = (templateId: string) => templateId === "token-scanner" || isAiTemplate(templateId) || Object.hasOwn(CONFIGS, templateId);
 
 export function ProductToolInterface({ p }: { p: PublicProfile }) {
   if (p.availability !== "active" || !p.tool) return null;
   if (p.templateId === "token-scanner") return <TokenScannerApp slug={p.slug} defaultMint={p.childMint} ticker={p.ticker} />;
+  if (isAiTemplate(p.templateId)) return <AiProductApp templateId={p.templateId} slug={p.slug} />;
   const cfg = CONFIGS[p.templateId];
   return cfg ? <ToolApp slug={p.slug} cfg={cfg} defaultMint={p.childMint} ticker={p.ticker} fixedSettings={p.tool.fixedSettings} /> : null;
 }

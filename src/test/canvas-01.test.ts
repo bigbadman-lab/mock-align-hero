@@ -17,7 +17,7 @@ describe("CANVAS-01 catalog", () => {
     expect(CAPABILITIES.some((c) => c.templateId === "onchain-report-builder")).toBe(false);
   });
   it("Canvas is the 11th template: launch-draft only, no tool page, no MCP adapter", () => {
-    expect(LIBRARY).toHaveLength(11);
+    expect(LIBRARY).toHaveLength(16);
     const c = LIBRARY.find((t) => t.id === "canvas")!;
     expect([c.planned, c.toolId, c.route, c.mcpAdapter, c.tokenLaunch]).toEqual([false, null, null, false, true]);
     expect(TEMPLATES.some((t) => t.id === "canvas")).toBe(true);
