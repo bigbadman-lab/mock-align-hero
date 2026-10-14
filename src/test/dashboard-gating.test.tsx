@@ -5,9 +5,11 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { WalletContext } from "@/lib/wallet/context";
 import type { WalletView } from "@/lib/wallet/state";
+import { CreatorSessionProvider } from "@/lib/creator-auth/session-context";
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
+  useNavigate: () => () => {},
   Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
 
@@ -26,13 +28,12 @@ beforeEach(() => {
 
 afterEach(() => { vi.restoreAllMocks(); });
 
-const HIDDEN = ["Canvas workspace", "Verified MCP creations", "Coming in later phases"];
+const HIDDEN = ["Canvas workspace", "Verified MCP creations", "Verified creator"];
 
-function renderDashboard() {
-  const view: WalletView = { status: "loading" };
+function renderDashboard(view: WalletView = { status: "disconnected", open: () => {} }) {
   return render(
     <WalletContext.Provider value={view}>
-      <Dashboard />
+      <CreatorSessionProvider><Dashboard /></CreatorSessionProvider>
     </WalletContext.Provider>,
   );
 }
@@ -48,12 +49,12 @@ describe("dashboard session gating", () => {
 
     renderDashboard();
 
-    await waitFor(() => expect(screen.getByText("Your dashboard areas")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Your creator workspace")).toBeInTheDocument());
     for (const area of HIDDEN) {
       expect(screen.queryByText(area)).toBeNull();
     }
     // The way in must stay reachable.
-    expect(screen.getByText("Creator management")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Connect & Sign In" })).toBeInTheDocument();
   });
 
   it("shows the dashboard areas once a creator session is signed in", async () => {
@@ -64,11 +65,37 @@ describe("dashboard session gating", () => {
       return jsonResponse({}, 401);
     });
 
-    renderDashboard();
+    renderDashboard({ status: "connected_mainnet", address: WALLET });
 
     await waitFor(() => expect(screen.getByText("Canvas workspace")).toBeInTheDocument());
     expect(screen.getByText("Verified MCP creations")).toBeInTheDocument();
-    expect(screen.getByText("Coming in later phases")).toBeInTheDocument();
-    expect(screen.queryByText("Your dashboard areas")).toBeNull();
+    expect(screen.queryByText("Your creator workspace")).toBeNull();
+  });
+
+  it("a connected wallet without a session sees Verify Wallet, not the dashboard, and nothing is signed", async () => {
+    const signMessage = vi.fn();
+    fetchMock.mockImplementation(async (url: string) => url === "/api/auth/session" ? jsonResponse({ signedIn: false }) : jsonResponse({}, 401));
+    renderDashboard({ status: "connected_mainnet", address: WALLET, signMessage });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Verify Wallet" })).toBeInTheDocument());
+    expect(screen.queryByText("Verified MCP creations")).toBeNull();
+    expect(signMessage).not.toHaveBeenCalled();
+  });
+
+  it("a session for a different wallet never opens the dashboard", async () => {
+    fetchMock.mockImplementation(async (url: string) => url === "/api/auth/session"
+      ? jsonResponse({ signedIn: true, wallet: WALLET, expiresAt: new Date(Date.now() + 600_000).toISOString() }) : jsonResponse({}, 200));
+    renderDashboard({ status: "connected_mainnet", address: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Verify Wallet" })).toBeInTheDocument());
+    expect(screen.queryByText("Verified MCP creations")).toBeNull();
+  });
+});
+
+import { safeNext } from "@/lib/creator-auth/session-context";
+describe("post-verify destination", () => {
+  it("allows same-site paths only", () => {
+    expect(safeNext("/launch")).toBe("/launch");
+    expect(safeNext("//evil.com")).toBeNull();
+    expect(safeNext("https://evil.com")).toBeNull();
+    expect(safeNext("/\\evil.com")).toBeNull();
   });
 });

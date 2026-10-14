@@ -275,7 +275,7 @@ function Launch() {
             {session.s !== "signed_in" && session.s !== "checking" && (
               mainnetWallet
                 ? <button type="button" className={buttonOutline} disabled={!!session.pending} onClick={() => void session.signIn()}>{session.pending ? "Check your wallet…" : "Verify Wallet"}</button>
-                : <button type="button" className={buttonOutline} onClick={() => wallet.open?.()}>Connect Wallet</button>
+                : <button type="button" className={buttonOutline} onClick={() => w.open?.()}>Connect Wallet</button>
             )}
           </form>
           <DraftSummaryAside input={input} />
