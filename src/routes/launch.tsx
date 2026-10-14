@@ -7,6 +7,7 @@ import { WW_THRESHOLDS, WW_DEFAULT_THRESHOLD } from "@/lib/tools/whale-watch";
 import { useWallet } from "@/lib/wallet/context";
 import { useCreatorSession } from "@/lib/creator-auth/use-creator-session";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
+import { CAPABILITY_BY_ID } from "@/lib/canvas/catalog";
 import { LaunchFlow } from "@/components/mcpx/launch/LaunchFlow";
 import { CanvasBuilder, EMPTY_CANVAS } from "@/components/mcpx/launch/CanvasBuilder";
 import { CANVAS_TEMPLATE_ID } from "@/lib/launch/draft";
