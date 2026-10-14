@@ -71,7 +71,7 @@ describe("Canvas on the product MCP endpoint", () => {
       available: async () => true, take: async () => { takes++; return "ok"; }, execute: async () => ({ ok: true, out: outs[n++] }),
       summarise: async () => { ai++; return { status: "ok", text: "S", model: "gpt-4o-mini" }; } });
     expect(takes).toBe(2); expect(ai).toBe(1);
-    expect(r.structuredContent).toMatchObject({ canvasVersion: 3, complete: true, aiSummary: { status: "ok" } });
+    expect((r as any).structuredContent).toMatchObject({ canvasVersion: 3, complete: true, aiSummary: { status: "ok" } });
   });
   it("rate limits surface as errors and stop the pipeline; callers can't add steps or fields", async () => {
     const r = await executeCanvasTool(cfg, 1, { input: MINT }, { available: async () => true, take: async () => "limited", execute: async () => ({ ok: true, out: {} }) });
@@ -94,7 +94,7 @@ describe("Canvas on the product MCP endpoint", () => {
   it("wrong key → 401; unbound, inactive or missing-version products → 404", async () => {
     expect((await handleProductMcp(ID, list("bad"), deps(), exec)).status).toBe(401);
     expect((await handleProductMcp(ID, list(), deps({ getCanvasVersion: async () => null }), exec)).status).toBe(404);
-    expect((await handleProductMcp(ID, list(), deps({ getCanvasVersion: undefined }), exec)).status).toBe(404);
+    expect((await handleProductMcp(ID, list(), deps({ getCanvasVersion: undefined } as any), exec)).status).toBe(404);
     const inactive = deps({ getProductConfig: async () => ({ creationId: ID, templateId: "canvas", templateVersion: "1.0.0", configVersion: 1, toolConfig: {}, accessMode: "credential_required", lifecycleState: "inactive" }) });
     expect((await handleProductMcp(ID, list(), inactive, exec)).status).toBe(404);
   });
