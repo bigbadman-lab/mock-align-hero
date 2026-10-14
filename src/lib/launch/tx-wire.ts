@@ -56,8 +56,8 @@ export async function verifyAllSignatures(tx: Uint8Array): Promise<{ ok: boolean
   const signers = messageSigners(message);
   if (signers.length !== sigs.length) return { ok: false, signers, message, firstSignature: "" };
   for (let i = 0; i < sigs.length; i++) {
-    const key = await crypto.subtle.importKey("raw", bs58.decode(signers[i]!), { name: "Ed25519" } as any, false, ["verify"]);
-    if (!(await crypto.subtle.verify({ name: "Ed25519" } as any, key, sigs[i]!, message))) return { ok: false, signers, message, firstSignature: "" };
+    const key = await crypto.subtle.importKey("raw", Uint8Array.from(bs58.decode(signers[i]!)), { name: "Ed25519" } as any, false, ["verify"]);
+    if (!(await crypto.subtle.verify({ name: "Ed25519" } as any, key, Uint8Array.from(sigs[i]!), Uint8Array.from(message)))) return { ok: false, signers, message, firstSignature: "" };
   }
   return { ok: true, signers, message, firstSignature: bs58.encode(sigs[0]!) };
 }
