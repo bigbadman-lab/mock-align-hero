@@ -56,6 +56,7 @@ import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
 import { Route as ApiCreatorDashboardActivityRouteImport } from './routes/api/creator/dashboard.activity'
 import { Route as ApiCreatorDashboardEarningsRouteImport } from './routes/api/creator/dashboard.earnings'
+import { Route as ApiProductsSlugRunRouteImport } from './routes/api/products/$slug.run'
 import { Route as ApiPublicLaunchAssetsSplatRouteImport } from './routes/api/public/launch-assets.$'
 import { Route as ApiPublicMcpPlatformDemoRouteImport } from './routes/api/public/mcp/platform-demo'
 import { Route as ApiPublicRewardsExecRouteImport } from './routes/api/public/rewards/exec'
@@ -311,6 +312,11 @@ const ApiCreatorDashboardEarningsRoute =
     path: '/earnings',
     getParentRoute: () => ApiCreatorDashboardRoute,
   } as any)
+const ApiProductsSlugRunRoute = ApiProductsSlugRunRouteImport.update({
+  id: '/api/products/$slug/run',
+  path: '/api/products/$slug/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLaunchAssetsSplatRoute =
   ApiPublicLaunchAssetsSplatRouteImport.update({
     id: '/api/public/launch-assets/$',
@@ -418,6 +424,7 @@ export interface FileRoutesByFullPath {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
+  '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
+  '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -537,6 +545,7 @@ export interface FileRoutesById {
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
+  '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
   '/api/public/launch-assets/$': typeof ApiPublicLaunchAssetsSplatRoute
   '/api/public/mcp/platform-demo': typeof ApiPublicMcpPlatformDemoRoute
   '/api/public/rewards/exec': typeof ApiPublicRewardsExecRoute
@@ -598,6 +607,7 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
+    | '/api/products/$slug/run'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
+    | '/api/products/$slug/run'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -716,6 +727,7 @@ export interface FileRouteTypes {
     | '/api/tools/whale-watch'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
+    | '/api/products/$slug/run'
     | '/api/public/launch-assets/$'
     | '/api/public/mcp/platform-demo'
     | '/api/public/rewards/exec'
@@ -774,6 +786,7 @@ export interface RootRouteChildren {
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
   ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
+  ApiProductsSlugRunRoute: typeof ApiProductsSlugRunRoute
   ApiPublicLaunchAssetsSplatRoute: typeof ApiPublicLaunchAssetsSplatRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
   ApiPublicRewardsExecRoute: typeof ApiPublicRewardsExecRoute
@@ -1117,6 +1130,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreatorDashboardEarningsRouteImport
       parentRoute: typeof ApiCreatorDashboardRoute
     }
+    '/api/products/$slug/run': {
+      id: '/api/products/$slug/run'
+      path: '/api/products/$slug/run'
+      fullPath: '/api/products/$slug/run'
+      preLoaderRoute: typeof ApiProductsSlugRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/launch-assets/$': {
       id: '/api/public/launch-assets/$'
       path: '/api/public/launch-assets/$'
@@ -1249,6 +1269,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
   ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
+  ApiProductsSlugRunRoute: ApiProductsSlugRunRoute,
   ApiPublicLaunchAssetsSplatRoute: ApiPublicLaunchAssetsSplatRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
   ApiPublicRewardsExecRoute: ApiPublicRewardsExecRoute,

@@ -4,6 +4,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/tools/relay";
 
 const MAX_BODY = 256;
+// Short per-isolate profile cache so a burst of runs can't turn into a burst of registry reads.
+const CACHE_MS = 60_000;
+const profiles = new Map<string, { at: number; v: Promise<import("@/lib/product-profile").ProfileResult> }>();
 
 export const Route = createFileRoute("/api/products/$slug/run")({
   server: {
@@ -19,7 +22,15 @@ export const Route = createFileRoute("/api/products/$slug/run")({
         ]);
         const recordActivity = process.env["MCPX_TOOL_ACTIVITY"] === "1" ? (await import("@/lib/creator-dashboard/source.server")).recordActivity : undefined;
         const r = await runProductTool({
-          loadProfile: (s) => loadProfile(productionProfileDeps, s),
+          loadProfile: (s) => {
+            const hit = profiles.get(s);
+            if (hit && Date.now() - hit.at < CACHE_MS) return hit.v;
+            const v = loadProfile(productionProfileDeps, s);
+            if (profiles.size > 200) profiles.clear();
+            profiles.set(s, { at: Date.now(), v });
+            v.then((r) => { if (r.status === "unavailable") profiles.delete(s); }, () => profiles.delete(s));
+            return v;
+          },
           workerConfig: relay.workerConfig, toolAvailability: relay.toolAvailability, takeShared: relay.takeShared, callWorker: relay.callWorker,
           recordActivity,
         }, params.slug, body, request);
