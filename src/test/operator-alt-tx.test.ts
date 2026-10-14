@@ -20,7 +20,7 @@ describe("operator lookup-table transactions", () => {
   });
   it("rejects an address outside the manifest", () => expect(validateAltMessage(msg(auth, [ext([...all.slice(0, 2), Keypair.generate().publicKey.toBase58()])]))).toEqual({ ok: false, code: "ADDRESS_NOT_IN_MANIFEST" }));
   it("rejects any other signer", () => { const k = Keypair.generate().publicKey; expect(validateAltMessage(msg(k, [ext(all, k)])).ok).toBe(false); });
-  it("rejects an extra instruction (e.g. a SOL transfer)", () => expect(validateAltMessage(msg(auth, [createIx, SystemProgram.transfer({ fromPubkey: auth, toPubkey: Keypair.generate().publicKey, lamports: 1 })]))).toEqual({ ok: false, code: "ONE_INSTRUCTION_ONLY" }));
+  it("rejects an extra instruction (e.g. a SOL transfer)", () => expect(validateAltMessage(msg(auth, [createIx, SystemProgram.transfer({ fromPubkey: auth, toPubkey: Keypair.generate().publicKey, lamports: 1 })]))).toEqual({ ok: false, code: "INSTRUCTION_NOT_ALLOWED" }));
   it("accepts the wallet-modified create Phantom actually returned (priority fee + Lighthouse)", () => {
     const raw = Uint8Array.from(atob(PHANTOM), (c) => c.charCodeAt(0));
     const r = validateAltMessage(splitTx(raw).message);
