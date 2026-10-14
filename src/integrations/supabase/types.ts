@@ -2218,6 +2218,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_tool_activity: {
+        Row: {
+          creation_id: string
+          execution_ref: string
+          id: number
+          occurred_at: string
+          outcome: string
+          tool_id: string
+        }
+        Insert: {
+          creation_id: string
+          execution_ref: string
+          id?: never
+          occurred_at?: string
+          outcome: string
+          tool_id: string
+        }
+        Update: {
+          creation_id?: string
+          execution_ref?: string
+          id?: never
+          occurred_at?: string
+          outcome?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_tool_activity_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outbox_events: {
         Row: {
           aggregate_id: string
@@ -2436,6 +2471,16 @@ export type Database = {
       mcpx_rw_remote_exec: { Args: { p_steps: Json }; Returns: Json }
       mcpx_rw_remote_nonce_take: { Args: { p_nonce: string }; Returns: boolean }
       mcpx_rw_row_text: { Args: { r: Json }; Returns: Json }
+      mcpx_tool_activity_purge: { Args: { _batch: number }; Returns: number }
+      mcpx_tool_activity_record: {
+        Args: {
+          _creation: string
+          _outcome: string
+          _ref: string
+          _tool: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
