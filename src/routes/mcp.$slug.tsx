@@ -94,7 +94,6 @@ function Profile({ p }: { p: PublicProfile }) {
           </div>
         </section>
         <TokenMarket slug={p.slug} />
-        <p className="text-sm text-muted-foreground">Token verification and tool availability are separate: a verified token does not mean its MCP endpoint is running.</p>
         {p.endpoint && p.tool ? (
           <McpConnection endpoint={p.endpoint} tool={p.tool} />
         ) : (
