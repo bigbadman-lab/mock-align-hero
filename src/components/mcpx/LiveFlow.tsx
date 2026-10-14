@@ -76,7 +76,8 @@ export function LiveFlow() {
 
           <circle cx={HUB.x} cy={HUB.y} r={88} className="fill-primary lf-glow" opacity={0.3} style={{ filter: "blur(18px)" }} />
           <circle cx={HUB.x} cy={HUB.y} r={74} className="fill-background stroke-primary" strokeWidth={1.5} />
-          <image href={logo.url} x={HUB.x - 66} y={HUB.y - 66} width={132} height={132} style={{ imageRendering: "pixelated" }} />
+          <defs><clipPath id="lf-hub"><circle cx={HUB.x} cy={HUB.y} r={72} /></clipPath></defs>
+          <image href={logo.url} clipPath="url(#lf-hub)" x={HUB.x - 100} y={HUB.y - 100} width={200} height={200} style={{ imageRendering: "pixelated" }} />
           <text x={HUB.x} y={HUB.y + 104} textAnchor="middle" className="fill-foreground" fontSize={13} fontWeight={600}>MCPX ecosystem</text>
 
           {OUT.map((o) => (
