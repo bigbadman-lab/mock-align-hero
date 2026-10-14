@@ -151,7 +151,7 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
       blockhashBound: msg.recentBlockhash === b.blockhash,
       programsAllowlisted: ixs.every((ix) => ALLOWED_PROGRAMS.has(ix.programId.toBase58())),
       feeFirstOrder: feeFirst(ixs),
-      createV2Bound: false, feeSharesExact: false, buyMatchesBinding: false,
+      createV2Bound: false, feeSharesExact: false, creatorVaultAtaExact: false, buyMatchesBinding: false,
       quoteMintReferenced: ixs.some((ix) => ix.keys.some((k) => k.pubkey.toBase58() === b.quoteMint)),
     };
     try {
@@ -159,6 +159,11 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
       checks.createV2Bound = names[0] === "create_v2" && cr.data.name === b.name && cr.data.symbol === b.symbol && cr.data.uri === b.uri
         && cr.data.creator.toBase58() === b.creator && ixs[0].keys.some((k) => k.pubkey.toBase58() === b.mint);
       const ui = names.indexOf("update_fee_shares_v2");
+      // The ATA directly before the fee update must be the sharing-config creator vault's quote ATA.
+      const vault = pump.creatorVaultPda(pump.feeSharingConfigPda(new web3.PublicKey(b.mint))).toBase58();
+      const va = ixs[ui - 1];
+      checks.creatorVaultAtaExact = names[ui - 1] === "ata_create_idempotent" && va.keys[0].pubkey.toBase58() === b.creator
+        && va.keys[2].pubkey.toBase58() === vault && va.keys[3].pubkey.toBase58() === b.quoteMint;
       const up = feeProgram.coder.instruction.decode(ixs[ui].data);
       checks.feeSharesExact = canonical(up.data.shareholders.map((s) => ({ address: s.address.toBase58(), bps: s.shareBps }))) === canonical(b.shareholders);
       const buys = names.filter((x) => x.startsWith("buy"));
