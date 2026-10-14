@@ -7,10 +7,10 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
   return <div className={cn("mx-auto w-full max-w-6xl px-5 sm:px-8", className)}>{children}</div>;
 }
 
-export function SectionLabel({ children }: { children: ReactNode }) {
+export function SectionLabel({ children, rule = true }: { children: ReactNode; rule?: boolean }) {
   return (
     <p className="label-mono flex items-center gap-2 text-primary">
-      <span aria-hidden className="inline-block h-px w-6 bg-primary" />
+      {rule && <span aria-hidden className="inline-block h-px w-6 bg-primary" />}
       {children}
     </p>
   );
