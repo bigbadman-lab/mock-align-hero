@@ -65,7 +65,7 @@ d("0027 SOL rehearsal permission (real Postgres)", () => {
 
     // A product for a different mint can't consume it; the real one can, exactly once, and gets marked.
     const mk = async (m: string, s: string, q = SOL) => (await sql`insert into public.mcp_creations (slug, template_id, template_version, display_name, ticker, description, creator_wallet, child_mint, quote_mint, network, verified_tx_signature, verified_slot, verified_at)
-      values (${"r-" + b58(8)}, 'wallet-inspector', 1, 'P', 'TOK', 'd', ${W}, ${m}, ${q}, 'solana-mainnet', ${s}, 1, now()) returning id`)[0].id;
+      values (${"r-" + crypto.randomUUID().slice(0, 8)}, 'wallet-inspector', 1, 'P', 'TOK', 'd', ${W}, ${m}, ${q}, 'solana-mainnet', ${s}, 1, now()) returning id`)[0].id;
     const other = await mk(b58(44), b58(88));
     expect(await fn(sql`select public.mcpx_sol_rehearsal_consume(${other}) v`)).toBe("mismatch");
     const real = await mk(mint, sig);
