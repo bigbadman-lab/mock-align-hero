@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { PublicTool } from "@/lib/product-profile";
-import { FUTURE_ALIAS_PATTERN, TESTED_PROTOCOL } from "@/lib/product-profile";
+import { TESTED_PROTOCOL } from "@/lib/product-profile";
 import { buttonOutline } from "./primitives";
 
 export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
@@ -32,7 +32,6 @@ export function McpConnection({ endpoint, tool }: { endpoint: string; tool: Publ
         <p className="break-all font-mono text-sm text-foreground">{endpoint}</p>
         <CopyButton text={endpoint} label="Copy endpoint" />
       </div>
-      <p className="text-sm text-muted-foreground">The custom address <span className="font-mono">{FUTURE_ALIAS_PATTERN}</span> is planned but not live. Use the endpoint above.</p>
       <div className="space-y-2">
         <p className="label-mono text-subtle">Example client configuration</p>
         <Code>{config}</Code>
