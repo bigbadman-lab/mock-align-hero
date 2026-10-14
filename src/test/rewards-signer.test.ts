@@ -76,8 +76,9 @@ describe("signing validated plans (offline fixture key)", () => {
   it("refuses non-allowlisted programs and unproven paths", async () => {
     const evil = { programId: Keypair.generate().publicKey, keys: [], data: Buffer.from([1]) };
     expect((await s.sign!(solPlan({ messageBase64: msg([evil]) }), ctx())).ok).toBe(false);
-    for (const kind of ["BUYBACK", "WSOL_UNWRAP", "FEE_COLLECTION"] as const)
-      expect(await s.sign!(solPlan({ kind }), ctx())).toEqual({ ok: false, reason: `PATH_NOT_PROVEN:${kind}` });
+    expect(await s.sign!(solPlan({ kind: "WSOL_UNWRAP" }), ctx())).toEqual({ ok: false, reason: "PATH_NOT_PROVEN:WSOL_UNWRAP" });
+    // 01E: collection/buyback are signable only through the strict venue check — a payout message never passes it
+    for (const kind of ["BUYBACK", "FEE_COLLECTION"] as const) expect((await s.sign!(solPlan({ kind }), ctx())).ok).toBe(false);
   });
   it("payout dedupe: same idempotency key is never signed twice", async () => {
     const st = memStore(); const p = solPlan();

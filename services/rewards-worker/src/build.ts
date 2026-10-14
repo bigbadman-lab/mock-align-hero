@@ -7,7 +7,8 @@ import { execute, type ExecStore, type Sender } from "./executor";
 import type { Plan, SignCtx, SignResult } from "./signer";
 import type { SubmitOutcome } from "./orchestrator";
 
-export const BUY_SLIPPAGE_BPS = 300;
+import { BUY_SLIPPAGE_BPS, curveInputFor } from "./venue-check";
+export { BUY_SLIPPAGE_BPS, curveInputFor };
 const CU = { FEE_COLLECTION: 200_000, BUYBACK: 250_000, SOL_PAYOUT: 50_000, TOKEN_PAYOUT: 400_000 } as const;
 
 export type BuildDeps = {
@@ -15,8 +16,6 @@ export type BuildDeps = {
   sign: ((p: Plan, c: SignCtx) => Promise<SignResult>) | null; ctx: () => Promise<SignCtx>; store: ExecStore; sender: Sender | null;
 };
 
-/** Curve buy's max_sol_cost = budget + slippage; shrink the input so the signed max spend stays inside the budget. */
-export const curveInputFor = (budget: bigint) => (budget * 10_000n) / BigInt(10_000 + BUY_SLIPPAGE_BPS);
 
 export async function submitStage(d: BuildDeps, kind: "FEE_COLLECTION" | "BUYBACK" | "SOL_PAYOUT" | "TOKEN_PAYOUT", key: string, cycleId: string, window: number,
   rows: { owner: string; amount: bigint }[], lamports: bigint): Promise<SubmitOutcome> {

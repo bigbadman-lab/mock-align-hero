@@ -79,3 +79,7 @@ export function checkVenueTx(kind: "FEE_COLLECTION" | "BUYBACK", keys: readonly 
   }
   return { ok: true, cuLimit, cuPrice, lamports: kind === "BUYBACK" ? x.budgetLamports! : 0n, maxSpend: spend, venue };
 }
+
+export const BUY_SLIPPAGE_BPS = 300;
+/** Curve buy's max_sol_cost = input + slippage; shrink the input so the signed max spend stays inside the budget. */
+export const curveInputFor = (budget: bigint) => (budget * 10_000n) / BigInt(10_000 + BUY_SLIPPAGE_BPS);

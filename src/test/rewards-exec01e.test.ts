@@ -9,7 +9,7 @@ import { loadSigner, TECHNICAL_LIMITS, type Plan, type Limits } from "../../serv
 import { memoryBudgetStore } from "../../services/rewards-worker/src/budget";
 import { disc, PUMP, PUMP_AMM } from "../../services/rewards-worker/src/venue-check";
 import { execute, reconcileOpen, memoryExecStore } from "../../services/rewards-worker/src/executor";
-import { curveInputFor, BUY_SLIPPAGE_BPS } from "../../services/rewards-worker/src/build";
+import { curveInputFor, BUY_SLIPPAGE_BPS } from "../../services/rewards-worker/src/venue-check";
 
 const kp = Keypair.generate(), me = kp.publicKey;
 const signer = loadSigner({ MCPX_DEPLOYER_PRIVATE_KEY: bs58.encode(kp.secretKey), MCPX_DEPLOYER_PUBLIC_KEY: me.toBase58() });
