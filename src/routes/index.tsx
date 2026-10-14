@@ -95,7 +95,7 @@ function Home() {
                 <p className="label-mono text-primary">{c.tag}</p>
                 <h3 className="mt-4 text-lg font-semibold text-foreground">{c.t}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.d}</p>
-                <span className={`label-mono mt-6 inline-flex items-center gap-2 ${c.live ? "text-primary" : "text-warning"}`}>
+                <span className={`label-mono mt-auto pt-6 inline-flex items-center gap-2 ${c.live ? "text-primary" : "text-warning"}`}>
                   <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />{c.s}
                 </span>
               </div>

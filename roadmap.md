@@ -36,4 +36,4 @@
   - [x] Homepage: flow section recast as "How it works" — bigger numbers, status chips
   - [x] Homepage: tool library recast as scrollable showcase rail (11 cards, arrows, real links)
   - [x] Homepage: Treasury countdown ticks live (clock skew pinned per server sample)
-  - [ ] Homepage: "Planned capability" section — clearer copy + look (live MCP tools, $MCP-paired token, third-party AI)
+  - [x] Homepage: "Planned capability" → "What you can build" — 3 cards, honest status chips
