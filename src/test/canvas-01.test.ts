@@ -16,11 +16,11 @@ describe("CANVAS-01 catalog", () => {
   it("excludes the report builder (no recursive composition)", () => {
     expect(CAPABILITIES.some((c) => c.templateId === "onchain-report-builder")).toBe(false);
   });
-  it("Canvas is the 11th library template, honestly planned and not launchable yet", () => {
+  it("Canvas is the 11th template: launch-draft only, no tool page, no MCP adapter", () => {
     expect(LIBRARY).toHaveLength(11);
     const c = LIBRARY.find((t) => t.id === "canvas")!;
-    expect([c.planned, c.toolId, c.route, c.mcpAdapter, c.tokenLaunch]).toEqual([true, null, null, false, false]);
-    expect(TEMPLATES.some((t) => t.id === "canvas")).toBe(false);
+    expect([c.planned, c.toolId, c.route, c.mcpAdapter, c.tokenLaunch]).toEqual([false, null, null, false, true]);
+    expect(TEMPLATES.some((t) => t.id === "canvas")).toBe(true);
   });
 });
 

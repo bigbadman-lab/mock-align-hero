@@ -48,7 +48,7 @@ export function validateCanvas(raw: unknown): CanvasCheck {
     const src = out[f.step] ? CAPABILITY_BY_ID[out[f.step]!.capabilityId] : undefined;
     const o = src?.outputs.find((x) => x.id === f.output);
     if (!src || !o) { errors.push(`Step ${n}: that output doesn't exist on the chosen step.`); return; }
-    if (!kindAccepts(c.input.kind, o.kind)) { errors.push(`${c.name} needs a ${c.input.label.toLowerCase()}; ${src.name}'s "${o.label}" isn't one.`); return; }
+    if (!kindAccepts(c.input.kind, o.kind)) { errors.push(`${c.name} needs ${/^[aeiou]/i.test(c.input.label) ? "an" : "a"} ${c.input.label.toLowerCase()}; ${src.name}'s "${o.label}" isn't one.`); return; }
     out.push({ capabilityId: c.id, version: c.version, from: { step: f.step, output: o.id } });
   });
 

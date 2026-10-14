@@ -7,7 +7,7 @@ import { reply } from "@/lib/creator-auth/http.server";
 import { DRAFT_BODY_MAX, parseDraftBody } from "@/lib/launch/drafts-core";
 
 const STATUS: Record<string, number> = { method_not_allowed: 405, forbidden: 403, unsupported_media_type: 415, too_large: 413 };
-const CONFLICT: Record<string, number> = { not_found: 404, stale_revision: 409, too_many_drafts: 409, storage_limit: 409, artwork_required: 409, uri_too_long: 409 };
+const CONFLICT: Record<string, number> = { canvas_storage_unavailable: 409, not_found: 404, stale_revision: 409, too_many_drafts: 409, storage_limit: 409, artwork_required: 409, uri_too_long: 409 };
 
 export const Route = createFileRoute("/api/creator/launch-drafts")({
   server: {

@@ -2,6 +2,10 @@
 // it creates nothing, signs nothing and is never sent to the transaction builder in this phase.
 import { TEMPLATES } from "@/lib/templates";
 import { ADAPTERS } from "@/lib/mcp-gateway/registry";
+import { validateCanvas, type CanvasConfig } from "@/lib/canvas/validate";
+import { CAPABILITY_BY_ID } from "@/lib/canvas/catalog";
+
+export const CANVAS_TEMPLATE_ID = "canvas";
 
 /** Fixed fee split, server-owned. Shown read-only; never part of any browser input. */
 export const FEE_SPLIT = Object.freeze([
@@ -35,6 +39,8 @@ export interface DraftInput {
   buyEnabled: boolean;
   buyAmount: string;
   slippageBps: string;
+  /** Required for the Canvas template, absent/null for every other template. */
+  canvas?: CanvasConfig | null;
 }
 
 export interface Draft {
@@ -48,6 +54,7 @@ export interface Draft {
   description: string;
   link: string | null;
   initialBuy: null | { amountMcp: string; slippageBps: number };
+  canvas: CanvasConfig | null;
 }
 
 export type FieldErrors = Partial<Record<keyof DraftInput, string | undefined>>;
@@ -96,6 +103,12 @@ export function validateDraft(i: DraftInput): { ok: true; draft: Draft } | { ok:
     }
   }
 
+  let canvas: CanvasConfig | null = null;
+  if (t?.id === CANVAS_TEMPLATE_ID) {
+    const c = validateCanvas(i.canvas);
+    if (c.ok) canvas = c.config; else e.canvas = c.errors[0];
+  } else if (i.canvas != null) e.canvas = "Only the Canvas template has a pipeline.";
+
   const pn = i.productName;
   if (!pn.trim()) e.productName = "Enter a product name.";
   else if (pn !== pn.trim()) e.productName = "Remove spaces at the start or end.";
@@ -137,7 +150,7 @@ export function validateDraft(i: DraftInput): { ok: true; draft: Draft } | { ok:
     ok: true,
     draft: {
       templateId: t.id, templateName: t.name, settings, productName: pn, toolDescription: td || null, tokenName: tn, symbol: i.symbol,
-      description: d.trim(), link: typeof link === "string" ? link : null, initialBuy,
+      description: d.trim(), link: typeof link === "string" ? link : null, initialBuy, canvas,
     },
   };
 }
@@ -147,6 +160,7 @@ export function draftSummary(d: Draft, settingsText: string[], wallet: string | 
     "MCPX launch draft — preparation only, nothing created or signed",
     `Template: ${d.templateName} (${d.templateId})`,
     ...settingsText.map((s) => `Setting: ${s}`),
+    ...(d.canvas ? [`Canvas pipeline: ${d.canvas.steps.map((s) => CAPABILITY_BY_ID[s.capabilityId]?.name ?? s.capabilityId).join(" → ")}`] : []),
     `Product: ${d.productName}`,
     `Tool description: ${d.toolDescription ?? "none"}`,
     `Token: ${d.tokenName} (${d.symbol})`,

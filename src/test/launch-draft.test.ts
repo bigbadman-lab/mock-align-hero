@@ -10,7 +10,7 @@ const errs = (p: Partial<DraftInput>) => { const r = validateDraft({ ...ok, ...p
 describe("launch draft (04-C)", () => {
   it("accepts a valid draft with no buy", () => expect(validateDraft(ok).ok).toBe(true));
   it("every catalogue template is selectable", () => {
-    for (const t of TEMPLATES) expect(validateDraft({ ...ok, templateId: t.id, settings: t.id === "whale-watch" ? ok.settings : {} }).ok).toBe(true);
+    for (const t of TEMPLATES) expect(validateDraft({ ...ok, templateId: t.id, settings: t.id === "whale-watch" ? ok.settings : {}, ...(t.id === "canvas" ? { canvas: { catalogVersion: 1, steps: [{ capabilityId: "token.supply", version: 1 }, { capabilityId: "verify.account", version: 1, from: { step: 0, output: "largest_token_account" } }] } } : {}) }).ok).toBe(true);
   });
   it("rejects unknown template and unsupported settings", () => {
     expect(errs({ templateId: "nope" }).templateId).toBeTruthy();

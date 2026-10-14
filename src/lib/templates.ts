@@ -11,7 +11,7 @@ import img_canvas from "@/assets/templates/canvas.jpg";
 import img_onchain_report_builder from "@/assets/templates/onchain-report-builder.jpg";
 // Static product-definition catalogue. These are planned templates,
 // launchable via the launch form. Live availability is never stored here.
-export type Engine = "WALLET" | "TOKEN" | "VERIFY";
+export type Engine = "WALLET" | "TOKEN" | "VERIFY" | "COMPOSE";
 
 export interface TemplateDefinition {
   id: string;
@@ -91,6 +91,17 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
 ];
 
+TEMPLATES.push({
+  id: "canvas",
+  name: "Canvas",
+  engine: "COMPOSE",
+  purpose: "Chain 2–4 existing MCPX tools into one ordered pipeline.",
+  details: [
+    "Each later step reads one approved value (an address or signature) from an earlier step.",
+    "No code, URLs or outside APIs. Created only together with a child-token launch.",
+  ],
+});
+
 export const AVAILABILITY_NOTE = "Live status is checked with the execution service";
 
 // ---------------------------------------------------------------------------
@@ -131,8 +142,8 @@ export const LIBRARY: LibraryTemplate[] = [
   { id: "token-risk-analyst", name: "Token Risk Analyst", category: "Intelligence", tagline: "Read a token's risk signals.", benefit: "Evidence checklist of authorities, Token-2022 extensions and concentration — observed, not observed or unknown. No score, no verdict.", toolId: "token_risk_analyst", route: "/tools/token-risk-analyst", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_token_risk_analyst },
   { id: "smart-money-tracker", name: "Smart Money Tracker", category: "Intelligence", tagline: "Follow wallets you choose.", benefit: "Recent activity for up to 3 wallets you choose — signatures and native SOL transfers, larger moves highlighted. On demand, not monitoring.", toolId: "smart_money_tracker", route: "/tools/smart-money-tracker", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_smart_money_tracker },
   { id: "onchain-report-builder", name: "Onchain Report Builder", category: "Intelligence", tagline: "Turn reads into a report.", benefit: "One sourced, point-in-time report for a wallet or token, built from existing MCPX tools. Partial parts are marked, never filled in.", toolId: "onchain_report_builder", route: "/tools/onchain-report-builder", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_onchain_report_builder },
-  // Template 11 (CANVAS-01): guided 2–4 step pipeline over src/lib/canvas/catalog.ts. Planned until it is wired into the combined launch draft with a real runtime.
-  { id: "canvas", name: "Canvas", category: "Composition", tagline: "Chain existing tools in order.", benefit: "Combine 2–4 MCPX tools into one ordered pipeline, passing addresses between steps only through approved connections. Created only with a child-token launch.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: false, planned: true, image: img_canvas },
+  // Template 11 (CANVAS-01): guided 2–4 step pipeline over src/lib/canvas/catalog.ts, configured inside the launch draft. No MCP adapter until a confirmed child launch exists.
+  { id: "canvas", name: "Canvas", category: "Composition", tagline: "Chain existing tools in order.", benefit: "Combine 2–4 MCPX tools into one ordered pipeline, passing addresses between steps only through approved connections. Created only with a child-token launch.", toolId: null, route: null, mcpAdapter: false, tokenLaunch: true, planned: false, image: img_canvas },
 ];
 
 // ---------------------------------------------------------------------------

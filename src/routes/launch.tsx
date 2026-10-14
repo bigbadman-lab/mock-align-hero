@@ -10,6 +10,8 @@ import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, t
 import type { ReadinessItem, ReadyState } from "@/lib/launch/readiness";
 import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
 import { LaunchTxCheck } from "@/components/mcpx/launch/LaunchTxCheck";
+import { CanvasBuilder, EMPTY_CANVAS } from "@/components/mcpx/launch/CanvasBuilder";
+import { CANVAS_TEMPLATE_ID } from "@/lib/launch/draft";
 import { ArtworkPanel, MetadataPanel, SavedDrafts, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
 
 export const Route = createFileRoute("/launch")({
@@ -83,7 +85,7 @@ function Launch() {
   useEffect(() => {
     if (urlApplied.current || param.kind !== "launchable") return;
     urlApplied.current = true;
-    setInput((p) => (p.templateId ? p : { ...p, templateId: param.id, settings: param.id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {} }));
+    setInput((p) => (p.templateId ? p : { ...p, templateId: param.id, settings: param.id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {}, ...(param.id === CANVAS_TEMPLATE_ID ? { canvas: EMPTY_CANVAS } : {}) }));
   }, [param]);
   const drafts = useDrafts(session.s === "signed_in" ? session.wallet : null);
   const [saved, setSaved] = useState<DraftView | null>(null);
@@ -119,8 +121,12 @@ function Launch() {
     setErrors((p) => ({ ...p, tokenName: undefined, productName: toolNameTouched ? p.productName : undefined }));
   };
   const pickTemplate = (id: string) => {
-    setInput((p) => ({ ...p, templateId: id, settings: id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {} }));
-    setErrors((p) => ({ ...p, templateId: undefined, settings: undefined }));
+    setInput((p) => {
+      const { canvas: _c, ...rest } = p;
+      const next = { ...rest, templateId: id, settings: id === "whale-watch" ? { minLamports: WW_DEFAULT_THRESHOLD } : {} };
+      return id === CANVAS_TEMPLATE_ID ? { ...next, canvas: p.canvas ?? EMPTY_CANVAS } : next;
+    });
+    setErrors((p) => ({ ...p, templateId: undefined, settings: undefined, canvas: undefined }));
   };
 
   const onReview = (e: React.FormEvent) => {
@@ -234,7 +240,10 @@ function Launch() {
                 <span id="toolDescription-hint" className="mt-1 block text-xs text-subtle">One or two sentences about what your tool is for. Saved with the draft; not part of token metadata. {[...(input.toolDescription ?? "").trim()].length}/{LIMITS.toolDescriptionMax}</span>
                 <FieldError id="toolDescription" msg={errors.toolDescription} />
               </label>
-              {input.templateId && (
+              {input.templateId === CANVAS_TEMPLATE_ID && (
+                <CanvasBuilder value={input.canvas} onChange={(c) => set("canvas", c)} err={errors.canvas} signedIn={session.s === "signed_in"} />
+              )}
+              {input.templateId && input.templateId !== CANVAS_TEMPLATE_ID && (
                 <div className="rounded-md border border-border bg-card p-4 text-sm">
                   <p className="text-foreground">Tool settings</p>
                   {templateSettingsMode(input.templateId) === "fixed" && input.templateId === "whale-watch" ? (
