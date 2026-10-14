@@ -18,7 +18,7 @@ const ALLOWED_KEYS = new Set(["capabilityId", "version", "from"]);
 export function validateCanvas(raw: unknown): CanvasCheck {
   const errors: string[] = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, errors: ["Canvas configuration is missing."] };
-  const r = raw as Record<string, unknown>;
+  const r = raw as { catalogVersion?: unknown; steps?: unknown };
   if (Object.keys(r).some((k) => k !== "catalogVersion" && k !== "steps")) return { ok: false, errors: ["Canvas configuration has unexpected fields."] };
   if (r.catalogVersion !== CANVAS_CATALOG_VERSION) return { ok: false, errors: ["This Canvas was built for a different capability catalog. Rebuild it."] };
   if (!Array.isArray(r.steps)) return { ok: false, errors: ["Add at least two steps."] };
