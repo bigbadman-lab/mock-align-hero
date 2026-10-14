@@ -104,6 +104,7 @@ export function launchStorePg(db: Db) {
 
 // ---- SOL MAINNET REHEARSAL (one-time; migration 0027). Separate path: never uses or alters the $MCP checks above.
 export const NATIVE_SOL = "So11111111111111111111111111111111111111112";
+export const NATIVE_SOL_DEFAULT = "11111111111111111111111111111111";
 export type RehearsalPermission = { creator: string; status: string; mint: string | null; signature: string | null };
 
 /** The pending claim that IS the rehearsal (exact creator + mint + signature of the SUBMITTED permission), if any. */
@@ -130,7 +131,8 @@ export function verifyRehearsalLaunch(c: Claim, p: RehearsalPermission, tx: Laun
   if (sc.mint !== c.mint) return { ok: false, code: "SHARING_CONFIG_MINT_MISMATCH", final: true };
   if (!sc.adminRevoked) return { ok: false, code: "SHARES_NOT_LOCKED", final: true };
   if (o.curveCreator !== sharingConfig) return { ok: false, code: "CURVE_CREATOR_NOT_SHARING_CONFIG", final: true };
-  if (o.curveQuoteMint !== NATIVE_SOL) return { ok: false, code: "QUOTE_NOT_NATIVE_SOL", final: true };
+  // Pump stores native-SOL curves with the default (all-zero) pubkey as quote mint; wSOL is accepted too.
+  if (o.curveQuoteMint !== NATIVE_SOL && o.curveQuoteMint !== NATIVE_SOL_DEFAULT) return { ok: false, code: "QUOTE_NOT_NATIVE_SOL", final: true };
   if (o.graduated === null) return { ok: false, code: "GRADUATION_UNKNOWN", final: false };
   const rec: ChildRecord = { mint: c.mint, creator: c.creator, ops: a.ops, platform: a.platform, quoteMint: NATIVE_SOL, quoteTokenProgram: "", sharingConfig };
   const r = verifyRecipients(rec, o, p.creator, a);

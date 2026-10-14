@@ -19,7 +19,9 @@ export function verifyCreated(st, { mint, creator, cfg }) {
   const bad = (code) => ({ state: "CREATED_FEE_MISMATCH", code });
   const bc = st.bondingCurve;
   if (!bc) return bad("CURVE_NOT_FOUND");
-  if (bc.quoteMint.toBase58() !== cfg.quoteMint) return bad("QUOTE_MINT_MISMATCH");
+  // Native-SOL curves (rehearsal) store the default all-zero pubkey as quote mint.
+  const q = bc.quoteMint.toBase58();
+  if (q !== cfg.quoteMint && !(cfg.quoteMint === "So11111111111111111111111111111111111111112" && q === "11111111111111111111111111111111")) return bad("QUOTE_MINT_MISMATCH");
   if (bc.creator.toBase58() !== pump.feeSharingConfigPda(new web3.PublicKey(mint)).toBase58()) return bad("CURVE_CREATOR_NOT_SHARING_CONFIG");
   const sc = st.sharingConfig;
   if (!sc) return bad("SHARING_CONFIG_NOT_FOUND");
