@@ -98,6 +98,13 @@ function Profile({ p }: { p: PublicProfile }) {
         title={<>{p.displayName} <span className="font-mono text-subtle">${p.ticker}</span></>}
         intro={<>
           {p.description && <span className="block">{p.description}</span>}
+          <span className="mt-3 flex flex-wrap items-center gap-3">
+            {p.imageUrl && <img src={p.imageUrl} alt={`${p.displayName} token artwork`} width={64} height={64} className="h-16 w-16 rounded-lg border border-border object-cover" />}
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="label-mono text-xs text-subtle">Official mint address</span>
+              <CopyValue text={p.childMint} />
+            </span>
+          </span>
           <span className="mt-2 flex flex-wrap gap-2">
             <span className="label-mono rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">{p.templateName} · v{p.templateVersion}</span>
             {p.rehearsal && <span className="label-mono rounded border border-warning/50 px-2 py-0.5 text-xs text-warning">SOL rehearsal · not $MCP-paired</span>}

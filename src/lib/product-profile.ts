@@ -24,6 +24,8 @@ export interface ProfileConfigRow {
 export interface ProfileDeps {
   getCreationBySlug(slug: string): Promise<ProfileCreationRow | null>;
   getConfig(creationId: string): Promise<ProfileConfigRow | null>;
+  /** Optional: validated launch artwork URL for this mint (best-effort, never fails the profile). */
+  getArtworkUrl?(mint: string): Promise<string | null>;
 }
 
 export type Availability = "active" | "inactive" | "suspended" | "not_configured" | "misconfigured";
@@ -36,6 +38,8 @@ export interface PublicProfile {
   verifiedTx: string; verifiedSlot: number; verifiedAt: string;
   /** Permanent SOL rehearsal marker (not $MCP-paired). */
   rehearsal: boolean;
+  /** Same-origin launch artwork URL, or null. */
+  imageUrl: string | null;
   availability: Availability;
   tool: PublicTool | null;
   /** Present only when the product endpoint can actually serve this product. */
@@ -73,6 +77,11 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
       };
     }
   }
+  let imageUrl: string | null = null;
+  try {
+    const u = deps.getArtworkUrl ? await deps.getArtworkUrl(c.child_mint) : null;
+    imageUrl = u && /^https:\/\/(www\.)?mcpx\.fun\/api\/public\/launch-assets\/artwork\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(u) ? u : null;
+  } catch { imageUrl = null; }
   return {
     status: "ok",
     profile: {
@@ -81,6 +90,7 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
       creatorWallet: c.creator_wallet, childMint: c.child_mint, quoteMint: c.quote_mint, network: c.network,
       verifiedTx: c.verified_tx_signature, verifiedSlot: c.verified_slot, verifiedAt: c.verified_at,
       rehearsal: c.pair_kind === "SOL_REHEARSAL",
+      imageUrl,
       availability, tool,
       endpoint: availability === "active" && tool ? PRODUCT_ENDPOINT_BASE + c.id : null,
     },

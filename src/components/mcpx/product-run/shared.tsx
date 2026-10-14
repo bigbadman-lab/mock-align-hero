@@ -13,7 +13,7 @@ export type RunErrorKind =
 export const RUN_ERROR_TEXT: Record<RunErrorKind, string> = {
   invalid_input: "That input isn't valid for this tool.",
   rate_limited: "Too many requests right now. Wait a minute, then try again.",
-  free_limit: "You've used today's 3 free website runs of this tool.",
+  free_limit: "You've reached today's website limit for this tool.",
   busy: "The tool is busy. Try again in a moment.",
   timeout: "The data provider didn't answer in time.",
   provider_error: "The Solana data provider returned an error.",

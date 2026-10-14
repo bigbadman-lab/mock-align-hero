@@ -10,7 +10,7 @@ const ID = "023879d8-55b8-468d-91fa-643065b67120";
 const profile = (over: Partial<PublicProfile> = {}): PublicProfile => ({
   creationId: ID, slug: "hee-j9mjveze", displayName: "Hee", ticker: "HEE", description: "", templateId: "token-scanner",
   templateName: "Token Scanner", engine: "TOKEN", templateVersion: 1, creatorWallet: "W", childMint: MINT, quoteMint: "Q",
-  network: "solana-mainnet", verifiedTx: "S", verifiedSlot: 1, verifiedAt: "2026-01-01T00:00:00Z", rehearsal: true,
+  network: "solana-mainnet", verifiedTx: "S", verifiedSlot: 1, verifiedAt: "2026-01-01T00:00:00Z", rehearsal: true, imageUrl: null,
   availability: "active", tool: { name: "token_scanner", adapterVersion: "1.0.0", title: "", description: "", inputSchema: "{}", fixedSettings: [] },
   endpoint: "https://mcpx.fun/api/public/mcp/products/" + ID, ...over,
 });
