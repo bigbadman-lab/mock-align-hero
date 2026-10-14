@@ -247,3 +247,46 @@ export function MetadataPanel({ saved, drafts, onSaved }: { saved: DraftView; dr
     </div>
   );
 }
+
+/** Controlled artwork picker for the one-step launch form: the file is uploaded when the creator presses Review. */
+export function ArtworkPicker({ file, onFile, savedUrl, err: outerErr }: { file: File | null; onFile: (f: File | null) => void; savedUrl: string | null; err?: string | null }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [over, setOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (!file) { setPreview(null); return; } const u = URL.createObjectURL(file); setPreview(u); return () => URL.revokeObjectURL(u); }, [file]);
+  const pick = async (f: File | undefined) => {
+    setErr(null);
+    if (!f) return;
+    const problem = await checkFile(f);
+    if (problem) { setErr(problem); onFile(null); return; }
+    onFile(f);
+  };
+  const shown = preview ?? savedUrl;
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 text-sm">
+      <p className="text-foreground">Token artwork</p>
+      <p className="mt-1 text-muted-foreground">Square (1:1) PNG or JPEG, 5 MB maximum. Not cropped or resized.</p>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+        onDrop={(e) => { e.preventDefault(); setOver(false); void pick(e.dataTransfer.files[0]); }}
+        className={`mt-3 flex flex-wrap items-center gap-3 rounded-md border border-dashed p-4 ${over ? "border-primary" : "border-border-strong"}`}
+      >
+        {shown && <img src={shown} alt="Token artwork preview" className="h-20 w-20 rounded border border-border object-cover" />}
+        <label className="min-w-0 flex-1 cursor-pointer rounded-md border border-border-strong bg-surface-2 p-3 transition-colors hover:border-primary hover:bg-secondary/60 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring">
+          <span className="flex flex-wrap items-center gap-3">
+            <span className={`${buttonPrimary} pointer-events-none`}>
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 shrink-0"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 20h16" /></svg>
+              {shown ? "Choose a different image" : "Choose image file"}
+            </span>
+            <span className="min-w-0 flex-1 text-xs text-subtle">
+              {file ? <span className="block truncate text-foreground">{file.name}</span> : "or drag an image here · PNG or JPEG, square 1:1, up to 5 MB"}
+            </span>
+          </span>
+          <input ref={inputRef} type="file" accept="image/png,image/jpeg" className="sr-only" aria-describedby="artwork-err" onChange={(e) => void pick(e.target.files?.[0])} />
+        </label>
+      </div>
+      <span id="artwork-err" role="alert" className="mt-2 block text-xs text-warning">{err ?? outerErr ?? ""}</span>
+    </div>
+  );
+}

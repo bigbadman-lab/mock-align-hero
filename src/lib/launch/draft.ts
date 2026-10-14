@@ -157,7 +157,7 @@ export function validateDraft(i: DraftInput): { ok: true; draft: Draft } | { ok:
 
 export function draftSummary(d: Draft, settingsText: string[], wallet: string | null): string {
   return [
-    "MCPX launch draft — preparation only, nothing created or signed",
+    "MCPX launch — review before signing",
     `Template: ${d.templateName} (${d.templateId})`,
     ...settingsText.map((s) => `Setting: ${s}`),
     ...(d.canvas ? [`Canvas pipeline: ${d.canvas.steps.map((s) => CAPABILITY_BY_ID[s.capabilityId]?.name ?? s.capabilityId).join(" → ")}`] : []),
