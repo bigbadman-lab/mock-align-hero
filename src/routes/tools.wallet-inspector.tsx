@@ -79,8 +79,8 @@ function WalletInspectorPage() {
 
   return (
     <>
-      <PageHeader label="Template tool · WALLET engine" title="Wallet Inspector" intro="Look up any public Solana mainnet address: its SOL balance and the token accounts it holds right now. Read-only. No wallet connection, signature or payment needed." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · WALLET engine" title="Wallet Inspector" intro="Look up any public Solana mainnet address: its SOL balance and the token accounts it holds right now. Read-only. No wallet connection, signature or payment needed." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">
           This is a platform-run template tool. It is not a user-created MCP tool, has no token, and nothing here earns fees.
         </p>
@@ -99,7 +99,7 @@ function WalletInspectorPage() {
             <input
               id="wi-address" value={address} onChange={(e) => setAddress(e.target.value)} onBlur={() => setTouched(true)}
               maxLength={44} autoComplete="off" spellCheck={false} aria-invalid={touched && !valid} aria-describedby="wi-help"
-              className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
               placeholder="Base58 address"
             />
             <p id="wi-help" className="text-xs text-muted-foreground">
@@ -138,7 +138,7 @@ function ResultView({ r }: { r: WalletInspectorResult }) {
   const url = explorerAccountUrl(r.address);
   const tokensKnown = r.coverage.splToken && r.coverage.token2022;
   return (
-    <section aria-labelledby="wi-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="wi-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="wi-result" className="text-lg font-semibold text-foreground">Result <span className="font-mono text-sm text-muted-foreground">{shortAddress(r.address)}</span></h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

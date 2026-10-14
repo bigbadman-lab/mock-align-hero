@@ -75,8 +75,8 @@ function WhaleWatchPage() {
 
   return (
     <>
-      <PageHeader label="Template tool · WALLET engine" title="Whale Watch" intro="See recent large native SOL transfers to or from one Solana address — checked from its latest transactions when you press the button. Native SOL transfers only." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · WALLET engine" title="Whale Watch" intro="See recent large native SOL transfers to or from one Solana address — checked from its latest transactions when you press the button. Native SOL transfers only." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">
           This is a small, dated sample — the address's 20 most recent transactions, of which the newest 10 are inspected. Older transfers may exist. No tokens, prices, labels, alerts or network-wide whale discovery. An address is not an identity.
         </p>
@@ -96,7 +96,7 @@ function WhaleWatchPage() {
               <input
                 id="ww-address" value={address} onChange={(e) => setAddress(e.target.value)} onBlur={() => setTouched(true)}
                 maxLength={60} autoComplete="off" spellCheck={false} aria-invalid={touched && !!trimmed && !valid} aria-describedby="ww-help"
-                className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+                className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
                 placeholder="Base58 address"
               />
               <p id="ww-help" className="text-xs text-muted-foreground">
@@ -155,7 +155,7 @@ function ResultView({ r }: { r: WhaleWatchResult }) {
     c.truncatedByBudget && `${c.truncatedByBudget} transaction(s) weren't checked because the time budget ran out`,
   ].filter(Boolean) as string[];
   return (
-    <section aria-labelledby="ww-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="ww-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="ww-result" className="text-lg font-semibold text-foreground">Sample result</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

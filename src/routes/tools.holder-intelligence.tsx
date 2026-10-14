@@ -39,7 +39,7 @@ function ResultView({ r }: { r: HolderIntelligenceResult }) {
   const url = explorerAccountUrl(r.mint);
   const d = r.distribution;
   return (
-    <section aria-labelledby="hi-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="hi-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="hi-result" className="text-lg font-semibold text-foreground">Holder snapshot</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

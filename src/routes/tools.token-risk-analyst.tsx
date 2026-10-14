@@ -34,7 +34,7 @@ const STATE_TONE: Record<CheckState, string> = { observed: "border-primary/50 te
 function ResultView({ r }: { r: TokenRiskResult }) {
   const url = explorerAccountUrl(r.mint);
   return (
-    <section aria-labelledby="tra-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="tra-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="tra-result" className="text-lg font-semibold text-foreground">Evidence checklist</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

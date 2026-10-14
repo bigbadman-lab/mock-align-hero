@@ -100,8 +100,8 @@ export function MintToolShell<R>({ id, name, label, intro, note, buttonText, end
 
   return (
     <>
-      <PageHeader label={label} title={name} intro={intro} />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label={label} title={name} intro={intro} />
+      <PageContainer className="space-y-5 py-6">
         <div className="max-w-2xl text-sm text-muted-foreground">{note}</div>
         {status.isPending && <StatusMessage title="Checking tool availability…" />}
         {status.isError && <StatusMessage tone="warning" title="Couldn't check availability"><button className="underline" onClick={() => void status.refetch()}>Check again</button></StatusMessage>}

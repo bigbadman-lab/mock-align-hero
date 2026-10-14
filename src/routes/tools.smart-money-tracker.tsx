@@ -39,8 +39,8 @@ function Page() {
 
   return (
     <>
-      <PageHeader label="Template tool · Intelligence" title="Smart Money Tracker" intro="Tracked wallet activity for up to 3 wallets you choose — recent signatures and native SOL transfers, read once when you press the button." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · Intelligence" title="Smart Money Tracker" intro="Tracked wallet activity for up to 3 wallets you choose — recent signatures and native SOL transfers, read once when you press the button." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">Not a 24/7 monitor, alert or copy-trading tool, and it doesn't say whether these wallets are "smart". It samples the latest 20 signatures per wallet and decodes the newest 5; token transfers, swaps and profit are not shown.</p>
         <ToolStatusBanner name="Smart Money Tracker" status={status} />
         {available && (
@@ -50,7 +50,7 @@ function Page() {
                 <label htmlFor={`smt-${i}`} className="label-mono block text-xs text-subtle">Wallet {i + 1}{i > 0 ? " (optional)" : ""}</label>
                 <input id={`smt-${i}`} value={v} onChange={(e) => setInputs((xs) => xs.map((x, j) => (j === i ? e.target.value : x)))} maxLength={60} autoComplete="off" spellCheck={false}
                   aria-invalid={!!v.trim() && !isValidSolanaAddress(v.trim())}
-                  className="mt-1 w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary" placeholder="Base58 wallet address" />
+                  className="mt-1 w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary" placeholder="Base58 wallet address" />
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
@@ -74,7 +74,7 @@ const when = (t: number | null) => (t === null ? "time unknown" : new Date(t * 1
 
 function Result({ r }: { r: SmartMoneyResult }) {
   return (
-    <section aria-labelledby="smt-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="smt-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="smt-result" className="text-lg font-semibold text-foreground">Tracked wallet activity</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet · finalized</span>
