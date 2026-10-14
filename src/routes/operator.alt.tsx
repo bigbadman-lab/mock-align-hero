@@ -1,0 +1,133 @@
+// Operator-only lookup-table preview. READ-ONLY: builds the two unsigned transactions for display; there is
+// no sign or send button in this phase. Data comes only from /api/operator/alt (deployer sign-in required).
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline } from "@/components/mcpx/primitives";
+import { useWallet } from "@/lib/wallet/context";
+import { ALT_AUTHORITY, type ExistingTable } from "@/lib/operator/alt-manifest";
+
+export const Route = createFileRoute("/operator/alt")({
+  head: () => ({
+    meta: [
+      { title: "Operator — MCPX" },
+      { name: "description", content: "MCPX operator tools." },
+      { property: "og:title", content: "Operator — MCPX" },
+      { property: "og:description", content: "MCPX operator tools." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+  component: OperatorAlt,
+  errorComponent: RouteError,
+});
+
+type Status = {
+  authority: string; network: string; entries: { address: string; role: string }[];
+  balanceLamports?: number; rentLamports?: number; feeLamports?: number; finalizedSlot?: number; rpcError?: string;
+  tables: ExistingTable[] | null; next: { step: string; table?: string };
+};
+type Preview = { table: string; createBytes: number; extendBytes: number; createIx: string; extendIx: string };
+
+const sol = (l?: number) => (l === undefined ? "—" : `${(l / 1e9).toFixed(6)} SOL`);
+
+function OperatorAlt() {
+  const w = useWallet();
+  const [st, setSt] = useState<{ s: "loading" } | { s: "forbidden" } | { s: "error" } | { s: "ok"; d: Status }>({ s: "loading" });
+  const [preview, setPreview] = useState<Preview | null>(null);
+  useEffect(() => {
+    fetch("/api/operator/alt", { credentials: "same-origin" }).then(async (r) => {
+      if (r.status === 403) return setSt({ s: "forbidden" });
+      if (!r.ok) return setSt({ s: "error" });
+      setSt({ s: "ok", d: await r.json() });
+    }, () => setSt({ s: "error" }));
+  }, []);
+
+  // Unsigned preview only. The real slot/blockhash are taken again at signing time in the next phase.
+  useEffect(() => {
+    if (st.s !== "ok" || st.d.finalizedSlot === undefined || st.d.next.step !== "create") return;
+    void (async () => {
+      const web3 = await import("@solana/web3.js");
+      const auth = new web3.PublicKey(ALT_AUTHORITY);
+      const [createIx, table] = web3.AddressLookupTableProgram.createLookupTable({ authority: auth, payer: auth, recentSlot: st.d.finalizedSlot! });
+      const extendIx = web3.AddressLookupTableProgram.extendLookupTable({ lookupTable: table, authority: auth, payer: auth, addresses: st.d.entries.map((e) => new web3.PublicKey(e.address)) });
+      const bh = "11111111111111111111111111111111";
+      const size = (ix: InstanceType<typeof web3.TransactionInstruction>) => new web3.VersionedTransaction(new web3.TransactionMessage({ payerKey: auth, recentBlockhash: bh, instructions: [ix] }).compileToV0Message()).serialize().length;
+      setPreview({ table: table.toBase58(), createBytes: size(createIx), extendBytes: size(extendIx), createIx: `CreateLookupTable (authority + payer = deployer, recent slot ${st.d.finalizedSlot})`, extendIx: `ExtendLookupTable (+${st.d.entries.length} addresses)` });
+    })();
+  }, [st]);
+
+  const connected = w.address ?? null;
+  return (
+    <>
+      <PageHeader label="Operator" title="Static lookup table" intro="Read-only preview. Nothing here can sign or send a transaction." className="py-8 sm:py-10" />
+      <PageContainer className="space-y-4 py-8">
+        {st.s === "loading" && <p className="text-sm text-muted-foreground">Checking operator access…</p>}
+        {st.s === "error" && <StatusMessage tone="warning" title="Couldn't load operator status. Try again." />}
+        {st.s === "forbidden" && (
+          <StatusMessage tone="warning" title="Operator only">
+            Sign in from the <Link to="/dashboard" className="underline">Dashboard</Link> with the authorised deployer wallet to view this page.
+          </StatusMessage>
+        )}
+        {st.s === "ok" && (
+          <>
+            <div className="rounded-lg border border-border bg-card p-4 text-sm">
+              <dl className="grid gap-2 font-mono text-xs sm:grid-cols-2">
+                <Row k="Network" v="Solana mainnet-beta" />
+                <Row k="Authority + payer" v={st.d.authority} />
+                <Row k="Connected wallet" v={connected ? `${connected}${connected === st.d.authority ? " ✓ matches" : " ✗ does not match"}` : "not connected"} />
+                <Row k="Deployer balance" v={sol(st.d.balanceLamports)} />
+                <Row k="Table deposit (refundable)" v={sol(st.d.rentLamports)} />
+                <Row k="Network fees (2 transactions)" v={sol(st.d.feeLamports)} />
+                <Row k="Total needed" v={st.d.rentLamports !== undefined ? sol(st.d.rentLamports + (st.d.feeLamports ?? 0)) : "—"} />
+                <Row k="Next step" v={stepText(st.d.next)} />
+              </dl>
+              {st.d.rpcError && <p className="mt-2 text-xs text-warning">{st.d.rpcError}</p>}
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-4 text-sm">
+              <p className="text-foreground">Tables already owned by the deployer</p>
+              {st.d.tables === null ? <p className="mt-1 text-warning">Couldn't check. Creation stays blocked until this check succeeds.</p>
+                : st.d.tables.length === 0 ? <p className="mt-1 text-muted-foreground">None — a new table would be created.</p>
+                : <ul className="mt-2 space-y-1 font-mono text-xs">{st.d.tables.map((t) => <li key={t.address}>{t.address} · {t.entries} entries · {t.active ? "active" : "deactivated"} · {t.frozen ? "frozen" : "extendable"} · {t.hasAllStatic ? "has all 13" : "missing static entries"}</li>)}</ul>}
+            </div>
+
+            {preview && (
+              <div className="rounded-lg border border-border bg-card p-4 text-sm">
+                <p className="text-foreground">Transactions (unsigned preview)</p>
+                <ol className="mt-2 space-y-1 text-muted-foreground">
+                  <li>1 · {preview.createIx} · {preview.createBytes} bytes</li>
+                  <li>2 · {preview.extendIx} · {preview.extendBytes} bytes</li>
+                </ol>
+                <p className="mt-2 font-mono text-xs text-subtle">Table address at this slot: {preview.table} (changes with the slot used at signing)</p>
+              </div>
+            )}
+
+            <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <table className="w-full text-left font-mono text-xs">
+                <thead className="text-subtle"><tr><th className="p-2">#</th><th className="p-2">Address</th><th className="p-2">Role</th></tr></thead>
+                <tbody className="divide-y divide-border">
+                  {st.d.entries.map((e, i) => <tr key={e.address}><td className="p-2 text-subtle">{i + 1}</td><td className="p-2 text-foreground">{e.address}</td><td className="p-2 text-muted-foreground">{e.role}</td></tr>)}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="rounded-md border border-border-strong p-3 text-sm text-muted-foreground">Preview mode. Wallet signing is not enabled in this phase.</p>
+            <button type="button" className={buttonOutline} onClick={() => location.reload()}>Refresh</button>
+          </>
+        )}
+      </PageContainer>
+    </>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string }) {
+  return <div className="min-w-0"><dt className="text-subtle">{k}</dt><dd className="break-all text-foreground">{v}</dd></div>;
+}
+function stepText(n: { step: string; table?: string }) {
+  return n.step === "create" ? "Create a new table, then add 13 addresses"
+    : n.step === "extend" ? `Resume: add missing addresses to ${n.table}`
+    : n.step === "done" ? `Done: ${n.table}`
+    : n.step === "conflict" ? "Blocked: unexpected existing tables — review manually"
+    : "Blocked: couldn't check existing tables";
+}

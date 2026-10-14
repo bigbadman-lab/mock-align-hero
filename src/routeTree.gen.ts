@@ -17,6 +17,7 @@ import { Route as PairedRouteImport } from './routes/paired'
 import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
+import { Route as OperatorAltRouteImport } from './routes/operator.alt'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsHolderIntelligenceRouteImport } from './routes/tools.holder-intelligence'
@@ -40,6 +41,7 @@ import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator
 import { Route as ApiCreatorLaunchPrepareRouteImport } from './routes/api/creator/launch-prepare'
 import { Route as ApiCreatorLaunchSubmitRouteImport } from './routes/api/creator/launch-submit'
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
+import { Route as ApiOperatorAltRouteImport } from './routes/api/operator/alt'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsHolderIntelligenceRouteImport } from './routes/api/tools/holder-intelligence'
 import { Route as ApiToolsOnchainReportBuilderRouteImport } from './routes/api/tools/onchain-report-builder'
@@ -98,6 +100,11 @@ const McpIndexRoute = McpIndexRouteImport.update({
 const McpSlugRoute = McpSlugRouteImport.update({
   id: '/mcp/$slug',
   path: '/mcp/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperatorAltRoute = OperatorAltRouteImport.update({
+  id: '/operator/alt',
+  path: '/operator/alt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
@@ -217,6 +224,11 @@ const ApiCreatorProductsRoute = ApiCreatorProductsRouteImport.update({
   path: '/api/creator/products',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOperatorAltRoute = ApiOperatorAltRouteImport.update({
+  id: '/api/operator/alt',
+  path: '/api/operator/alt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiToolsAccountCheckerRoute = ApiToolsAccountCheckerRouteImport.update({
   id: '/api/tools/account-checker',
   path: '/api/tools/account-checker',
@@ -333,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -357,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
   '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
+  '/api/operator/alt': typeof ApiOperatorAltRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
@@ -385,6 +399,7 @@ export interface FileRoutesByTo {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -409,6 +424,7 @@ export interface FileRoutesByTo {
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
   '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
+  '/api/operator/alt': typeof ApiOperatorAltRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
@@ -438,6 +454,7 @@ export interface FileRoutesById {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -462,6 +479,7 @@ export interface FileRoutesById {
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
   '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
+  '/api/operator/alt': typeof ApiOperatorAltRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
   '/api/tools/onchain-report-builder': typeof ApiToolsOnchainReportBuilderRoute
@@ -492,6 +510,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -516,6 +535,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-prepare'
     | '/api/creator/launch-submit'
     | '/api/creator/products'
+    | '/api/operator/alt'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
     | '/api/tools/onchain-report-builder'
@@ -544,6 +564,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -568,6 +589,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-prepare'
     | '/api/creator/launch-submit'
     | '/api/creator/products'
+    | '/api/operator/alt'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
     | '/api/tools/onchain-report-builder'
@@ -596,6 +618,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -620,6 +643,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-prepare'
     | '/api/creator/launch-submit'
     | '/api/creator/products'
+    | '/api/operator/alt'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
     | '/api/tools/onchain-report-builder'
@@ -649,6 +673,7 @@ export interface RootRouteChildren {
   PairedRoute: typeof PairedRoute
   TreasuryRoute: typeof TreasuryRoute
   McpSlugRoute: typeof McpSlugRoute
+  OperatorAltRoute: typeof OperatorAltRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsHolderIntelligenceRoute: typeof ToolsHolderIntelligenceRoute
@@ -673,6 +698,7 @@ export interface RootRouteChildren {
   ApiCreatorLaunchPrepareRoute: typeof ApiCreatorLaunchPrepareRoute
   ApiCreatorLaunchSubmitRoute: typeof ApiCreatorLaunchSubmitRoute
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
+  ApiOperatorAltRoute: typeof ApiOperatorAltRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsHolderIntelligenceRoute: typeof ApiToolsHolderIntelligenceRoute
   ApiToolsOnchainReportBuilderRoute: typeof ApiToolsOnchainReportBuilderRoute
@@ -750,6 +776,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp/$slug'
       fullPath: '/mcp/$slug'
       preLoaderRoute: typeof McpSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operator/alt': {
+      id: '/operator/alt'
+      path: '/operator/alt'
+      fullPath: '/operator/alt'
+      preLoaderRoute: typeof OperatorAltRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates/$templateId': {
@@ -913,6 +946,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreatorProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/operator/alt': {
+      id: '/api/operator/alt'
+      path: '/api/operator/alt'
+      fullPath: '/api/operator/alt'
+      preLoaderRoute: typeof ApiOperatorAltRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tools/account-checker': {
       id: '/api/tools/account-checker'
       path: '/api/tools/account-checker'
@@ -1057,6 +1097,7 @@ const rootRouteChildren: RootRouteChildren = {
   PairedRoute: PairedRoute,
   TreasuryRoute: TreasuryRoute,
   McpSlugRoute: McpSlugRoute,
+  OperatorAltRoute: OperatorAltRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsHolderIntelligenceRoute: ToolsHolderIntelligenceRoute,
@@ -1081,6 +1122,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorLaunchPrepareRoute: ApiCreatorLaunchPrepareRoute,
   ApiCreatorLaunchSubmitRoute: ApiCreatorLaunchSubmitRoute,
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
+  ApiOperatorAltRoute: ApiOperatorAltRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsHolderIntelligenceRoute: ApiToolsHolderIntelligenceRoute,
   ApiToolsOnchainReportBuilderRoute: ApiToolsOnchainReportBuilderRoute,

@@ -6,3 +6,6 @@
 - Metadata: metadata.ts is the only serializer; created at review time for one exact revision; objects are immutable random paths, never overwritten or auto-deleted.
 - Chain status stays NOT_STARTED (DB CHECK); mcpx_launch_attempts trigger refuses on-chain states without signature/mint/evidence and mint changes — nothing writes attempts until a signing phase is approved.
 - Readiness is GET-only getLaunchReadiness (redacted, 30 s cache); on-chain items stay BLOCKED without proof.
+
+- Child launch signing: browser mint key + wallet signTransaction; /api/creator/launch-submit re-runs gateVerify, checks byte-identical message + both Ed25519 sigs, files claim before broadcast; gated by MCPX_CHILD_LAUNCH_SIGNING=1 separately from MCPX_CHILD_LAUNCH_ENABLED — signing can never turn on by enabling preparation.
+- Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.

@@ -56,3 +56,5 @@
 - [x] Real launch path built: wallet signing, server re-check + broadcast + claim, live link; ALT creation script (deployer-owned); go-live runbook docs/GO_LIVE_MCP.md
 - [ ] Go-live steps (mint, lookup table, settings, switches) — need approval
 - [ ] Static lookup table: dry-run PASS (13 entries); creation awaits approval + deployer SOL
+- [x] Browser-wallet lookup table preview at /operator/alt (read-only)
+- [ ] Enable wallet signing for lookup table — awaits approval
