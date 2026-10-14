@@ -6,15 +6,16 @@ import type { Db } from "../../../src/lib/rewards/store.pg";
 import type { RpcCall } from "./pipeline";
 import { runChildFeePass, verifyChild, verifyRecipients, TOKEN_2022, type ChildRecord, type ChildOutcome } from "./child-fees";
 import { childStorePg, loadChildren, pendingRegistry, insertChild } from "./child-store.pg";
-import { runLaunchVerifier, readLaunchTx, launchStorePg } from "./launch-verify";
+import { runLaunchVerifier, readLaunchTx, launchStorePg, runRehearsalVerifier, rehearsalStorePg, NATIVE_SOL, type RehearsalPermission } from "./launch-verify";
 import { readChild, balances, fetchFinal, finalizedBlockHeight, curveVaultOwner, mintOwner, sharingConfigOf } from "./child-chain";
 
-export type ChildEnv = { launchVerifier: boolean; ops: string | null; platform: string | null; nativeDeployer: string | null; dailyGasLamports: bigint | null; minDistributable: bigint; estCostLamports: bigint };
+export type ChildEnv = { launchVerifier: boolean; solRehearsal?: boolean; ops: string | null; platform: string | null; nativeDeployer: string | null; dailyGasLamports: bigint | null; minDistributable: bigint; estCostLamports: bigint };
 
 export function readChildEnv(env: (k: string) => string | null): ChildEnv {
   const big = (k: string) => { const v = env(k); return v && /^\d{1,19}$/.test(v) ? BigInt(v) : null; };
   return {
     launchVerifier: env("MCPX_LAUNCH_VERIFIER") === "1", // needs migration 0025
+    solRehearsal: env("MCPX_SOL_REHEARSAL") === "1", // needs migration 0027
     ops: env("MCPX_FEE_OPS_RECIPIENT"), platform: env("MCPX_FEE_PLATFORM_RECIPIENT"),
     nativeDeployer: env("MCPX_DEPLOYER_PUBLIC_KEY") ?? env("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY"),
     dailyGasLamports: big("MCPX_CHILD_FEES_DAILY_GAS_LAMPORTS"),
@@ -41,11 +42,29 @@ export async function onboardChildren(db: Db, call: RpcCall, quote: string, e: C
 
 export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuote: string | null; feePayer: string | null; env: ChildEnv; now?: () => number }): Promise<ChildOutcome[]> {
   const e = opts.env;
-  if (!opts.canonicalQuote) return [{ mint: "*", result: "HELD:QUOTE_MINT_UNSET" }];
+  const auth = { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer };
+  // SOL rehearsal confirmation runs before (and independently of) the $MCP mint. Registration only — the
+  // rehearsal token is never onboarded into the child-fee keeper (pendingRegistry filters on the $MCP quote).
+  let rehearsal: RehearsalPermission | null = null, rehearsalUnknown = false;
+  const rehearsalOut: ChildOutcome[] = [];
+  if (e.launchVerifier && e.solRehearsal) {
+    const rs = rehearsalStorePg(db), ls = launchStorePg(db);
+    try { rehearsal = await rs.permission(); } catch { rehearsalUnknown = true; }
+    const xs = rehearsalUnknown ? [{ claim: "rehearsal", result: "HELD:REHEARSAL_UNAVAILABLE" }] : await runRehearsalVerifier({ ...ls, ...rs, permission: async () => rehearsal,
+      readTx: (sig) => readLaunchTx(call, sig), sharingConfigOf,
+      readChild: (c) => readChild(call, { mint: c.mint, creator: c.creator, ops: e.ops ?? "", platform: e.platform ?? "", quoteMint: NATIVE_SOL, quoteTokenProgram: "", sharingConfig: sharingConfigOf(c.mint) }),
+    }, auth);
+    rehearsalOut.push(...xs.map((x) => ({ mint: `rehearsal:${x.claim}`, result: x.result })));
+  }
+  if (!opts.canonicalQuote) return [...rehearsalOut, { mint: "*", result: "HELD:QUOTE_MINT_UNSET" }];
   if (!opts.feePayer) return [{ mint: "*", result: "HELD:FEE_PAYER_UNSET" }];
   // Post-launch verifier runs first so newly verified products are onboarded in the same pass.
-  const launches = e.launchVerifier ? await runLaunchVerifier({
-    ...launchStorePg(db),
+  const ls = launchStorePg(db);
+  // If the permission couldn't be read, the rehearsal claim can't be told apart: hold every claim this pass.
+  const launches = rehearsalUnknown ? [{ mint: "claim:*", result: "HELD:REHEARSAL_UNAVAILABLE" }] : e.launchVerifier ? await runLaunchVerifier({
+    ...ls,
+    // The rehearsal claim is never judged by the $MCP checker (it would be rejected for its SOL quote).
+    pending: async () => (await ls.pending()).filter((c) => !(rehearsal && c.mint === rehearsal.mint && c.signature === rehearsal.signature)),
     readTx: (sig) => readLaunchTx(call, sig),
     readChild: (c) => readChild(call, { mint: c.mint, creator: c.creator, ops: e.ops ?? "", platform: e.platform ?? "", quoteMint: opts.canonicalQuote!, quoteTokenProgram: TOKEN_2022, sharingConfig: sharingConfigOf(c.mint) }),
     quoteProgram: () => mintOwner(call, opts.canonicalQuote!),
@@ -74,5 +93,5 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
     registeredCreator: async (m) => byMint.get(m)?.registeredCreator ?? null,
     signingEnabled: false,
   });
-  return [...launches, ...onboard, ...pass];
+  return [...rehearsalOut, ...launches, ...onboard, ...pass];
 }

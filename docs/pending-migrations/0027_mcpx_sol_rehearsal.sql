@@ -144,6 +144,8 @@ BEGIN
     RETURN 'revoked';
   END IF;
   IF r.status = 'AVAILABLE' THEN RETURN 'nothing_to_release'; END IF;
+  -- Once a signed creation may have been broadcast, re-opening the permission could allow a second token.
+  IF r.status = 'SUBMITTED' THEN RETURN 'submitted_revoke_only'; END IF;
   UPDATE mcpx_sol_rehearsal SET status = 'AVAILABLE', draft_id = NULL, mint = NULL, signature = NULL, reserved_at = NULL WHERE id = 1;
   PERFORM mcpx_sol_rehearsal_log('release', r.status, 'AVAILABLE', r.mint, r.signature, _reason);
   RETURN 'released';
@@ -154,3 +156,38 @@ REVOKE ALL ON FUNCTION public.mcpx_sol_rehearsal_log(text, text, text, text, tex
   public.mcpx_sol_rehearsal_consume(uuid), public.mcpx_sol_rehearsal_release(text, boolean) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mcpx_sol_rehearsal_grant(text), public.mcpx_sol_rehearsal_reserve(text, uuid, text),
   public.mcpx_sol_rehearsal_submit(text, text, text), public.mcpx_sol_rehearsal_consume(uuid), public.mcpx_sol_rehearsal_release(text, boolean) TO service_role;
+
+-- PART 4 (Worker #3). Exposed through mcpx_cf_* names so the sealed worker bridge guard (public.mcpx_cf_* only) allows them.
+-- Read-only view of the permission for the launch checker (no browser access).
+CREATE OR REPLACE FUNCTION public.mcpx_cf_rehearsal_permission()
+RETURNS TABLE (creator_wallet text, status text, mint text, signature text, creation_id uuid)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT creator_wallet, status, mint, signature, creation_id FROM mcpx_sol_rehearsal WHERE id = 1;
+$$;
+
+-- After the worker's independent finalized on-chain verification of the SOL rehearsal launch: register the product
+-- through the existing mcpx_cf_register_launch, then consume the permission + mark pair_kind — all in ONE transaction,
+-- so a confirmed token is never left registered-but-unconsumed. Idempotent. Returns
+-- 'registered:<id>' | 'already_verified:<id>' | 'not_rehearsal' | 'permission_not_submitted' | <register_launch refusal>.
+CREATE OR REPLACE FUNCTION public.mcpx_cf_register_rehearsal(_claim uuid, _slot bigint, _evidence_id text) RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE r record; c record; res text; cid uuid; k text;
+BEGIN
+  SELECT * INTO r FROM mcpx_sol_rehearsal WHERE id = 1 FOR UPDATE;
+  SELECT * INTO c FROM mcpx_cf_launch_claims WHERE id = _claim FOR UPDATE;
+  IF r IS NULL OR c IS NULL OR c.mint IS DISTINCT FROM r.mint OR c.signature IS DISTINCT FROM r.signature
+     OR c.creator_wallet <> r.creator_wallet OR c.draft_id IS DISTINCT FROM r.draft_id THEN RETURN 'not_rehearsal'; END IF;
+  IF r.status = 'CONSUMED' THEN
+    RETURN CASE WHEN c.status = 'VERIFIED' AND c.creation_id = r.creation_id THEN 'already_verified:' || r.creation_id ELSE 'not_rehearsal' END;
+  END IF;
+  IF r.status <> 'SUBMITTED' THEN RETURN 'permission_not_submitted'; END IF;
+  res := mcpx_cf_register_launch(_claim, _slot, 'So11111111111111111111111111111111111111112', _evidence_id);
+  IF res NOT LIKE 'registered:%' AND res NOT LIKE 'already_verified:%' THEN RETURN res; END IF; -- nothing written
+  cid := split_part(res, ':', 2)::uuid;
+  k := mcpx_sol_rehearsal_consume(cid);
+  IF k NOT IN ('consumed', 'already_consumed') THEN RAISE EXCEPTION 'rehearsal_consume_failed:%', k; END IF; -- rolls back registration
+  RETURN res;
+END $$;
+
+REVOKE ALL ON FUNCTION public.mcpx_cf_rehearsal_permission(), public.mcpx_cf_register_rehearsal(uuid, bigint, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mcpx_cf_rehearsal_permission(), public.mcpx_cf_register_rehearsal(uuid, bigint, text) TO service_role;

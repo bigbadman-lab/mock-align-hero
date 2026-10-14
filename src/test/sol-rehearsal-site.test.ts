@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { Keypair, TransactionMessage, VersionedTransaction, SystemProgram, PublicKey, AddressLookupTableAccount } from "@solana/web3.js";
+import { Keypair, TransactionInstruction, TransactionMessage, VersionedTransaction, SystemProgram, PublicKey, AddressLookupTableAccount } from "@solana/web3.js";
 import { SESSION_TTL_MS } from "@/lib/creator-auth/core";
 import { gatePrepareDraft, gateVerify, modeFor, type GateDeps, type BuilderCall } from "@/lib/tx-builder/launch-gate";
 import { NATIVE_SOL, type RehearsalDeps, type RehearsalPermission } from "@/lib/tx-builder/rehearsal";
@@ -156,14 +156,18 @@ describe("lookup table check", () => {
 describe("optional 0.05 SOL initial buy (separate transaction)", () => {
   const kp = Keypair.generate(), W = kp.publicKey.toBase58();
   const submitted: RehearsalPermission = { status: "SUBMITTED", creatorWallet: W, draftId: DRAFT, mint, signature: "s" };
-  const buyMsg = () => new TransactionMessage({ payerKey: kp.publicKey, recentBlockhash: k(), instructions: [SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: new PublicKey(mint), lamports: 1 })] }).compileToV0Message();
+  const PUMP = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+  const buyIx = (spend = 50_000_000n, minOut = 99n) => { const d = Buffer.alloc(25); Buffer.from([225, 247, 80, 30, 213, 179, 132, 136]).copy(d); d.writeBigUInt64LE(spend, 8); d.writeBigUInt64LE(minOut, 16);
+    return new TransactionInstruction({ programId: PUMP, keys: [{ pubkey: kp.publicKey, isSigner: true, isWritable: true }, { pubkey: new PublicKey(mint), isSigner: false, isWritable: true }], data: d }); };
+  const buyMsg = (ix = buyIx()) => new TransactionMessage({ payerKey: kp.publicKey, recentBlockhash: k(), instructions: [ix] }).compileToV0Message();
   const m = buyMsg();
   const sent: string[] = [];
+  let msgFor = () => m;
   const bd = (p: RehearsalPermission = submitted, verified = true): BuyDeps => ({
     rehearsal: { ...rehearsal(p), configuredCreator: W }, now: () => NOW,
     builder: async (op, body: any) => op === "status"
       ? { status: 200, body: { state: verified ? "CREATED_FEE_VERIFIED" : "NOT_FOUND" } }
-      : { status: 200, body: { status: "UNSIGNED_BUY_CANDIDATE", messageBase64: b64.enc(m.serialize()), evidence: { quotedTokens: "123", simulation: { status: "PASS" } }, _q: body.quoteAmount } },
+      : { status: 200, body: { status: "UNSIGNED_BUY_CANDIDATE", messageBase64: b64.enc(msgFor().serialize()), evidence: { quotedTokens: "100", simulation: { status: "PASS" } }, _q: body.quoteAmount } },
     mac: async (s) => `mac:${s.length}:${s.slice(0, 60)}`, send: async (t) => { sent.push(t); return { ok: true }; }, result: async () => ({ state: "confirmed", tokensReceived: "123" }),
   });
   const s = fresh(W);
@@ -195,6 +199,16 @@ describe("optional 0.05 SOL initial buy (separate transaction)", () => {
     const p = (await buyPrepare({ connectedWallet: W }, s, d)).body as any;
     const tx = new VersionedTransaction(m); tx.sign([kp]);
     expect((await buySubmit({ connectedWallet: W, ...p, signedTxBase64: b64.enc(tx.serialize()) }, s, d)).body["code"]).toBe("BROADCAST_FAILED");
+  });
+  it("1% slippage is enforced on chain: min output below estimate-1% or a different amount is refused", async () => {
+    expect((await buyPrepare({ connectedWallet: W }, s, bd())).body["minTokensOut"]).toBe("99");
+    msgFor = () => buyMsg(buyIx(50_000_000n, 98n));
+    expect((await buyPrepare({ connectedWallet: W }, s, bd())).body["code"]).toBe("BUY_MIN_OUTPUT_TOO_LOW");
+    msgFor = () => buyMsg(buyIx(60_000_000n, 99n));
+    expect((await buyPrepare({ connectedWallet: W }, s, bd())).body["code"]).toBe("BUY_AMOUNT_MISMATCH");
+    msgFor = () => buyMsg(SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: new PublicKey(mint), lamports: 1 }));
+    expect((await buyPrepare({ connectedWallet: W }, s, bd())).body["code"]).toBe("BUY_INSTRUCTION_COUNT");
+    msgFor = () => m;
   });
   it("other wallets can never buy through the rehearsal path", async () => {
     expect((await buyPrepare({ connectedWallet: other }, fresh(other), bd())).body["code"]).toBe("REHEARSAL_NOT_PERMITTED");

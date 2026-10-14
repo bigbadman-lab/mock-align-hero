@@ -7,6 +7,32 @@ import type { BuilderCall, GateResult, GateSession } from "@/lib/tx-builder/laun
 import { LAUNCH_AUTH_FRESH_MS } from "@/lib/tx-builder/launch-gate";
 import { REHEARSAL_BUY_LAMPORTS, REHEARSAL_BUY_SLIPPAGE_BPS, type RehearsalDeps } from "@/lib/tx-builder/rehearsal";
 import { b64, messageSigners, sameBytes, verifyAllSignatures } from "./tx-wire";
+import { parseV0 } from "./alt-check";
+
+const PUMP = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
+const BUY_EXACT_QUOTE_IN_V3 = [225, 247, 80, 30, 213, 179, 132, 136];
+const ALLOWED_PROGRAMS = new Set([PUMP, "ComputeBudget111111111111111111111111111111", "11111111111111111111111111111111",
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"]);
+const u64 = (d: Uint8Array, o: number) => new DataView(d.buffer, d.byteOffset).getBigUint64(o, true);
+
+/** The buy must carry an ON-CHAIN minimum output: exactly one Pump buy_exact_quote_in_v3 spending exactly the fixed
+ *  amount with min_tokens_out >= estimate less the slippage (the program reverts below it). Returns minOut or a code. */
+export function checkBuyMessage(msg: Uint8Array, estimatedTokens: string | null, lamports: string, slippageBps: number): { minOut: string } | { code: string } {
+  if (!estimatedTokens || !/^[1-9][0-9]{0,25}$/.test(estimatedTokens)) return { code: "BUY_ESTIMATE_MISSING" };
+  let m;
+  try { m = parseV0(msg); } catch { return { code: "BUY_TX_INVALID" }; }
+  if (m.lookups !== 0) return { code: "BUY_TX_INVALID" };
+  if (m.ixs.some((i) => !ALLOWED_PROGRAMS.has(i.program))) return { code: "BUY_UNEXPECTED_PROGRAM" };
+  const buys = m.ixs.filter((i) => i.program === PUMP);
+  if (buys.length !== 1) return { code: "BUY_INSTRUCTION_COUNT" };
+  const d = buys[0]!.data;
+  if (d.length < 24 || BUY_EXACT_QUOTE_IN_V3.some((b, i) => d[i] !== b)) return { code: "BUY_WRONG_INSTRUCTION" };
+  if (u64(d, 8) !== BigInt(lamports)) return { code: "BUY_AMOUNT_MISMATCH" };
+  const minOut = u64(d, 16), est = BigInt(estimatedTokens);
+  const floor = est - (est * BigInt(slippageBps)) / 10_000n;
+  if (minOut < 1n || minOut < floor) return { code: "BUY_MIN_OUTPUT_TOO_LOW" };
+  return { minOut: minOut.toString() };
+}
 
 export const BUY_TTL_MS = 90_000;
 export type BuyDeps = {
@@ -56,10 +82,12 @@ export async function buyPrepare(input: { connectedWallet?: unknown }, session: 
   let signers: string[];
   try { signers = messageSigners(b64.dec(r.body.messageBase64)); } catch { return err(502, "BUY_TX_INVALID"); }
   if (signers.length !== 1 || signers[0] !== c.wallet) return err(502, "BUY_SIGNERS_MISMATCH");
+  const ev = r.body.evidence ?? {};
+  const chk = checkBuyMessage(b64.dec(r.body.messageBase64), typeof ev.quotedTokens === "string" ? ev.quotedTokens : null, REHEARSAL_BUY_LAMPORTS, REHEARSAL_BUY_SLIPPAGE_BPS);
+  if ("code" in chk) return err(502, chk.code);
   const expiresAt = d.now() + BUY_TTL_MS;
   const mac = await d.mac(`buy|${c.wallet}|${c.mint}|${expiresAt}|${r.body.messageBase64}`);
-  const ev = r.body.evidence ?? {};
-  return { http: 200, body: { ok: true, mint: c.mint, messageBase64: r.body.messageBase64, mac, expiresAt,
+  return { http: 200, body: { ok: true, mint: c.mint, minTokensOut: chk.minOut, messageBase64: r.body.messageBase64, mac, expiresAt,
     quoteLamports: REHEARSAL_BUY_LAMPORTS, slippageBps: REHEARSAL_BUY_SLIPPAGE_BPS, estimatedTokens: typeof ev.quotedTokens === "string" ? ev.quotedTokens : null,
     simulation: typeof ev.simulation === "object" ? ev.simulation?.status ?? null : null } };
 }

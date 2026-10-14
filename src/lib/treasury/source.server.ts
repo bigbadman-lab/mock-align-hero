@@ -134,7 +134,7 @@ export async function getChildEcosystem(): Promise<ChildEcosystem> {
   return cached("child", 30_000, async () => {
     const d = await db();
     const [products, dist] = await Promise.all([
-      d.from("mcp_creations").select("id", { count: "exact", head: true }).not("verified_tx_signature", "is", null).not("verified_slot", "is", null),
+      d.from("mcp_creations").select("id", { count: "exact", head: true }).not("verified_tx_signature", "is", null).not("verified_slot", "is", null).neq("quote_mint", "So11111111111111111111111111111111111111112") /* SOL rehearsal is not an $MCP-paired child */,
       d.from("mcpx_cf_intents").select("distributed_amount, finalized_slot").eq("status", "LANDED").not("finalized_slot", "is", null).order("finalized_slot", { ascending: false }).limit(5000),
     ]);
     if (products.error || dist.error) throw new Error("ledger_unavailable");

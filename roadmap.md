@@ -64,6 +64,6 @@ Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SO
 - [x] Migration SQL 0027 (one-use permission + rehearsal marker), throwaway-DB tests pass
 - [x] Builder #2 SOL create_v2 branch, size check, mainnet simulation PASS (0.05 SOL buy = separate tx after creation)
 - [x] Part 3 site gate: MCPX_SOL_REHEARSAL path, reserve/submit permission, ALT check, separate 0.05 SOL buy (consume + product registration = Worker #3, Part 4)
-- [ ] Worker #3: rehearsal products plan-only, excluded from native accounting
+- [x] Part 4: Worker #3 rehearsal confirmation, atomic register+consume, isolation, 1% on-chain min-out buy (not deployed)
 - [ ] "Rehearsal (SOL pair)" label; product lifecycle + tool activity checks
 - [ ] Report + activation sequence

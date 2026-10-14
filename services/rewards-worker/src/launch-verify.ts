@@ -101,3 +101,79 @@ export function launchStorePg(db: Db) {
     },
   };
 }
+
+// ---- SOL MAINNET REHEARSAL (one-time; migration 0027). Separate path: never uses or alters the $MCP checks above.
+export const NATIVE_SOL = "So11111111111111111111111111111111111111112";
+export type RehearsalPermission = { creator: string; status: string; mint: string | null; signature: string | null };
+
+/** The pending claim that IS the rehearsal (exact creator + mint + signature of the SUBMITTED permission), if any. */
+export function rehearsalClaimOf(p: RehearsalPermission | null, claims: Claim[]): Claim | null {
+  if (!p || p.status !== "SUBMITTED" || !p.mint || !p.signature) return null;
+  return claims.find((c) => c.mint === p.mint && c.signature === p.signature && c.creator === p.creator) ?? null;
+}
+
+/** Same signer/program checks as verifyLaunch, then: curve quote = native SOL, sharing config locked at
+ *  60% permitted creator / 25% env ops / 15% env platform. Unrelated SOL tokens never reach here. */
+export function verifyRehearsalLaunch(c: Claim, p: RehearsalPermission, tx: LaunchTx, o: OnchainChild | null, a: Authorized, sharingConfig: string): LaunchVerdict {
+  if (c.creator !== p.creator || c.mint !== p.mint || c.signature !== p.signature) return { ok: false, code: "NOT_THE_REHEARSAL", final: false };
+  if (!a.ops || !a.platform || !a.nativeDeployer) return { ok: false, code: "AUTHORIZED_RECIPIENTS_UNSET", final: false };
+  if (!tx.found) return { ok: false, code: "TX_NOT_FOUND", final: false };
+  if (!tx.finalized) return { ok: false, code: "TX_NOT_FINALIZED", final: false };
+  if (tx.err !== null && tx.err !== undefined) return { ok: false, code: "TX_FAILED", final: true };
+  if (tx.accountKeys[0] !== c.creator) return { ok: false, code: "FEE_PAYER_NOT_CREATOR", final: true };
+  if (!tx.accountKeys.slice(0, tx.numSigners).includes(c.mint)) return { ok: false, code: "MINT_NOT_CREATED_IN_TX", final: true };
+  if ([a.nativeDeployer, a.ops, a.platform].includes(c.creator)) return { ok: false, code: "CREATOR_PROHIBITED", final: true };
+  if (!tx.programIds.includes(PUMP_PROGRAM)) return { ok: false, code: "NOT_A_PUMP_LAUNCH", final: true };
+  if (!o) return { ok: false, code: "EVIDENCE_UNAVAILABLE", final: false };
+  const sc = o.sharingConfig;
+  if (!sc) return { ok: false, code: "SHARING_CONFIG_MISSING", final: false };
+  if (sc.mint !== c.mint) return { ok: false, code: "SHARING_CONFIG_MINT_MISMATCH", final: true };
+  if (!sc.adminRevoked) return { ok: false, code: "SHARES_NOT_LOCKED", final: true };
+  if (o.curveCreator !== sharingConfig) return { ok: false, code: "CURVE_CREATOR_NOT_SHARING_CONFIG", final: true };
+  if (o.curveQuoteMint !== NATIVE_SOL) return { ok: false, code: "QUOTE_NOT_NATIVE_SOL", final: true };
+  if (o.graduated === null) return { ok: false, code: "GRADUATION_UNKNOWN", final: false };
+  const rec: ChildRecord = { mint: c.mint, creator: c.creator, ops: a.ops, platform: a.platform, quoteMint: NATIVE_SOL, quoteTokenProgram: "", sharingConfig };
+  const r = verifyRecipients(rec, o, p.creator, a);
+  if (!r.ok) return { ok: false, code: r.code, final: true };
+  return { ok: true, slot: tx.slot, evidenceId: `rehearsal:${c.signature.slice(0, 64)}` };
+}
+
+export type RehearsalDeps = Pick<LaunchDeps, "pending" | "readTx" | "readChild" | "sharingConfigOf" | "reject"> & {
+  permission(): Promise<RehearsalPermission | null>;
+  registerRehearsal(id: string, slot: number, evidenceId: string): Promise<string>;
+};
+
+/** Runs even before the $MCP mint exists. Read-only chain access; the only write is the single atomic SQL call. */
+export async function runRehearsalVerifier(d: RehearsalDeps, a: Authorized): Promise<LaunchOutcome[]> {
+  let p: RehearsalPermission | null, claims: Claim[];
+  try { [p, claims] = await Promise.all([d.permission(), d.pending()]); } catch { return [{ claim: "rehearsal", result: "HELD:REHEARSAL_UNAVAILABLE" }]; }
+  const c = rehearsalClaimOf(p, claims);
+  if (!c || !p) return [];
+  let v: LaunchVerdict;
+  try {
+    const tx = await d.readTx(c.signature);
+    const oc = tx.found && tx.finalized && !tx.err ? await d.readChild(c) : null;
+    v = verifyRehearsalLaunch(c, p, tx, oc, a, d.sharingConfigOf(c.mint));
+  } catch { v = { ok: false, code: "EVIDENCE_UNAVAILABLE", final: false }; }
+  // A rejected rehearsal claim leaves the permission SUBMITTED: no new launch is possible; operator revokes.
+  if (!v.ok) {
+    if (v.final) { await d.reject(c.id, `REHEARSAL_${v.code}`.slice(0, 64)).catch(() => {}); return [{ claim: c.id, result: `REJECTED:${v.code}` }]; }
+    return [{ claim: c.id, result: `HELD:${v.code}` }];
+  }
+  try { return [{ claim: c.id, result: await d.registerRehearsal(c.id, v.slot, v.evidenceId) }]; }
+  catch (e) { return [{ claim: c.id, result: `HELD:REGISTER_FAILED:${e instanceof Error ? e.message.slice(0, 60) : "error"}` }]; }
+}
+
+export function rehearsalStorePg(db: Db) {
+  return {
+    async permission(): Promise<RehearsalPermission | null> {
+      const r = await db.query("select creator_wallet, status, mint, signature from public.mcpx_cf_rehearsal_permission()");
+      const x: any = r.rows[0];
+      return x ? { creator: x.creator_wallet, status: x.status, mint: x.mint, signature: x.signature } : null;
+    },
+    async registerRehearsal(id: string, slot: number, ev: string) {
+      const r = await db.query("select public.mcpx_cf_register_rehearsal($1::uuid, $2::bigint, $3) v", [id, slot, ev]);
+      return String(r.rows[0]?.v);
+    },
+  };
+}

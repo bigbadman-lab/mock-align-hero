@@ -44,4 +44,4 @@ export function canSign(p: RehearsalPermission, draftId: unknown, mint: unknown)
 
 /** Fixed initial buy for the rehearsal: 0.05 SOL, separate transaction after verified creation. */
 export const REHEARSAL_BUY_LAMPORTS = "50000000";
-export const REHEARSAL_BUY_SLIPPAGE_BPS = 500;
+export const REHEARSAL_BUY_SLIPPAGE_BPS = 100; // 1%: enforced on chain as min_tokens_out
