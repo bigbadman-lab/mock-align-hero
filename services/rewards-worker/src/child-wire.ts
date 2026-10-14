@@ -45,12 +45,12 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
   const auth = { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer };
   // SOL rehearsal confirmation runs before (and independently of) the $MCP mint. Registration only — the
   // rehearsal token is never onboarded into the child-fee keeper (pendingRegistry filters on the $MCP quote).
-  let rehearsal: RehearsalPermission | null = null;
+  let rehearsal: RehearsalPermission | null = null, rehearsalUnknown = false;
   const rehearsalOut: ChildOutcome[] = [];
   if (e.launchVerifier && e.solRehearsal) {
     const rs = rehearsalStorePg(db), ls = launchStorePg(db);
-    rehearsal = await rs.permission().catch(() => null);
-    const xs = await runRehearsalVerifier({ ...ls, ...rs, permission: async () => rehearsal,
+    try { rehearsal = await rs.permission(); } catch { rehearsalUnknown = true; }
+    const xs = rehearsalUnknown ? [{ claim: "rehearsal", result: "HELD:REHEARSAL_UNAVAILABLE" }] : await runRehearsalVerifier({ ...ls, ...rs, permission: async () => rehearsal,
       readTx: (sig) => readLaunchTx(call, sig), sharingConfigOf,
       readChild: (c) => readChild(call, { mint: c.mint, creator: c.creator, ops: e.ops ?? "", platform: e.platform ?? "", quoteMint: NATIVE_SOL, quoteTokenProgram: "", sharingConfig: sharingConfigOf(c.mint) }),
     }, auth);
@@ -60,7 +60,8 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
   if (!opts.feePayer) return [{ mint: "*", result: "HELD:FEE_PAYER_UNSET" }];
   // Post-launch verifier runs first so newly verified products are onboarded in the same pass.
   const ls = launchStorePg(db);
-  const launches = e.launchVerifier ? await runLaunchVerifier({
+  // If the permission couldn't be read, the rehearsal claim can't be told apart: hold every claim this pass.
+  const launches = rehearsalUnknown ? [{ mint: "claim:*", result: "HELD:REHEARSAL_UNAVAILABLE" }] : e.launchVerifier ? await runLaunchVerifier({
     ...ls,
     // The rehearsal claim is never judged by the $MCP checker (it would be rejected for its SOL quote).
     pending: async () => (await ls.pending()).filter((c) => !(rehearsal && c.mint === rehearsal.mint && c.signature === rehearsal.signature)),
