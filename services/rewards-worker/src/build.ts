@@ -23,6 +23,10 @@ export async function submitStage(d: BuildDeps, kind: "FEE_COLLECTION" | "BUYBAC
   try {
     let ixs;
     if (kind === "FEE_COLLECTION") {
+      // Unaccounted WSOL already in the deployer's WSOL account would be swept by the unwrap → refuse (never "income").
+      const w = await d.conn.getTokenAccountBalance((require("@solana/spl-token") as typeof import("@solana/spl-token")).getAssociatedTokenAddressSync(
+        new PublicKey("So11111111111111111111111111111111111111112"), d.deployer), "finalized").then((b) => BigInt(b.value.amount)).catch(() => 0n);
+      if (w !== 0n) return "REFUSED";
       const curve = await collectionInstructions(d.conn, d.deployer).catch(() => null);
       const amm = curve ? null : await ammCollectInstructions(d.conn, d.deployer);
       ixs = curve?.ixs ?? (amm?.kind === "OK" ? amm.ixs : null);
