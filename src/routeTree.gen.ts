@@ -31,6 +31,7 @@ import { Route as ApiAuthChallengeRouteImport } from './routes/api/auth/challeng
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
 import { Route as ApiCreatorAiRouteImport } from './routes/api/creator/ai'
+import { Route as ApiCreatorCanvasRouteImport } from './routes/api/creator/canvas'
 import { Route as ApiCreatorCanvasDryRunRouteImport } from './routes/api/creator/canvas-dry-run'
 import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creator/launch-artwork'
 import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
@@ -162,6 +163,11 @@ const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
 const ApiCreatorAiRoute = ApiCreatorAiRouteImport.update({
   id: '/api/creator/ai',
   path: '/api/creator/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCreatorCanvasRoute = ApiCreatorCanvasRouteImport.update({
+  id: '/api/creator/canvas',
+  path: '/api/creator/canvas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCreatorCanvasDryRunRoute = ApiCreatorCanvasDryRunRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
   '/api/creator/ai': typeof ApiCreatorAiRoute
+  '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
   '/api/creator/ai': typeof ApiCreatorAiRoute
+  '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
   '/api/creator/ai': typeof ApiCreatorAiRoute
+  '/api/creator/canvas': typeof ApiCreatorCanvasRoute
   '/api/creator/canvas-dry-run': typeof ApiCreatorCanvasDryRunRoute
   '/api/creator/launch-artwork': typeof ApiCreatorLaunchArtworkRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/auth/verify'
     | '/api/creator/ai'
+    | '/api/creator/canvas'
     | '/api/creator/canvas-dry-run'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/auth/verify'
     | '/api/creator/ai'
+    | '/api/creator/canvas'
     | '/api/creator/canvas-dry-run'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/auth/verify'
     | '/api/creator/ai'
+    | '/api/creator/canvas'
     | '/api/creator/canvas-dry-run'
     | '/api/creator/launch-artwork'
     | '/api/creator/launch-drafts'
@@ -564,6 +576,7 @@ export interface RootRouteChildren {
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
   ApiCreatorAiRoute: typeof ApiCreatorAiRoute
+  ApiCreatorCanvasRoute: typeof ApiCreatorCanvasRoute
   ApiCreatorCanvasDryRunRoute: typeof ApiCreatorCanvasDryRunRoute
   ApiCreatorLaunchArtworkRoute: typeof ApiCreatorLaunchArtworkRoute
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
@@ -742,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreatorAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/creator/canvas': {
+      id: '/api/creator/canvas'
+      path: '/api/creator/canvas'
+      fullPath: '/api/creator/canvas'
+      preLoaderRoute: typeof ApiCreatorCanvasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/creator/canvas-dry-run': {
       id: '/api/creator/canvas-dry-run'
       path: '/api/creator/canvas-dry-run'
@@ -908,6 +928,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
   ApiCreatorAiRoute: ApiCreatorAiRoute,
+  ApiCreatorCanvasRoute: ApiCreatorCanvasRoute,
   ApiCreatorCanvasDryRunRoute: ApiCreatorCanvasDryRunRoute,
   ApiCreatorLaunchArtworkRoute: ApiCreatorLaunchArtworkRoute,
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
