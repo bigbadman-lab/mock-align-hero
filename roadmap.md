@@ -49,3 +49,4 @@
 - [x] Launch form: artwork picker is now a clear lime "Choose image file" button (verified picker opens, file name + preview show, phone + desktop)
 - [x] Launch page: fee sharing card redesigned — segmented 60/25/15 bar plus stacked rows with large percentages (verified phone + desktop)
 - [x] Launch flow: "3 · AI enhancement · optional" section removed; numbering now 1/2/3 (AI key management unchanged in creator management)
+- [x] Dashboard: padding reduced — heading block 40px (was 56/80), cards p-4 (was p-6), panel gaps 16px (was 32), list rows px-4 py-3; verified desktop + phone, no overflow, build OK
