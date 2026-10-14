@@ -27,7 +27,7 @@ const UNAVAILABLE = [
   { id: "activity", title: "Tool activity", reason: "Not available — product activity appears only after a verified token launch." },
 ];
 
-function Dashboard() {
+export function Dashboard() {
   const session = useCreatorSession();
   const signedIn = session.s === "signed_in";
 
