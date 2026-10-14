@@ -18,26 +18,26 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
 }
 
 const Code = ({ children }: { children: string }) => (
-  <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-xs text-foreground"><code>{children}</code></pre>
+  <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-3 font-mono text-xs text-foreground"><code>{children}</code></pre>
 );
 
 /** Render ONLY for an active product whose endpoint the server reported. Never contains a real key. */
 export function McpConnection({ endpoint, tool }: { endpoint: string; tool: PublicTool }) {
   const config = JSON.stringify({ mcpServers: { [tool.name]: { type: "streamable-http", url: endpoint, headers: { Authorization: "Bearer <YOUR_PRODUCT_API_KEY>" } } } }, null, 2);
   return (
-    <section aria-labelledby="conn-h" className="space-y-5 rounded-lg border border-border bg-card p-6">
-      <h2 id="conn-h" className="text-lg font-semibold">MCP connection</h2>
-      <div className="space-y-2">
+    <section aria-labelledby="conn-h" className="space-y-3 rounded-lg border border-border bg-card p-4">
+      <h2 id="conn-h" className="text-base font-semibold">MCP connection</h2>
+      <div className="space-y-1.5">
         <p className="label-mono text-subtle">Endpoint (Streamable HTTP, POST)</p>
         <p className="break-all font-mono text-sm text-foreground">{endpoint}</p>
         <CopyButton text={endpoint} label="Copy endpoint" />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <p className="label-mono text-subtle">Example client configuration</p>
         <Code>{config}</Code>
         <p className="text-sm text-muted-foreground">Replace the placeholder with a product API key from the product's creator. Never paste a real key into public pages, chats or shared repositories.</p>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <p className="label-mono text-subtle">Tool</p>
         <p className="text-sm text-foreground"><span className="font-mono">{tool.name}</span> · adapter v{tool.adapterVersion}</p>
         <p className="text-sm text-muted-foreground">{tool.description}</p>
@@ -45,7 +45,7 @@ export function McpConnection({ endpoint, tool }: { endpoint: string; tool: Publ
         <p className="label-mono text-subtle">Input schema</p>
         <Code>{tool.inputSchema}</Code>
       </div>
-      <div className="space-y-2 text-sm text-muted-foreground">
+      <div className="space-y-1.5 text-sm text-muted-foreground">
         <p className="label-mono text-subtle">Compatibility</p>
         <p>Tested with the official MCP client on protocol {TESTED_PROTOCOL}. Protocol 2026-07-28 is not yet tested. There is no one-click connect.</p>
         <p className="label-mono text-subtle">Troubleshooting</p>

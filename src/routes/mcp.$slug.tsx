@@ -39,7 +39,7 @@ function ProductPage() {
   const { data } = useSuspenseQuery(productProfileQuery(slug));
   if (data.status === "unavailable") {
     return (
-      <PageContainer className="py-16">
+      <PageContainer className="py-8">
         <StatusMessage tone="warning" title="Product registry unavailable">
           <p role="alert">We couldn't reach the product registry. This does not mean the product doesn't exist — try again later.</p>
         </StatusMessage>
@@ -48,7 +48,7 @@ function ProductPage() {
   }
   if (data.status === "not_found") {
     return (
-      <PageContainer className="py-16">
+      <PageContainer className="py-8">
         <EmptyState title="No verified product at this address">
           <p>There is no verified MCPX product called “{slug}”. <Link to="/mcp" className="underline underline-offset-4">Browse templates</Link></p>
         </EmptyState>
@@ -62,7 +62,7 @@ const solscan = (kind: "token" | "tx" | "account", v: string) => `https://solsca
 
 function Fact({ k, v, href }: { k: string; v: string; href?: string }) {
   return (
-    <div className="grid gap-1 border-b border-border py-3 last:border-0 sm:grid-cols-[12rem_1fr]">
+    <div className="grid gap-0.5 border-b border-border py-1.5 last:border-0 sm:grid-cols-[10rem_1fr]">
       <dt className="label-mono text-subtle">{k}</dt>
       <dd className="break-all font-mono text-sm text-foreground">
         {href ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-4">{v}</a> : v}
@@ -75,10 +75,10 @@ function Profile({ p }: { p: PublicProfile }) {
   const url = `https://mcpx.fun/mcp/${p.slug}`;
   return (
     <>
-      <PageHeader label={LABEL[p.availability]} title={<>{p.displayName} <span className="font-mono text-subtle">${p.ticker}</span></>} intro={p.description || undefined} />
-      <PageContainer className="space-y-10 py-12">
-        <section aria-labelledby="facts-h" className="rounded-lg border border-border bg-card p-6">
-          <h2 id="facts-h" className="mb-2 text-lg font-semibold">Verified facts</h2>
+      <PageHeader className="py-6 sm:py-8" label={LABEL[p.availability]} title={<>{p.displayName} <span className="font-mono text-subtle">${p.ticker}</span></>} intro={p.description || undefined} />
+      <PageContainer className="space-y-4 py-6">
+        <section aria-labelledby="facts-h" className="rounded-lg border border-border bg-card p-4">
+          <h2 id="facts-h" className="mb-2 text-base font-semibold">Verified facts</h2>
           <dl>
             <Fact k="Template" v={`${p.templateName} · v${p.templateVersion}${p.engine ? ` · ${p.engine}` : ""}`} />
             <Fact k="Creator wallet" v={p.creatorWallet} href={solscan("account", p.creatorWallet)} />
@@ -88,7 +88,7 @@ function Profile({ p }: { p: PublicProfile }) {
             <Fact k="Verified" v={`${new Date(p.verifiedAt).toISOString().slice(0, 16).replace("T", " ")} UTC · slot ${p.verifiedSlot} · ${p.network}`} />
             <Fact k="Product ID" v={p.creationId} />
           </dl>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>Share: <span className="font-mono">{url}</span></span>
             <CopyButton text={url} label="Copy link" />
           </div>
