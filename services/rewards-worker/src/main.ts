@@ -109,8 +109,12 @@ async function main() {
   };
   for (;;) {
     if (stopping) return;
+    let op = "site_state";
+    const t0 = Date.now();
     try {
-      const st = (await sealedPost(bridge, "/api/public/rewards/state", {})) as { config: { mint: string | null; deployerWallet: string | null; anchorSlot: string | null; genesisWindow: string | null; emergencyStop: boolean } | null; schemaReady: boolean };
+      // 2A: the state read is a ~200 ms request; bound it (15 s) with one retry instead of the bridge's 120 s default.
+      const st = (await fetchSiteState(bridge, sealedPost)) as { config: { mint: string | null; deployerWallet: string | null; anchorSlot: string | null; genesisWindow: string | null; emergencyStop: boolean } | null; schemaReady: boolean };
+      op = "launch_config";
       const c = st.config;
       const wait: string[] = [];
       if (!st.schemaReady) wait.push("SCHEMA_0010_NOT_APPLIED");
