@@ -1,7 +1,7 @@
 // Public product profile contract (pure logic; data sources are injected so tests use fixtures only).
 // Only allowlisted, evidence-backed fields leave the server. Raw tool_config, keys, audit events never do.
 import * as z from "zod/v4";
-import { adapterExact } from "@/lib/mcp-gateway/registry";
+import { adapterExact, type ProductSettings, type TemplateAdapter } from "@/lib/mcp-gateway/registry";
 import { TEMPLATES } from "@/lib/templates";
 
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -52,6 +52,16 @@ export type ProfileResult =
   | { status: "unavailable" };
 
 export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<ProfileResult> {
+  return (await resolveProfile(deps, rawSlug)).result;
+}
+
+/** Server-only: the public profile plus the resolved adapter and server-fixed settings (never sent to browsers). */
+export async function resolveProfile(deps: ProfileDeps, rawSlug: string): Promise<{ result: ProfileResult; adapter: TemplateAdapter | null; settings: ProductSettings | null }> {
+  const r = await resolveInner(deps, rawSlug);
+  return "result" in r ? r : { result: r, adapter: null, settings: null };
+}
+
+async function resolveInner(deps: ProfileDeps, rawSlug: string): Promise<ProfileResult | { result: ProfileResult; adapter: TemplateAdapter | null; settings: ProductSettings | null }> {
   const slug = String(rawSlug ?? "").toLowerCase();
   if (!SLUG_RE.test(slug)) return { status: "not_found" };
   let c: ProfileCreationRow | null, cfg: ProfileConfigRow | null = null;
@@ -65,11 +75,13 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
   const tpl = TEMPLATES.find((t) => t.id === c.template_id);
   let availability: Availability = "not_configured";
   let tool: PublicTool | null = null;
+  let runAdapter: TemplateAdapter | null = null, runSettings: ProductSettings | null = null;
   if (cfg && cfg.creation_id === c.id) {
     const adapter = cfg.template_id === c.template_id ? adapterExact(cfg.template_id, cfg.template_version) : null;
     const settings = adapter && Number(cfg.template_version.split(".")[0]) === c.template_version ? adapter.parseSettings(cfg.tool_config) : null;
     if (!adapter || !settings) availability = "misconfigured";
     else {
+      runAdapter = adapter; runSettings = settings;
       availability = cfg.lifecycle_state === "active" ? "active" : cfg.lifecycle_state === "suspended" ? "suspended" : "inactive";
       tool = {
         name: adapter.toolName, adapterVersion: adapter.version, title: adapter.title, description: adapter.description,
@@ -82,7 +94,7 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
     const u = deps.getArtworkUrl ? await deps.getArtworkUrl(c.child_mint) : null;
     imageUrl = u && /^https:\/\/(www\.)?mcpx\.fun\/api\/public\/launch-assets\/artwork\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(u) ? u : null;
   } catch { imageUrl = null; }
-  return {
+  const result: ProfileResult = {
     status: "ok",
     profile: {
       creationId: c.id, slug: c.slug, displayName: c.display_name, ticker: c.ticker, description: c.description,
@@ -95,4 +107,5 @@ export async function loadProfile(deps: ProfileDeps, rawSlug: string): Promise<P
       endpoint: availability === "active" && tool ? PRODUCT_ENDPOINT_BASE + c.id : null,
     },
   };
+  return { result, adapter: runAdapter, settings: runSettings };
 }

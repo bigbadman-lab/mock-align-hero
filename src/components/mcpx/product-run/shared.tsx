@@ -29,7 +29,7 @@ const RETRYABLE: RunErrorKind[] = ["rate_limited", "busy", "timeout", "provider_
 
 export class RunError extends Error { constructor(public kind: RunErrorKind) { super(kind); } }
 
-export async function postRun<T>(slug: string, input: Record<string, string>, signal: AbortSignal): Promise<T> {
+export async function postRun<T>(slug: string, input: Record<string, unknown>, signal: AbortSignal): Promise<T> {
   let r: Response;
   try {
     r = await fetch(`/api/products/${encodeURIComponent(slug)}/run`, {
@@ -49,7 +49,7 @@ export async function postRun<T>(slug: string, input: Record<string, string>, si
 export function useProductRun<T>(slug: string) {
   const abort = useRef<AbortController | null>(null);
   return useMutation({
-    mutationFn: (input: Record<string, string>) => {
+    mutationFn: (input: Record<string, unknown>) => {
       abort.current?.abort(); abort.current = new AbortController();
       return postRun<T>(slug, input, abort.current.signal);
     },

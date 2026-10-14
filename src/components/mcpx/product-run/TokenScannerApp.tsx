@@ -156,7 +156,7 @@ export function TokenScannerApp({ slug, defaultMint, ticker }: { slug: string; d
       <div aria-live="polite" aria-busy={run.isPending}>
         {run.isPending && run.variables && (
           <p className="flex items-center gap-2 break-all font-mono text-xs text-muted-foreground">
-            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" aria-hidden /> Reading {run.variables["mint"]} from Solana…
+            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" aria-hidden /> Reading {String(run.variables["mint"])} from Solana…
           </p>
         )}
         {run.isError && !run.isPending && <RunErrorView error={run.error} disabled={run.isPending} onRetry={run.variables ? () => run.mutate(run.variables!) : undefined} />}
