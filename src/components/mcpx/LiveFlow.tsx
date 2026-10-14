@@ -99,7 +99,7 @@ const C_OUT: (Node & { pct: string; tone: "primary" | "muted"; path: string })[]
   { x: 880, y: 350, label: "MCPX platform", sub: "protocol", pct: "15%", tone: "muted", path: "M580 240 C 690 240, 710 350, 800 350" },
 ];
 
-/** Child-token flow: traders buy a child token with $MCP, its fees split 60/25/15, and the token powers a live MCP tool. */
+/** Child-token flow: traders buy a child token with SOL, its fees split 60/25/15, and the token powers a live MCP tool. */
 export function ChildFlow() {
   const p1 = "M165 220 L 225 220";
   const p2 = "M375 220 L 435 220";
@@ -117,7 +117,7 @@ export function ChildFlow() {
         <span className="label-mono text-subtle">Illustration · child launches not live yet</span>
       </div>
       <div className="overflow-x-auto">
-        <svg viewBox="0 0 1000 470" role="img" aria-label="Traders buy a child token using $MCP. The child token's creator fees split 60% to the tool creator, 25% to tool operations and 15% to the MCPX platform. Every child token powers its own live MCP tool." className="min-w-[680px] w-full">
+        <svg viewBox="0 0 1000 470" role="img" aria-label="Traders buy a child token using SOL. The child token's creator fees split 60% to the tool creator, 25% to tool operations and 15% to the MCPX platform. Every child token powers its own live MCP tool." className="min-w-[680px] w-full">
           <style>{`
             .cf-line{stroke-dasharray:6 8;animation:cf-dash 1.2s linear infinite}
             @keyframes cf-dash{to{stroke-dashoffset:-28}}
@@ -137,8 +137,8 @@ export function ChildFlow() {
           {C_OUT.map((o, i) => <Dots key={i} path={o.path} dur={2.2 + i * 0.2} cls={o.tone === "primary" ? "fill-primary" : "fill-muted-foreground"} />)}
           <Dots path={tool} dur={0.9} cls="fill-primary" count={2} />
 
-          <Box n={{ x: 90, y: 220, label: "Traders", sub: "buy with $MCP" }} />
-          <Box n={{ x: 300, y: 220, label: "Child token", sub: "$MCP-paired pool" }} />
+          <Box n={{ x: 90, y: 220, label: "Traders", sub: "buy with SOL" }} />
+          <Box n={{ x: 300, y: 220, label: "Child token", sub: "paired to $MCP" }} />
 
           <circle cx={510} cy={220} r={80} className="fill-primary cf-glow" opacity={0.3} style={{ filter: "blur(18px)" }} />
           <circle cx={510} cy={220} r={66} className="fill-background stroke-primary" strokeWidth={1.5} />
