@@ -41,7 +41,14 @@ export function guardSql(sql: string): string | null {
   if (typeof sql !== "string" || !sql.length || sql.length > MAX_SQL_CHARS) return "SQL_SIZE";
   if (!/^\s*(select|insert|update|delete|with)\s/i.test(sql)) return "SQL_KIND";
   if (DENY.test(sql)) return "SQL_DENIED";
-  for (const m of sql.matchAll(/\bpublic\.([a-z_][a-z0-9_]*)/gi)) if (!m[1]!.toLowerCase().startsWith("mcpx_rw_")) return "SQL_RELATION";
+  // mcpx_rw_* (native) and mcpx_cf_* (child keeper) are writable; the verified registry is read-only.
+  const readOnly = /^\s*select\s/i.test(sql) && !/\b(insert|update|delete)\b/i.test(sql);
+  for (const m of sql.matchAll(/\bpublic\.([a-z_][a-z0-9_]*)/gi)) {
+    const t = m[1]!.toLowerCase();
+    if (t.startsWith("mcpx_rw_") || t.startsWith("mcpx_cf_")) continue;
+    if (t === "mcp_creations" && readOnly) continue;
+    return "SQL_RELATION";
+  }
   if (/\bpublic\s*\.\s*"/i.test(sql)) return "SQL_RELATION";
   return null;
 }

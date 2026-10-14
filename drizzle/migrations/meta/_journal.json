@@ -148,6 +148,20 @@
       "when": 1791966247534,
       "tag": "0020_mcpx_rw_intent_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791971478367,
+      "tag": "0021_mcpx_cf_child_fees",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791971498484,
+      "tag": "0022_mcpx_cf_revoke_client_roles",
+      "breakpoints": true
     }
   ]
 }

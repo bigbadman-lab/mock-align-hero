@@ -20,6 +20,7 @@ import { loadFrozen, loadPolicies } from "../../../src/lib/rewards/cutoff-snapsh
 import { windowPayableForPlanning } from "../../../src/lib/rewards/recovery.pg";
 import { pipelineStatus } from "../../../src/lib/rewards/cutoff-snapshot";
 import { policyFor, policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
+import { childFeeCycle, readChildEnv } from "./child-wire";
 import { address, isOffCurveAddress } from "@solana/addresses"; // address-only; keeps web3.js (send/sign code) out of the bundle
 
 const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? ("PROGRAM" as const) : ("WALLET" as const); } catch { return "UNKNOWN" as const; } };
@@ -99,6 +100,13 @@ async function main() {
   // Launch config comes from the site. Setting the $MCP mint there is the ONLY go-live step: anchor slot, genesis
   // window and deployer wallet are derived from the mint's creation transaction unless explicitly configured.
   let genesis = NaN;
+  // CHILD-FEES-01B: child-fee keeper runs on the same schedule, plan-only, isolated from native rewards.
+  const childPass = async (quote: string | null, feePayer: string | null) => {
+    try {
+      const r = await childFeeCycle(db, rpcCall(env("MCPX_REWARDS_RPC_URL")!), { canonicalQuote: quote, feePayer, env: readChildEnv(env) });
+      log({ event: "child_fees", signing: "DISABLED", broadcast: "DISABLED", results: r.slice(0, 50) });
+    } catch (e) { log({ level: "error", event: "child_fees_failed", error: e instanceof Error ? e.message : "unknown" }); }
+  };
   for (;;) {
     if (stopping) return;
     try {
@@ -119,6 +127,7 @@ async function main() {
         if (!wait.length) { log({ event: "launch_config", mint: cfg.mint, deployerWallet: cfg.deployerWallet, anchorSlot: process.env["MCPX_NATIVE_ANCHOR_SLOT"], genesisWindow: genesis, derived: !c!.anchorSlot || !c!.genesisWindow || !c!.deployerWallet }); break; }
       }
       log({ event: "ready_state", ready: false, health: true, mode, blockers: wait });
+      await childPass(c?.mint ?? null, c?.deployerWallet ?? env("MCPX_DEPLOYER_PUBLIC_KEY"));
     } catch (e) { log({ level: "error", event: "state_failed", error: e instanceof Error ? e.message : "unknown" }); }
     await new Promise((r) => setTimeout(r, pollMs));
   }
@@ -208,6 +217,7 @@ async function main() {
       }
       log({ event: "fees", correlationId, provenance: prov.createdMints === null ? "UNKNOWN" : prov.createdMints.length, result: fees.kind, events: "events" in fees ? fees.events.length : 0, fills: fills.map((f) => f.result) });
       log({ event: "execution", correlationId, readiness: readiness.state, blockers: readiness.blockers, reconciled: rec.length, actions: rec.map((x) => x.action) });
+      await childPass(cfg.mint, cfg.deployerWallet);
       backoff = pollMs;
     } catch (e) {
       backoff = Math.min(backoff * 2, 10 * 60_000);

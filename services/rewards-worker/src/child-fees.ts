@@ -109,7 +109,7 @@ export function verifyChildSettlement(tx: FinalTx | null, c: ChildRecord, vaultO
 // ---- durable execution (store injected; production store = pending migration 0021 via the sealed bridge)
 export type ChildIntent = { key: string; mint: string; status: "RESERVED" | "SIGNED" | "LANDED" | "FAILED" | "EXPIRED"; signature?: string; signedBase64?: string; lastValidBlockHeight?: number; costLamports: bigint };
 export interface ChildStore {
-  reserve(i: { key: string; mint: string; costLamports: bigint }): Promise<"RESERVED" | "DUPLICATE">;
+  reserve(i: { key: string; mint: string; costLamports: bigint; action?: "DISTRIBUTE" | "SWEEP_THEN_DISTRIBUTE" }): Promise<"RESERVED" | "DUPLICATE">;
   recordSigned(key: string, signature: string, signedBase64: string, lastValidBlockHeight: number): Promise<void>;
   open(): Promise<ChildIntent[]>;
   finalize(key: string, status: "LANDED" | "FAILED" | "EXPIRED", evidence: unknown): Promise<void>;
@@ -155,6 +155,8 @@ export type KeeperDeps = {
   store: ChildStore;
   authorized: AuthorizedRecipients;                 // server env, never from the DB record
   registeredCreator: (mint: string) => Promise<string | null>; // mcp_creations.creator_wallet
+  /** false = plan only: stop before reserving an identity or building/signing anything (this gate). */
+  signingEnabled?: boolean;
 };
 
 async function recipientsOk(d: KeeperDeps, c: ChildRecord): Promise<VerifyResult & { onchain?: OnchainChild }> {
@@ -208,8 +210,9 @@ export async function runChildFeePass(d: KeeperDeps): Promise<ChildOutcome[]> {
     const remaining = d.dailyGasLamports - (await d.store.gasSpentToday());
     const p = planChild({ graduated: onchain.graduated as boolean, ...b, minDistributable: d.minDistributable, estCostLamports: cost, gasRemainingLamports: remaining });
     if (p.action === "SKIP") { out.push({ mint: c.mint, result: `SKIP:${p.code}` }); continue; }
+    if (d.signingEnabled === false) { out.push({ mint: c.mint, result: `READY_UNSIGNED:${p.action}:${p.amount}` }); continue; }
     const key = childIntentKey(c.mint, d.now());
-    if ((await d.store.reserve({ key, mint: c.mint, costLamports: cost })) === "DUPLICATE") { out.push({ mint: c.mint, result: "DUPLICATE" }); continue; }
+    if ((await d.store.reserve({ key, mint: c.mint, costLamports: cost, action: p.action })) === "DUPLICATE") { out.push({ mint: c.mint, result: "DUPLICATE" }); continue; }
     const s = await d.buildAndSign(c, p.action);
     await d.store.recordSigned(key, s.signature, s.signedBase64, s.lastValidBlockHeight); // bytes persisted before any send
     if (d.send) await d.send(s.signedBase64).catch(() => {});
