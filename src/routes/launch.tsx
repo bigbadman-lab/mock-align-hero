@@ -223,13 +223,13 @@ function Launch() {
               </div>
 
               <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-secondary" role="img" aria-label="Fee split: 60% creator, 25% tool operations, 15% platform">
-                {FEE_SPLIT.map((f, i) => <span key={f.role} style={{ width: `${f.bps / 100}%` }} className={["bg-primary", "bg-primary/55", "bg-primary/25"][i]} />)}
+                {FEE_SPLIT.map((f, i) => <span key={f.role} style={{ width: `${f.bps / 100}%` }} className={["bg-primary", "bg-primary/60", "bg-primary/35"][i]} />)}
               </div>
 
               <ul className="mt-1 divide-y divide-border">
                 {FEE_SPLIT.map((f, i) => (
                   <li key={f.role} className="flex items-center gap-3 py-2">
-                    <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-sm ${["bg-primary", "bg-primary/55", "bg-primary/25"][i]}`} />
+                    <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-sm ${["bg-primary", "bg-primary/60", "bg-primary/35"][i]}`} />
                     <span className="w-16 shrink-0 font-mono text-2xl font-semibold tabular-nums text-foreground">{f.bps / 100}%</span>
                     <span className="text-muted-foreground">{f.role}</span>
                   </li>
