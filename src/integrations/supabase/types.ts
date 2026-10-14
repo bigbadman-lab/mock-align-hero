@@ -667,6 +667,66 @@ export type Database = {
           },
         ]
       }
+      mcpx_cf_launch_claims: {
+        Row: {
+          attempts: number
+          created_at: string
+          creation_id: string | null
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          id: string
+          mint: string
+          reason: string | null
+          signature: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          creation_id?: string | null
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+          id?: string
+          mint: string
+          reason?: string | null
+          signature: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          creation_id?: string | null
+          creator_wallet?: string
+          draft_id?: string
+          draft_revision?: number
+          id?: string
+          mint?: string
+          reason?: string | null
+          signature?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_cf_launch_claims_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcpx_cf_launch_claims_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcpx_creator_sessions: {
         Row: {
           created_at: string
@@ -2284,6 +2344,19 @@ export type Database = {
           _expected: number
           _wallet: string
         }
+        Returns: string
+      }
+      mcpx_cf_register_launch: {
+        Args: {
+          _claim: string
+          _evidence_id: string
+          _quote: string
+          _slot: number
+        }
+        Returns: string
+      }
+      mcpx_cf_reject_launch: {
+        Args: { _claim: string; _reason: string }
         Returns: string
       }
       mcpx_free_test_take: {
