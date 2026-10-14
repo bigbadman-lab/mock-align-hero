@@ -27,7 +27,7 @@ function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-border bg-grid">
-        <PageContainer className="py-20 sm:py-28 lg:py-32">
+        <PageContainer className="py-14 sm:py-20 lg:py-24">
           <div className="max-w-5xl animate-rise">
             <SectionLabel>CREATOR FEES PAY HOLDERS</SectionLabel>
             <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
@@ -46,14 +46,14 @@ function Home() {
       </section>
 
       <section aria-labelledby="treasury" className="border-b border-border">
-        <PageContainer className="py-20">
+        <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Treasury" title={<span id="treasury">Native $MCP rewards, in the open</span>} intro="Fees collected, five-minute reward windows and finalized holder payouts — verified data only." />
           <div className="mt-10"><TreasuryModule /></div>
         </PageContainer>
       </section>
 
       <section aria-labelledby="flow" className="border-b border-border">
-        <PageContainer className="py-20">
+        <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Planned product flow" title={<span id="flow">From template to working tool</span>} intro="This is the intended journey. None of these steps can be performed yet." />
           <ol className="mt-10 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {FLOW.map((s) => (
@@ -68,7 +68,7 @@ function Home() {
       </section>
 
       <section aria-labelledby="tpl" className="border-b border-border">
-        <PageContainer className="py-20">
+        <PageContainer className="py-12 sm:py-14">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <SectionHeading label="Tool library" title={<span id="tpl">Ten live tools, plus Canvas</span>} intro="Read-only Solana tools you can run today, and Canvas to chain 2–4 of them into one pipeline." />
             <Link to="/mcp" className={buttonOutline}>View all templates</Link>
@@ -90,7 +90,7 @@ function Home() {
       </section>
 
       <section aria-labelledby="vision" className="border-b border-border">
-        <PageContainer className="py-20">
+        <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Planned capability" title={<span id="vision">Useful in two places</span>} />
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             <InfoCard label="On site" title="Run tools in the browser">Each created tool is intended to have a permanent profile page where anyone can use it.</InfoCard>
@@ -100,7 +100,7 @@ function Home() {
       </section>
 
       <section aria-labelledby="status">
-        <PageContainer className="py-20">
+        <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Current status" title={<span id="status">What exists today</span>} />
           <div className="mt-8 grid gap-3 md:grid-cols-2">
             <StatusMessage title="Available now">Template definitions, documentation, Solana wallet connection (public address only) and the read-only verified registry.</StatusMessage>

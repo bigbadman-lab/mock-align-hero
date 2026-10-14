@@ -31,3 +31,4 @@
   - [x] Hero H1 size increased (sm:text-6xl / lg:text-7xl)
   - [x] Homepage: Treasury moved to first section below hero
   - [x] Section labels: decorative dash removed site-wide (matches hero)
+  - [x] Homepage: section padding tightened (hero 96px, sections 56px)
