@@ -70,5 +70,5 @@ Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SO
 - [ ] "Rehearsal (SOL pair)" label; product lifecycle + tool activity checks
 - [ ] Report + activation sequence
 
-- [ ] Hide the four SOL test tokens (pair_kind SOL_REHEARSAL) from the Paired page
-- [ ] Bundled $MCP first buy: site side (gate + launch page copy)
+- [x] Hide the four SOL test tokens (pair_kind SOL_REHEARSAL) from the Paired page
+- [x] Bundled $MCP first buy: site side (gate + launch page copy)
