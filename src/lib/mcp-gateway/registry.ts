@@ -7,6 +7,7 @@ import { HI_SCHEMA, HI_TOOL_ID, isHolderIntelligenceResult } from "@/lib/tools/h
 import { SMT_SCHEMA, SMT_TOOL_ID, SMT_MAX_WALLETS, isSmartMoneyResult } from "@/lib/tools/smart-money-tracker";
 import { ORB_SCHEMA, ORB_TOOL_ID, isOnchainReport, type TargetType } from "@/lib/tools/onchain-report";
 import { TRA_SCHEMA, TRA_TOOL_ID, isTokenRiskResult, STATE_MEANING } from "@/lib/tools/token-risk-analyst";
+import { TS_SCHEMA, TS_TOOL_ID, isTokenScannerResult } from "@/lib/tools/token-scanner";
 
 /** Server-validated, per-template product settings. Never contains URLs, programs or secrets. */
 export type ProductSettings = Record<string, string>;
@@ -145,7 +146,23 @@ const onchainReportBuilder: TemplateAdapter = {
 };
 
 /** All implemented adapters, keyed by templateId. */
+const tokenScanner: TemplateAdapter = {
+  templateId: "token-scanner",
+  version: "1.0.0",
+  toolName: "token_scanner",
+  workerToolId: TS_TOOL_ID,
+  title: "Token Scanner (Solana mainnet, read-only)",
+  description:
+    "Reads one SPL Token / Token-2022 mint at 'confirmed': program, decimals, supply, mint and freeze authority, and Token-2022 extensions. " +
+    "`status` says whether the address is a mint; `supplyCheck` cross-checks supply. No scores or safety verdicts. Read-only.",
+  inputSchema: z.strictObject({ mint: mintSchema() }),
+  ...noSettings,
+  toWorkerPayload: (i) => JSON.stringify({ schema: TS_SCHEMA, toolId: TS_TOOL_ID, input: { mint: i["mint"] } }),
+  validOutput: (out, i) => isTokenScannerResult(out, String(i["mint"])),
+};
+
 export const ADAPTERS: Record<string, TemplateAdapter> = {
+  [tokenScanner.templateId]: tokenScanner,
   [walletInspector.templateId]: walletInspector,
   [whaleWatch.templateId]: whaleWatch,
   [holderIntelligence.templateId]: holderIntelligence,

@@ -56,9 +56,9 @@ export const ownershipStore: OwnershipStore = {
 /** Products whose verified creator is this wallet (bounded). */
 export async function listOwnedProducts(wallet: string) {
   const db = await admin();
-  const { data, error } = await db.from("mcp_creations").select("id, display_name, template_id").eq("creator_wallet", wallet).order("verified_at", { ascending: false }).limit(50);
+  const { data, error } = await db.from("mcp_creations").select("id, slug, display_name, ticker, template_id, child_mint, verified_at").eq("creator_wallet", wallet).order("verified_at", { ascending: false }).limit(50);
   fail(error);
-  return (data ?? []).map((r) => ({ creationId: r.id, displayName: r.display_name, templateId: r.template_id }));
+  return (data ?? []).map((r) => ({ creationId: r.id, slug: r.slug, displayName: r.display_name, ticker: r.ticker, templateId: r.template_id, childMint: r.child_mint, verifiedAt: r.verified_at }));
 }
 
 export async function listKeyMetadata(creationId: string) {
