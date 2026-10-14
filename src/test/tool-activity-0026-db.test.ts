@@ -33,7 +33,7 @@ d("0026 tool activity (real Postgres)", () => {
     await sql`insert into public.mcpx_tool_activity (creation_id, tool_id, outcome, execution_ref, occurred_at) values (${c}, 'token_scanner', 'ok', ${crypto.randomUUID()}, now() - interval '91 days')`;
     expect(await sql`select public.mcpx_tool_activity_purge(1000) n`.then((r) => r[0].n)).toBe(1);
     expect((await sql`select count(*)::int n from public.mcpx_tool_activity where occurred_at < now() - interval '90 days'`)[0].n).toBe(0);
-    expect((await sql`select count(*)::int n from public.mcpx_tool_activity`)[0].n).toBe(2);
+    expect((await sql`select count(*)::int n from public.mcpx_tool_activity where creation_id = ${c}`)[0].n).toBe(2);
   });
   it("browser roles have no access to the table or functions", async () => {
     for (const role of ["anon", "authenticated"]) {
