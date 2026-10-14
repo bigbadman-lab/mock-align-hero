@@ -37,3 +37,6 @@
   - [x] Homepage: tool library recast as scrollable showcase rail (11 cards, arrows, real links)
   - [x] Homepage: Treasury countdown ticks live (clock skew pinned per server sample)
   - [x] Homepage: "Planned capability" → "What you can build" — 3 cards, honest status chips
+  - [x] Homepage: "Current status" → "Live flow" animated fee-flow graphic (logo, flowing dots, 30/30/40)
+  - [x] Homepage: Live flow moved above Treasury (Treasury now section 2)
+  - [x] Footer: tighter link spacing + disclaimer reworded (all facts kept)
