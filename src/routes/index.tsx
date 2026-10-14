@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageContainer, SectionHeading, SectionLabel, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
 import { ToolRail } from "@/components/mcpx/ToolRail";
+import { LiveFlow } from "@/components/mcpx/LiveFlow";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
@@ -107,11 +108,8 @@ function Home() {
 
       <section aria-labelledby="status">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="Current status" title={<span id="status">What exists today</span>} />
-          <div className="mt-8 grid gap-3 md:grid-cols-2">
-            <StatusMessage title="Available now">Template definitions, documentation, Solana wallet connection (public address only) and the read-only verified registry.</StatusMessage>
-            <StatusMessage tone="warning" title="Not available yet">Onchain token creation, earnings and rewards. Template tools run read-only, one at a time, when their service is ready. $MCP has not been minted.</StatusMessage>
-          </div>
+          <SectionHeading label="Live flow" title={<span id="status">From every trade to every holder</span>} intro="Fees collected from native $MCP trades flow into MCPX, then out to eligible wallets in SOL and bought-back $MCP." />
+          <div className="mt-8"><LiveFlow /></div>
         </PageContainer>
       </section>
     </>
