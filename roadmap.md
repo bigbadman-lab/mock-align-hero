@@ -50,6 +50,8 @@
 - [x] Launch page: fee sharing card redesigned — segmented 60/25/15 bar plus stacked rows with large percentages (verified phone + desktop)
 - [x] Launch flow: "3 · AI enhancement · optional" section removed; numbering now 1/2/3 (AI key management unchanged in creator management)
 - [x] Dashboard: padding reduced — heading block 40px (was 56/80), cards p-4 (was p-6), panel gaps 16px (was 32), list rows px-4 py-3; verified desktop + phone, no overflow, build OK
+  - [x] Product pages (/mcp/$slug): padding reduced — header 24/32px, cards p-4, section gaps 16px, fact rows py-1.5; verified desktop/mid/phone, no overflow, build OK
+  - [x] Product pages: token mint is single-click copy (value is the button, nothing opens); verified click copies, "Copied" shows, build OK
 
 - [x] Launch flow rebuilt: form → Review (quiet save) → Launch with processing graphic and live link; launch button off until server enables launching
 - [ ] Wallet transaction signing step — waits on launch-ready builder (lookup table, $MCP mint) and sign-off
