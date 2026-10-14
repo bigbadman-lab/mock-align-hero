@@ -12,7 +12,7 @@
 ## Architecture rules
 - Shared site frame (nav/footer) lives in src/components/mcpx/AppShell.tsx, mounted once in __root around <Outlet /> — one shell for all routes.
 - Template catalogue lives in src/lib/templates.ts: LIBRARY is the canonical ten-template registry with explicit id→toolId→route mappings; TEMPLATES (launchable subset) is unchanged. Live execution only from status endpoints; MCP/launch flags test-checked against ADAPTERS/TEMPLATES, so labels never claim unbuilt capability.
-- Every route sets errorComponent: RouteError so a failing section never takes down the whole app.
+- Every route sets errorComponent: RouteError so one failing section never crashes the app.
 - Verified creations registry (mcp_creations) is publicly readable on safe columns only and writable solely by a future server-side verifier; never grant browser writes.
 - outbox_events has no browser access; a verified creation and its outbox event must be written in one Postgres transaction by the server.
 - Registry reads go through src/lib/registry.ts (bounded pages, no polling, failures never shown as "empty").
@@ -22,7 +22,7 @@
 - Data ownership and refresh rules are documented in docs/DATA_REFRESH.md; registry query keys never include wallet state so wallet changes cannot refetch public data.
 - Tool execution: browser → same-origin proxy src/routes/api/tools/wallet-inspector.ts (validates, rate-limits via service-role-only `mcpx_rate_limit_take`, HMAC-signs) → separate Render worker in services/mcp-worker (only holder of the RPC key; no DB, no signing) — keeps keys out of the browser.
 - Tool CTAs render only when the proxy GET reports the worker ready, else "not connected" text.
-- Product profiles: /mcp/$slug resolves slug → canonical mcp_creations.id via a server function (src/lib/product-profile.ts, injectable deps; production in product-profile.server.ts) that returns only an allowlisted profile (describeSettings() text, never raw tool_config) and an endpoint URL only when the product is active and its adapter resolves, so public pages can never advertise an unusable MCP endpoint.
+- Product profiles: /mcp/$slug resolves slug → canonical mcp_creations.id via a server function (src/lib/product-profile.ts, injectable deps; production in product-profile.server.ts) that returns only an allowlisted profile (describeSettings() text, never raw tool_config) and an endpoint URL only when the product is active and its adapter resolves — never advertise an unusable endpoint.
 - Subdirectories with their own AGENTS.md (read first): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch, src/lib/byok, src/lib/canvas, src/lib/treasury, src/lib/tx-builder, src/lib/creator-auth, src/lib/tools, src/lib/ai-tools.
 - Operator tools: /operator/* pages read only from /api/operator/* routes, which return 403 unless the creator SIWS session wallet equals the authorised deployer; the server only accepts the exact validated lookup-table create/extend (deployer-signed in the operator's own wallet, resume rule re-checked at confirmed commitment) and never holds keys — operator powers never depend on hidden URLs.
 - Tool activity: product MCP endpoints record one row per external call (Canvas = one per request) via service-role-only `mcpx_tool_activity_record` (idempotent on execution_ref, 90-day retention), gated by `MCPX_TOOL_ACTIVITY=1`; recording is awaited with a short timeout and failures are swallowed so it never changes tool results; the dashboard shows activity only when that flag is on.
