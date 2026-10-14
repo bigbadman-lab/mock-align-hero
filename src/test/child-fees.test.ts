@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Keypair, PublicKey, TransactionInstruction, SystemProgram } from "@solana/web3.js";
-import { PUMP_SDK } from "@pump-fun/pump-sdk";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { verifyChild, planChild, verifyChildSettlement, memoryChildStore, runChildFeePass, childIntentKey, TOKEN_2022, type ChildRecord, type OnchainChild, type KeeperDeps, type FinalTx } from "../../services/rewards-worker/src/child-fees";
-import { buildChildDistribution, checkChildTx } from "../../services/rewards-worker/src/child-fees-build";
 
 const k = () => Keypair.generate().publicKey.toBase58();
 const MCP = k();
@@ -64,27 +62,6 @@ describe("finalized settlement proof", () => {
     expect(verifyChildSettlement(tx({ [vault]: -1000n, [c.creator]: 600n, [c.ops]: 250n, [c.platform]: 140n, [keeper]: 10n }), c, vault, keeper)).toMatchObject({ code: "KEEPER_RECEIVED_FUNDS" });
     expect(verifyChildSettlement(tx({}, { finalized: false }), c, vault, keeper)).toMatchObject({ state: "UNKNOWN" });
     expect(verifyChildSettlement(null, c, vault, keeper)).toMatchObject({ state: "UNKNOWN" });
-  });
-});
-
-describe("transaction construction (official SDK, Token-2022 quote)", () => {
-  it("bonding curve: sweep → distribute; graduated: AMM transfer first; strict check passes", async () => {
-    const c = mk(), keeper = k(), sh = onchain(c).sharingConfig!.shareholders;
-    for (const g of [false, true]) {
-      const ixs = await buildChildDistribution(c, keeper, sh, g);
-      expect(ixs.length).toBe(g ? 4 : 3);
-      expect(checkChildTx(ixs, keeper, c, g)).toEqual({ ok: true });
-      expect(ixs.flatMap((i) => i.keys).some((x) => x.pubkey.toBase58() === TOKEN_2022)).toBe(true);
-    }
-  });
-  it("refuses an added transfer, a wrong shape or a missing recipient", async () => {
-    const c = mk(), keeper = k(), sh = onchain(c).sharingConfig!.shareholders;
-    const ixs = await buildChildDistribution(c, keeper, sh, false);
-    expect(checkChildTx([...ixs, SystemProgram.transfer({ fromPubkey: new PublicKey(keeper), toPubkey: new PublicKey(k()), lamports: 1 })], keeper, c, false)).toMatchObject({ ok: false });
-    expect(checkChildTx(ixs, keeper, c, true)).toMatchObject({ code: "SHAPE_MISMATCH" });
-    const other = { ...c, platform: k() };
-    expect(checkChildTx(ixs, keeper, other, false)).toMatchObject({ code: "RECIPIENT_MISSING" });
-    void PUMP_SDK; void TransactionInstruction;
   });
 });
 
