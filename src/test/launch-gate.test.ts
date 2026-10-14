@@ -64,3 +64,29 @@ describe("launch path creator binding", () => {
     expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: me }, fresh(), d)).body["code"]).toBe("CANDIDATE_INCONSISTENT");
   });
 });
+
+import { gatePrepareDraft, type GateDraft } from "@/lib/tx-builder/launch-gate";
+describe("draft-bound launch", () => {
+  const draftId = "11111111-1111-4111-8111-111111111111", key = "22222222-2222-4222-8222-222222222222";
+  const dr: GateDraft = { id: draftId, revision: 3, templateId: "whale-watch", name: "Child", symbol: "CHD", uri: "https://mcpx.fun/api/public/launch-assets/metadata/x.json" };
+  const withDraft = (calls: any[] = [], d: GateDraft | null = dr) => ({ ...deps({}, calls), loadDraft: async (w: string, id: string) => (w === me && id === draftId ? d : null) });
+  const req = { draftId, revision: 3, mint, idempotencyKey: key, connectedWallet: me };
+  it("uses the stored draft's name/symbol/uri and returns the template", async () => {
+    const calls: any[] = [];
+    const r = await gatePrepareDraft({ ...req, name: "Forged" } as any, fresh(), withDraft(calls));
+    expect(r.http).toBe(200);
+    expect(calls[0][1]).toMatchObject({ creator: me, name: "Child", symbol: "CHD", uri: dr.uri });
+    expect(r.body["draft"]).toEqual({ id: draftId, revision: 3, templateId: "whale-watch" });
+  });
+  it("another creator's draft, a changed draft or missing metadata is refused", async () => {
+    const other = k();
+    expect((await gatePrepareDraft({ ...req, connectedWallet: other }, fresh(other), withDraft())).body["code"]).toBe("DRAFT_NOT_FOUND");
+    expect((await gatePrepareDraft({ ...req, revision: 2 }, fresh(), withDraft())).body["code"]).toBe("DRAFT_CHANGED");
+    expect((await gatePrepareDraft(req, fresh(), withDraft([], { ...dr, uri: null }))).body["code"]).toBe("METADATA_NOT_PREPARED");
+  });
+  it("verify refuses a binding whose token details no longer match the draft", async () => {
+    const b = { ...binding(), name: "Other", symbol: "CHD", uri: dr.uri };
+    expect((await gateVerify({ messageBase64: "AA==", binding: b, bindingMac: "m", connectedWallet: me, draftId, revision: 3 }, fresh(), withDraft())).body["code"]).toBe("DRAFT_MISMATCH");
+    expect((await gateVerify({ messageBase64: "AA==", binding: { ...b, name: "Child" }, bindingMac: "m", connectedWallet: me, draftId, revision: 3 }, fresh(), withDraft())).http).toBe(200);
+  });
+});

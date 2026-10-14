@@ -12,7 +12,9 @@ export const LAUNCH_AUTH_FRESH_MS = 10 * 60_000;
 export type GateSession = { wallet: string; expiresAt: string } | null;
 export type GateConfig = { enabled: boolean; opsRecipient: string | null; platformRecipient: string | null; nativeDeployer: string | null };
 export type BuilderCall = (op: "prepare" | "inspect", body: unknown) => Promise<{ status: number; body: any }>;
-export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number };
+/** Saved draft as owned by the session wallet (null = not theirs / missing). Metadata URI must exist. */
+export type GateDraft = { id: string; revision: number; templateId: string; name: string; symbol: string; uri: string | null };
+export type GateDeps = { config: GateConfig; builder: BuilderCall; now: () => number; loadDraft?: (wallet: string, id: string) => Promise<GateDraft | null> };
 export type GateResult = { http: number; body: Record<string, unknown> };
 
 const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -48,6 +50,25 @@ export type PrepareInput = {
   creator?: unknown; connectedWallet?: unknown;
 };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+/** Launch from a saved draft: name/symbol/uri/template come from the creator's own stored draft, never the browser. */
+export async function gatePrepareDraft(input: { draftId?: unknown; revision?: unknown; mint?: unknown; idempotencyKey?: unknown; connectedWallet?: unknown; creator?: unknown }, session: GateSession, d: GateDeps): Promise<GateResult> {
+  const ctx = precheck(session, input.connectedWallet, d);
+  if ("http" in ctx) return ctx;
+  if (typeof input.draftId !== "string" || !UUID.test(input.draftId) || typeof input.revision !== "number" || typeof input.mint !== "string" || !B58.test(input.mint)
+    || typeof input.idempotencyKey !== "string" || !UUID.test(input.idempotencyKey)) return err(400, "INVALID_INPUT");
+  if (!d.loadDraft) return err(503, "DRAFTS_UNAVAILABLE");
+  let dr: GateDraft | null;
+  try { dr = await d.loadDraft(ctx.sessionWallet!, input.draftId); } catch { return err(503, "DRAFTS_UNAVAILABLE"); }
+  if (!dr) return err(404, "DRAFT_NOT_FOUND");
+  if (dr.revision !== input.revision) return err(409, "DRAFT_CHANGED");
+  if (!dr.uri) return err(409, "METADATA_NOT_PREPARED");
+  const r = await gatePrepare({ idempotencyKey: input.idempotencyKey, mint: input.mint, name: dr.name, symbol: dr.symbol, uri: dr.uri, initialBuy: null, format: "v0_alt", creator: input.creator, connectedWallet: input.connectedWallet }, session, d);
+  if (r.http !== 200) return r;
+  return { http: 200, body: { ...r.body, draft: { id: dr.id, revision: dr.revision, templateId: dr.templateId } } };
+}
+
 export async function gatePrepare(input: PrepareInput, session: GateSession, d: GateDeps): Promise<GateResult> {
   const ctx = precheck(session, input.connectedWallet, d);
   if ("http" in ctx) return ctx;
@@ -62,7 +83,7 @@ export async function gatePrepare(input: PrepareInput, session: GateSession, d: 
   return { http: 200, body: { ok: true, creator: ctx.sessionWallet, messageBase64: r.body.messageBase64, binding: r.body.binding, bindingMac: r.body.bindingMac } };
 }
 
-export type VerifyInput = { messageBase64: unknown; binding: unknown; bindingMac: unknown; connectedWallet?: unknown };
+export type VerifyInput = { messageBase64: unknown; binding: unknown; bindingMac: unknown; connectedWallet?: unknown; draftId?: unknown; revision?: unknown };
 
 /** Called immediately before the wallet signs: same session, same wallet, untouched bytes. */
 export async function gateVerify(input: VerifyInput, session: GateSession, d: GateDeps): Promise<GateResult> {
@@ -73,6 +94,16 @@ export async function gateVerify(input: VerifyInput, session: GateSession, d: Ga
   if (typeof input.messageBase64 !== "string" || typeof input.bindingMac !== "string") return err(400, "INVALID_INPUT");
   const bad = bindingMatches(input.binding, ctx);
   if (bad) return err(403, bad);
+  // Draft-bound launches: the stored draft must be unchanged and still describe exactly this token.
+  if (input.draftId !== undefined) {
+    if (typeof input.draftId !== "string" || !UUID.test(input.draftId) || !d.loadDraft) return err(400, "INVALID_INPUT");
+    let dr: GateDraft | null;
+    try { dr = await d.loadDraft(ctx.sessionWallet!, input.draftId); } catch { return err(503, "DRAFTS_UNAVAILABLE"); }
+    const b = input.binding as any;
+    if (!dr) return err(404, "DRAFT_NOT_FOUND");
+    if (dr.revision !== input.revision) return err(409, "DRAFT_CHANGED");
+    if (b.name !== dr.name || b.symbol !== dr.symbol || b.uri !== dr.uri) return err(403, "DRAFT_MISMATCH");
+  }
   let r;
   try { r = await d.builder("inspect", { messageBase64: input.messageBase64, binding: input.binding, bindingMac: input.bindingMac }); } catch { return err(503, "BUILDER_UNREACHABLE"); }
   const c = r.body?.checks ?? {};

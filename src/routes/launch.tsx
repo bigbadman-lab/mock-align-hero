@@ -9,6 +9,7 @@ import { shortAddress } from "@/lib/wallet/state";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
 import type { ReadinessItem, ReadyState } from "@/lib/launch/readiness";
 import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
+import { LaunchTxCheck } from "@/components/mcpx/launch/LaunchTxCheck";
 import { ArtworkPanel, MetadataPanel, SavedDrafts, useDrafts, type DraftView } from "@/components/mcpx/launch/DraftPersistence";
 
 export const Route = createFileRoute("/launch")({
@@ -305,7 +306,10 @@ function Launch() {
             <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Draft review — preparation only</h2>
             <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
             {saved && !dirty ? (
-              <MetadataPanel saved={saved} drafts={drafts} onSaved={setSaved} />
+              <>
+                <MetadataPanel saved={saved} drafts={drafts} onSaved={setSaved} />
+                <LaunchTxCheck saved={saved} wallet={mainnetWallet} />
+              </>
             ) : (
               <p className="text-sm text-muted-foreground">{session.s === "signed_in" ? "Save this draft and its artwork to publish token metadata." : "This draft has not been sent anywhere."}</p>
             )}
