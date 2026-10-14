@@ -22,3 +22,5 @@
 
 - [x] CHILD-FEES-01 audit + builder fix (PARTIAL; real-mint proofs pending)
 - [x] CHILD-FEES-01B keeper module + tests (PARTIAL; 0021 pending, not wired/deployed)
+- [ ] CANVAS-01 live UI activation correction (in progress)
+- [ ] TREASURY-01 brief: read and implement within approved scope
