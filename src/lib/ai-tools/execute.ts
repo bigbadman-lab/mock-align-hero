@@ -70,7 +70,8 @@ export async function runAiTool(d: AiToolDef, input: Record<string, unknown>, de
   try {
     try {
       if (!(await deps.take("ai:global:m", 60, e.perMinute))) return { ok: false, status: 429, error: "rate_limited" };
-      if (!(await deps.take("ai:global:d", 86_400, e.perDay))) return { ok: false, status: 429, error: "rate_limited" };
+      // The shared limiter accepts windows of at most 1 hour, so the daily cap is enforced as perDay/24 per hour (never more than perDay a day).
+      if (!(await deps.take("ai:global:h", 3600, Math.max(1, Math.floor(e.perDay / 24))))) return { ok: false, status: 429, error: "rate_limited" };
     } catch { return { ok: false, status: 503, error: "unavailable" }; }
 
     const hist = Array.isArray(input["history"]) ? (input["history"] as { role: "user" | "assistant"; text: string }[]) : [];
