@@ -26,6 +26,8 @@ export interface WalletView {
   disconnect?: (() => void) | undefined;
   /** Off-chain message signing only (never transactions). Present only while connected. */
   signMessage?: ((message: Uint8Array) => Promise<Uint8Array>) | undefined;
+  /** Asks the wallet to sign one serialized transaction (never sends). Returns the signed bytes. */
+  signTransaction?: ((tx: Uint8Array) => Promise<Uint8Array>) | undefined;
 }
 
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;

@@ -28,3 +28,4 @@
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.
 - /launch never signs or sends.
 - Subdirectories with their own AGENTS.md (read first): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch, src/lib/byok, src/lib/canvas, src/lib/treasury.
+- Child launch signing: browser mint key + wallet signTransaction; /api/creator/launch-submit re-runs gateVerify, checks byte-identical message + both Ed25519 sigs, files claim before broadcast; gated by MCPX_CHILD_LAUNCH_SIGNING=1 separately from MCPX_CHILD_LAUNCH_ENABLED — signing can never turn on by enabling preparation.
