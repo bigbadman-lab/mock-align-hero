@@ -17,9 +17,9 @@ export class Conflict extends Error { constructor(public code: string) { super(c
 
 
 const BASE_COLS = "id, revision, status, chain_status, template_id, settings, product_name, tool_description, token_name, symbol, description, link, buy_preference, artwork_id, metadata_id, updated_at";
-// Canvas storage (pending migration 0023) is switched on only by MCPX_CANVAS_DRAFTS=1, set after the migration is applied.
-// Until then Canvas drafts are refused and every other draft works unchanged.
-export const canvasStorageEnabled = () => process.env["MCPX_CANVAS_DRAFTS"] === "1";
+// Canvas storage (migration 0023, applied) is on. MCPX_CANVAS_DRAFTS=0 is an emergency stop that refuses
+// Canvas drafts while every other draft keeps working unchanged.
+export const canvasStorageEnabled = () => process.env["MCPX_CANVAS_DRAFTS"] !== "0";
 const cols = () => (canvasStorageEnabled() ? `${BASE_COLS}, canvas_config` : BASE_COLS) as typeof BASE_COLS;
 type Row = { id: string; revision: number; status: string; template_id: string; settings: unknown; product_name: string; tool_description: string | null; token_name: string; symbol: string; description: string; link: string | null; buy_preference: unknown; canvas_config?: unknown; artwork_id: string | null; metadata_id: string | null; updated_at: string };
 

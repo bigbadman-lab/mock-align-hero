@@ -89,4 +89,14 @@ describe("draft-bound launch", () => {
     expect((await gateVerify({ messageBase64: "AA==", binding: b, bindingMac: "m", connectedWallet: me, draftId, revision: 3 }, fresh(), withDraft())).body["code"]).toBe("DRAFT_MISMATCH");
     expect((await gateVerify({ messageBase64: "AA==", binding: { ...b, name: "Child" }, bindingMac: "m", connectedWallet: me, draftId, revision: 3 }, fresh(), withDraft())).http).toBe(200);
   });
+  it("a Canvas (Template 11) draft goes through the identical builder request: same creator binding, no template field", async () => {
+    const calls: any[] = [];
+    const r = await gatePrepareDraft(req, fresh(), withDraft(calls, { ...dr, templateId: "canvas" }));
+    expect(r.http).toBe(200);
+    expect(r.body["draft"]).toEqual({ id: draftId, revision: 3, templateId: "canvas" });
+    const plain: any[] = [];
+    await gatePrepareDraft(req, fresh(), withDraft(plain));
+    expect(calls[0][1]).toEqual(plain[0][1]); // token creation and 60/25/15 request byte-identical to any other template
+    expect(JSON.stringify(calls[0][1])).not.toMatch(/canvas|template/i);
+  });
 });

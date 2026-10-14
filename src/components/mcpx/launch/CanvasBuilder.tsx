@@ -26,7 +26,7 @@ export function CanvasBuilder({ value, onChange, err, signedIn }: { value: Canva
       const from = keep ? s.from : opts[0] ? { step: opts[0].step, output: opts[0].output } : undefined;
       return from ? { ...s, from } : { capabilityId: s.capabilityId, version: s.version };
     });
-    onChange({ catalogVersion: CANVAS_CATALOG_VERSION, steps: fixed });
+    onChange({ catalogVersion: CANVAS_CATALOG_VERSION, steps: fixed, ...(cfg.ai ? { ai: cfg.ai } : {}) });
   };
   const add = () => { const c = CAPABILITY_BY_ID[adding]; if (!c) return; write([...steps, { capabilityId: c.id, version: c.version }]); setAdding(""); };
   const move = (i: number, d: -1 | 1) => { const n = [...steps]; const j = i + d; if (j < 0 || j >= n.length) return; [n[i], n[j]] = [n[j]!, n[i]!]; write(n.map((s) => ({ capabilityId: s.capabilityId, version: s.version, ...(s.from ? { from: s.from } : {}) }))); };
