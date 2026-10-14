@@ -5,11 +5,8 @@ import { LIBRARY, TEMPLATES, resolveTemplateParam } from "@/lib/templates";
 import { ADAPTERS } from "@/lib/mcp-gateway/registry";
 import { WW_THRESHOLDS, WW_DEFAULT_THRESHOLD } from "@/lib/tools/whale-watch";
 import { useWallet } from "@/lib/wallet/context";
-import { shortAddress } from "@/lib/wallet/state";
 import { useCreatorSession } from "@/lib/creator-auth/use-creator-session";
 import { FEE_SPLIT, LIMITS, draftSummary, templateSettingsMode, validateDraft, type Draft, type DraftInput, type FieldErrors } from "@/lib/launch/draft";
-import type { ReadinessItem, ReadyState } from "@/lib/launch/readiness";
-import { getLaunchReadiness } from "@/lib/launch/readiness.functions";
 import { LaunchTxCheck } from "@/components/mcpx/launch/LaunchTxCheck";
 import { CanvasBuilder, EMPTY_CANVAS } from "@/components/mcpx/launch/CanvasBuilder";
 import { CANVAS_TEMPLATE_ID } from "@/lib/launch/draft";
@@ -20,30 +17,19 @@ export const Route = createFileRoute("/launch")({
   validateSearch: (s: Record<string, unknown>): { template?: string } => (typeof s["template"] === "string" ? { template: s["template"] as string } : {}),
   head: () => ({
     meta: [
-      { title: "Launch preparation — MCPX" },
-      { name: "description", content: "Prepare and validate an MCPX tool-token draft. Token creation is not available yet." },
-      { property: "og:title", content: "Launch preparation — MCPX" },
-      { property: "og:description", content: "Draft and check a tool token. Nothing is created or signed while launch prerequisites are missing." },
+      { title: "Launch your token — MCPX" },
+      { name: "description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. Token launching is coming soon — configure, save and review your launch today." },
+      { property: "og:title", content: "Launch your token — MCPX" },
+      { property: "og:description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. Token launching is coming soon." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: async () => {
-    try { return await getLaunchReadiness(); } catch { return null; }
-  },
-  staleTime: 60_000,
   component: Launch,
   errorComponent: RouteError,
 });
 
 const EMPTY: DraftInput = { templateId: "", settings: {}, productName: "", toolDescription: "", tokenName: "", symbol: "", description: "", link: "", buyEnabled: false, buyAmount: "", slippageBps: "100" };
-const STATE_STYLE: Record<ReadyState, string> = {
-  READY: "text-primary border-primary/40",
-  NOT_CONFIGURED: "text-muted-foreground border-border-strong",
-  BLOCKED: "text-warning border-warning/40",
-  UNKNOWN: "text-muted-foreground border-border-strong",
-};
-const STATE_TEXT: Record<ReadyState, string> = { READY: "READY", NOT_CONFIGURED: "NOT CONFIGURED", BLOCKED: "BLOCKED", UNKNOWN: "UNKNOWN" };
 
 function settingsText(templateId: string, settings: Record<string, string>) {
   const a = ADAPTERS[templateId];
@@ -53,7 +39,6 @@ function settingsText(templateId: string, settings: Record<string, string>) {
 
 
 function Launch() {
-  const readiness = Route.useLoaderData();
   const w = useWallet();
   const session = useCreatorSession();
   const [input, setInput] = useState<DraftInput>(EMPTY);
@@ -122,42 +107,17 @@ function Launch() {
     requestAnimationFrame(() => reviewRef.current?.focus());
   };
 
-  const items: ReadinessItem[] = readiness?.items ?? [];
-  const walletItem: ReadinessItem = {
-    id: "wallet", label: "Creator wallet on Solana mainnet",
-    state: mainnetWallet ? "READY" : w.status === "loading" ? "UNKNOWN" : "NOT_CONFIGURED",
-    detail: mainnetWallet ? `Connected: ${shortAddress(mainnetWallet)}. Connecting does not create ownership.` : w.status === "connected_unsupported_network" ? "Connected, but not on Solana mainnet." : "No wallet connected.",
-  };
   const errorCount = Object.values(errors).filter(Boolean).length;
   const summary = useMemo(() => review ? draftSummary(review.draft, settingsText(review.draft.templateId, review.draft.settings), review.wallet) : "", [review]);
 
   return (
     <>
-      <PageHeader label="Builder" title="Launch preparation" intro="Draft and check a tool token. Token creation is unavailable — nothing on this page creates, signs or sends anything." />
+      <PageHeader label="Launch" title="Launch your token. Power it with MCP." intro="Choose your tools, configure your token and bring your own MCP-powered product to life on Solana." />
       <PageContainer className="space-y-12 py-16">
-        <StatusMessage tone="warning" title="Launch preparation — token creation unavailable">
-          Required technical prerequisites are missing (listed below). You can prepare, save and review a draft. Saving a draft or publishing its metadata does not create, launch or own a token.
+        <StatusMessage tone="info" title="Token launching is coming soon">
+          You can configure, save and review your launch today. Nothing is created, signed or sent until token launches open.
         </StatusMessage>
 
-        <section aria-labelledby="readiness">
-          <SectionHeading label="Prerequisites" title={<span id="readiness">What a real launch still needs</span>} />
-          <ul className="mt-8 divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-            {(readiness ? [...items.slice(0, 3), walletItem, ...items.slice(3)] : [walletItem]).map((it) => (
-              <li key={it.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-foreground">{it.label}</p>
-                  <p className="text-sm text-muted-foreground">{it.detail}</p>
-                </div>
-                <span className={`label-mono shrink-0 self-start rounded border px-2 py-1 sm:self-center ${STATE_STYLE[it.state]}`}>{STATE_TEXT[it.state]}</span>
-              </li>
-            ))}
-            {!readiness && <li className="p-4 text-sm text-muted-foreground">Server prerequisites could not be checked right now (UNKNOWN). Your draft still works.</li>}
-            <li className="p-4 text-sm text-muted-foreground">
-              Creator sign-in: {session.s === "checking" ? "checking…" : session.s === "signed_in" ? `signed in as ${shortAddress(session.wallet ?? "")}` : session.s === "signed_out" ? "not signed in" : "could not be checked"}. Signing in does not create product ownership.
-            </li>
-          </ul>
-          {readiness && <p className="mt-2 font-mono text-xs text-subtle">Checked {new Date(readiness.checkedAt).toUTCString()}</p>}
-        </section>
 
         {notice && <StatusMessage tone="warning" title={notice} />}
 
@@ -306,7 +266,7 @@ function Launch() {
             ) : (
               <p className="text-sm text-muted-foreground">{session.s === "signed_in" ? "Save this draft and its artwork to publish token metadata." : "This draft has not been sent anywhere."}</p>
             )}
-            <p className="text-sm text-muted-foreground">Creating the token stays unavailable until every prerequisite above is proven. There is no Launch, Sign or Buy step.</p>
+            <p className="text-sm text-muted-foreground">Creating the token stays unavailable until launch prerequisites are proven. There is no Launch, Sign or Buy step.</p>
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" className={buttonOutline} onClick={() => { setReview(null); setNotice(null); }}>Edit</button>
               <button type="button" className={buttonOutline} onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied("ok"), () => setCopied("fail"))}>Copy draft summary</button>
