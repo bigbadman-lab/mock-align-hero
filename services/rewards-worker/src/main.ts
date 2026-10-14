@@ -87,6 +87,8 @@ async function main() {
   const workerId = `rw-${env("RENDER_INSTANCE_ID") ?? process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   const pollMs = Math.min(Math.max(Number(env("MCPX_REWARDS_POLL_SECONDS") ?? 300), 60), 900) * 1000; // 05-I: 5-minute default, no hot loop
   const maxWindows = Math.min(Math.max(Number(env("MCPX_REWARDS_MAX_WINDOWS_PER_PASS") ?? 12), 1), 288);
+  // New launches are confirmed on a shorter cadence than reward windows (default 60 s, bounded 30–900 s).
+  const launchPollMs = Math.min(Math.max(Number(env("MCPX_LAUNCH_POLL_SECONDS") ?? 60), 30), 900) * 1000;
   let stopping = false, backoff = pollMs;
   for (const s of ["SIGTERM", "SIGINT"] as const) process.on(s, () => { stopping = true; log({ event: "shutdown_requested", signal: s }); });
 
@@ -134,7 +136,7 @@ async function main() {
       log({ event: "ready_state", ready: false, health: true, mode, blockers: wait });
       await childPass(c?.mint ?? null, c?.deployerWallet ?? env("MCPX_DEPLOYER_PUBLIC_KEY"));
     } catch (e) { log({ level: "error", event: "state_failed", op, elapsedMs: Date.now() - t0, errorName: e instanceof Error ? e.name : "unknown", error: e instanceof Error ? e.message : "unknown" }); }
-    await new Promise((r) => setTimeout(r, pollMs));
+    await new Promise((r) => setTimeout(r, Math.min(pollMs, launchPollMs)));
   }
   const store = pgStore(db, workerId, 60);
   log({ event: "started", workerId, mode, blockers });

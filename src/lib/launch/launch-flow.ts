@@ -26,12 +26,13 @@ export const BLOCKER_TEXT: Record<Exclude<LaunchBlocker, null>, string> = {
   not_ready: "Add artwork, then press Review again to finish preparing your launch.",
 };
 
-export type LaunchStage = "preparing" | "checking" | "signing" | "confirming" | "live";
+export type LaunchStage = "preparing" | "checking" | "signing" | "confirming" | "registering" | "live";
 export const STAGES: { id: LaunchStage; label: string }[] = [
   { id: "preparing", label: "Preparing your launch" },
   { id: "checking", label: "Checking fee sharing and creator wallet" },
   { id: "signing", label: "Waiting for your wallet signature" },
   { id: "confirming", label: "Confirming on Solana" },
+  { id: "registering", label: "Setting up your MCP product" },
   { id: "live", label: "Your token is live" },
 ];
 
@@ -40,4 +41,9 @@ export function claimOutcome(c: { status?: unknown; slug?: unknown }): "live" | 
   if (c.status === "VERIFIED" && typeof c.slug === "string" && c.slug) return "live";
   if (c.status === "REJECTED") return "rejected";
   return "pending";
+}
+
+/** Whether Solana itself has confirmed the launch transaction, independent of product registration. */
+export function chainConfirmed(c: { chain?: unknown }): boolean {
+  return c.chain === "confirmed" || c.chain === "finalized";
 }
