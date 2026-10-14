@@ -30,37 +30,37 @@ describe("launch path creator binding", () => {
   });
   it("forged browser creator is refused and never reaches the builder", async () => {
     const calls: any[] = [];
-    expect((await gatePrepare({ ...input, creator: k() }, fresh(), deps({}, calls))).body.code).toBe("CREATOR_WALLET_MISMATCH");
+    expect((await gatePrepare({ ...input, creator: k() }, fresh(), deps({}, calls))).body["code"]).toBe("CREATOR_WALLET_MISMATCH");
     expect(calls).toEqual([]);
   });
   it("refuses signed-out, stale sign-in, disconnected or different connected wallet", async () => {
-    expect((await gatePrepare(input, null, deps())).body.code).toBe("CREATOR_SESSION_REQUIRED");
-    expect((await gatePrepare(input, fresh(me, 11 * 60_000), deps())).body.code).toBe("LAUNCH_REAUTH_REQUIRED");
-    expect((await gatePrepare({ ...input, connectedWallet: undefined }, fresh(), deps())).body.code).toBe("WALLET_DISCONNECTED");
-    expect((await gatePrepare({ ...input, connectedWallet: k() }, fresh(), deps())).body.code).toBe("CONNECTED_WALLET_MISMATCH");
+    expect((await gatePrepare(input, null, deps())).body["code"]).toBe("CREATOR_SESSION_REQUIRED");
+    expect((await gatePrepare(input, fresh(me, 11 * 60_000), deps())).body["code"]).toBe("LAUNCH_REAUTH_REQUIRED");
+    expect((await gatePrepare({ ...input, connectedWallet: undefined }, fresh(), deps())).body["code"]).toBe("WALLET_DISCONNECTED");
+    expect((await gatePrepare({ ...input, connectedWallet: k() }, fresh(), deps())).body["code"]).toBe("CONNECTED_WALLET_MISMATCH");
   });
   it("stays off unless enabled and refuses without a configured native deployer", async () => {
-    expect((await gatePrepare(input, fresh(), deps({ config: { enabled: false, opsRecipient: ops, platformRecipient: plat, nativeDeployer: deployer } }))).body.code).toBe("CHILD_LAUNCH_NOT_ENABLED");
-    expect((await gatePrepare(input, fresh(), deps({ config: { enabled: true, opsRecipient: ops, platformRecipient: plat, nativeDeployer: null } }))).body.code).toBe("NATIVE_DEPLOYER_NOT_CONFIGURED");
-    expect((await gatePrepare({ ...input, connectedWallet: deployer }, fresh(deployer), deps())).body.code).toBe("CREATOR_IS_NATIVE_DEPLOYER");
+    expect((await gatePrepare(input, fresh(), deps({ config: { enabled: false, opsRecipient: ops, platformRecipient: plat, nativeDeployer: deployer } }))).body["code"]).toBe("CHILD_LAUNCH_NOT_ENABLED");
+    expect((await gatePrepare(input, fresh(), deps({ config: { enabled: true, opsRecipient: ops, platformRecipient: plat, nativeDeployer: null } }))).body["code"]).toBe("NATIVE_DEPLOYER_NOT_CONFIGURED");
+    expect((await gatePrepare({ ...input, connectedWallet: deployer }, fresh(deployer), deps())).body["code"]).toBe("CREATOR_IS_NATIVE_DEPLOYER");
   });
   it("rejects a builder response that binds someone else at 60%", async () => {
     const d = deps({ builder: async () => ({ status: 200, body: { status: "UNSIGNED_CANDIDATE", messageBase64: "AA==", binding: binding(k()), bindingMac: "m" } }) });
-    expect((await gatePrepare(input, fresh(), d)).body.code).toBe("BUILDER_CREATOR_CHANGED_SINCE_PREPARE");
+    expect((await gatePrepare(input, fresh(), d)).body["code"]).toBe("BUILDER_CREATOR_CHANGED_SINCE_PREPARE");
   });
   it("verify passes for the same wallet and untouched candidate", async () => {
     expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: me }, fresh(), deps())).http).toBe(200);
   });
   it("wallet changed between preparation and signing is refused", async () => {
     const other = k();
-    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: other }, fresh(other), deps())).body.code).toBe("CREATOR_CHANGED_SINCE_PREPARE");
-    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: other }, fresh(), deps())).body.code).toBe("CONNECTED_WALLET_MISMATCH");
+    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: other }, fresh(other), deps())).body["code"]).toBe("CREATOR_CHANGED_SINCE_PREPARE");
+    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: other }, fresh(), deps())).body["code"]).toBe("CONNECTED_WALLET_MISMATCH");
   });
   it("modified unsigned transaction or binding is refused", async () => {
     expect((await gateVerify({ messageBase64: "AQ==", binding: binding(), bindingMac: "m", connectedWallet: me }, fresh(), deps())).http).toBe(403);
     const sh = binding(); sh.shareholders[1] = { address: k(), bps: 2500 };
-    expect((await gateVerify({ messageBase64: "AA==", binding: sh, bindingMac: "m", connectedWallet: me }, fresh(), deps())).body.code).toBe("SHARES_MISMATCH");
+    expect((await gateVerify({ messageBase64: "AA==", binding: sh, bindingMac: "m", connectedWallet: me }, fresh(), deps())).body["code"]).toBe("SHARES_MISMATCH");
     const d = deps({ builder: async () => ({ status: 200, body: { valid: true, checks: { ...okChecks, payerIsCreator: false } } }) });
-    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: me }, fresh(), d)).body.code).toBe("CANDIDATE_INCONSISTENT");
+    expect((await gateVerify({ messageBase64: "AA==", binding: binding(), bindingMac: "m", connectedWallet: me }, fresh(), d)).body["code"]).toBe("CANDIDATE_INCONSISTENT");
   });
 });

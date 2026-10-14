@@ -85,13 +85,13 @@ describe("keeper durability", () => {
     const again = await runChildFeePass(deps(store, c));
     expect(again).toContainEqual({ mint: c.mint, result: "SIGNED_HELD" });
     expect(again).toContainEqual({ mint: c.mint, result: "SKIP:OPEN_INTENT" });
-    expect([...store.rows.values()][0].status).toBe("SIGNED");
+    expect([...store.rows.values()][0]!.status).toBe("SIGNED");
   });
   it("expires only past the finalized block height", async () => {
     const store = memoryChildStore(), c = mk();
     await runChildFeePass(deps(store, c));
     await runChildFeePass(deps(store, c, { finalizedBlockHeight: async () => 101 }));
-    expect([...store.rows.values()][0].status).toBe("EXPIRED");
+    expect([...store.rows.values()][0]!.status).toBe("EXPIRED");
   });
   it("holds everything without a gas budget or with an unverified split", async () => {
     const c = mk();
