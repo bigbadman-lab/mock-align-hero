@@ -91,3 +91,76 @@ export function LiveFlow() {
     </div>
   );
 }
+
+const C_OUT: (Node & { pct: string; tone: "primary" | "muted"; path: string })[] = [
+  { x: 880, y: 90, label: "Tool creator", sub: "creator wallet", pct: "60%", tone: "primary", path: "M580 200 C 690 200, 710 90, 800 90" },
+  { x: 880, y: 220, label: "Tool operations", sub: "keeps the MCP running", pct: "25%", tone: "primary", path: "M585 220 L 800 220" },
+  { x: 880, y: 350, label: "MCPX platform", sub: "protocol", pct: "15%", tone: "muted", path: "M580 240 C 690 240, 710 350, 800 350" },
+];
+
+/** Child-token flow: traders buy a child token with $MCP, its fees split 60/25/15, and the token powers a live MCP tool. */
+export function ChildFlow() {
+  const p1 = "M165 220 L 225 220";
+  const p2 = "M375 220 L 435 220";
+  const tool = "M510 300 L 510 352";
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span className="label-mono inline-flex items-center gap-2 text-primary">
+          <span aria-hidden className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+          </span>
+          Child token flow · paired to $MCP
+        </span>
+        <span className="label-mono text-subtle">Illustration · child launches not live yet</span>
+      </div>
+      <div className="overflow-x-auto">
+        <svg viewBox="0 0 1000 470" role="img" aria-label="Traders buy a child token using $MCP. The child token's creator fees split 60% to the tool creator, 25% to tool operations and 15% to the MCPX platform. Every child token powers its own live MCP tool." className="min-w-[680px] w-full">
+          <style>{`
+            .cf-line{stroke-dasharray:6 8;animation:cf-dash 1.2s linear infinite}
+            @keyframes cf-dash{to{stroke-dashoffset:-28}}
+            .cf-glow{animation:cf-pulse 2.4s ease-in-out infinite;transform-origin:510px 220px}
+            @keyframes cf-pulse{0%,100%{opacity:.25;transform:scale(.92)}50%{opacity:.6;transform:scale(1.06)}}
+            .cf-blink{animation:cf-blink 1.6s steps(2) infinite}
+            @keyframes cf-blink{50%{opacity:.2}}
+            @media (prefers-reduced-motion: reduce){.cf-line,.cf-glow,.cf-blink{animation:none}.lf-dot{display:none}}
+          `}</style>
+
+          {[p1, p2].map((p) => <path key={p} d={p} fill="none" className="stroke-primary cf-line" strokeWidth={2} />)}
+          {C_OUT.map((o) => <path key={o.path} d={o.path} fill="none" className={`${o.tone === "primary" ? "stroke-primary" : "stroke-muted-foreground"} cf-line`} strokeWidth={2} />)}
+          <path d={tool} fill="none" className="stroke-primary cf-line" strokeWidth={2} />
+
+          <Dots path={p1} dur={1.1} cls="fill-primary" count={2} />
+          <Dots path={p2} dur={1.1} cls="fill-primary" count={2} />
+          {C_OUT.map((o, i) => <Dots key={i} path={o.path} dur={2.2 + i * 0.2} cls={o.tone === "primary" ? "fill-primary" : "fill-muted-foreground"} />)}
+          <Dots path={tool} dur={0.9} cls="fill-primary" count={2} />
+
+          <Box n={{ x: 90, y: 220, label: "Traders", sub: "buy with $MCP" }} />
+          <Box n={{ x: 300, y: 220, label: "Child token", sub: "$MCP-paired pool" }} />
+
+          <circle cx={510} cy={220} r={80} className="fill-primary cf-glow" opacity={0.3} style={{ filter: "blur(18px)" }} />
+          <circle cx={510} cy={220} r={66} className="fill-background stroke-primary" strokeWidth={1.5} />
+          <defs><clipPath id="cf-hub"><circle cx={510} cy={220} r={64} /></clipPath></defs>
+          <image href={logo.url} clipPath="url(#cf-hub)" x={510 - 90} y={220 - 90} width={180} height={180} style={{ imageRendering: "pixelated" }} />
+          <text x={510} y={150 - 6} textAnchor="middle" className="fill-foreground" fontSize={13} fontWeight={600}>Child creator fees</text>
+
+          <g transform="translate(390 352)">
+            <rect width={240} height={96} rx={8} className="fill-card stroke-primary" strokeWidth={1.5} />
+            <circle cx={20} cy={22} r={4} className="fill-primary cf-blink" />
+            <text x={32} y={26} className="fill-primary" fontSize={11} fontFamily="var(--font-mono, monospace)" fontWeight={600}>LIVE MCP TOOL</text>
+            <text x={20} y={52} className="fill-foreground" fontSize={14} fontWeight={600}>Every child token runs a tool</text>
+            <text x={20} y={74} className="fill-muted-foreground" fontSize={11} fontFamily="var(--font-mono, monospace)">/api/public/mcp/&lt;token&gt;</text>
+          </g>
+
+          {C_OUT.map((o) => (
+            <g key={o.y}>
+              <text x={o.x - 170} y={o.y - 12} className={o.tone === "primary" ? "fill-primary" : "fill-muted-foreground"} fontSize={13} fontFamily="var(--font-mono, monospace)" fontWeight={600}>{o.pct}</text>
+              <Box n={o} w={170} />
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
