@@ -11,4 +11,11 @@ describe("registrable templates", () => {
     const list = [...sql.match(/template_id NOT IN \(([^)]*)\)/)![1]!.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
     expect(list).toEqual(TEMPLATES.map((t) => t.id).sort());
   });
+  it("latest mcp_creations template CHECK equals the launchable templates", () => {
+    const dir = "docs/pending-migrations";
+    const files = readdirSync(dir).filter((f) => /^\d{4}_.*\.sql$/.test(f)).sort();
+    const sql = files.map((f) => readFileSync(`${dir}/${f}`, "utf8")).filter((s) => /ADD CONSTRAINT mcp_creations_template_id_check/.test(s)).pop()!;
+    const list = [...sql.match(/template_id = ANY \(ARRAY\[([^\]]*)\]/)![1]!.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
+    expect(list).toEqual(TEMPLATES.map((t) => t.id).sort());
+  });
 });
