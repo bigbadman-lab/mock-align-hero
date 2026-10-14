@@ -30,6 +30,7 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     if (cfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
     if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
     if (req.creator === cfg.opsRecipient || req.creator === cfg.platformRecipient) return blocked(["FEE_RECIPIENT_DUPLICATE"]);
+    if (cfg.nativeDeployer && req.creator === cfg.nativeDeployer) return blocked(["CREATOR_IS_NATIVE_DEPLOYER"]);
     // Locked 04-B decision: the optional buy is a separate, later transaction. Refused, never stripped.
     if (req.initialBuy) return blocked(["INITIAL_BUY_MUST_BE_SEPARATE"]);
     if (req.format === "v0_alt" && !cfg.lookupTable) return blocked(["ALT_NOT_CONFIGURED"]);
