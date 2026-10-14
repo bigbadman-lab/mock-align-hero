@@ -13,8 +13,6 @@ const rpcCall = async (url: string, method: string, params: unknown[]) => {
   return j.result;
 };
 
-async function b58(bytes: Uint8Array) { return (await import("bs58")).default.encode(bytes); }
-
 export const Route = createFileRoute("/api/operator/alt")({
   server: {
     handlers: {
@@ -48,7 +46,6 @@ export const Route = createFileRoute("/api/operator/alt")({
             tables.push({ address: a.pubkey, entries: addrs.length, active: deact === 18446744073709551615n, frozen: !hasAuth, lastExtendedSlot: lastExt, hasAllStatic: STATIC_ALT_ENTRIES.every((e) => addrs.includes(e.address)) });
           }
         } catch { tables = null; }
-        void b58;
         return reply(200, { ...out, tables, next: nextAltStep(tables) });
       },
     },
