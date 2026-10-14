@@ -28,10 +28,11 @@ function Home() {
     <>
       <section className="relative overflow-hidden border-b border-border bg-grid">
         <PageContainer className="py-20 sm:py-28 lg:py-32">
-          <div className="max-w-3xl animate-rise">
+          <div className="max-w-4xl animate-rise">
             <SectionLabel rule={false}>CREATOR FEES PAY HOLDERS</SectionLabel>
-            <h1 className="mt-6 max-w-2xl font-mono text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Hold <span className="text-primary">$MCP</span>. Share in the ecosystem.
+            <h1 className="mt-6 font-mono text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              <span className="block">Hold <span className="text-primary">$MCP</span>.</span>
+              <span className="block">Share in the ecosystem.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
               Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders — 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
