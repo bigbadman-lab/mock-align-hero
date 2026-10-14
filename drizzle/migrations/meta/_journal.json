@@ -204,6 +204,13 @@
       "when": 1792008773446,
       "tag": "0028_mcpx_sol_rehearsal_second",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792011310813,
+      "tag": "0029_mcpx_sol_rehearsal_third",
+      "breakpoints": true
     }
   ]
 }
