@@ -324,3 +324,23 @@ test("D03 malformed secret/RPC/recipients fail closed and are reported by name o
   const r = readyReport(c); assert.equal(r.ready, false); assert.equal(r.feeRecipients, "MISSING");
   assert.ok(!JSON.stringify(r).includes("short"));
 });
+
+test("B01 CREATOR_RECIPIENT_BINDING: native deployer can never be the 60% creator or a fee recipient", async () => {
+  const dep = F.kp().publicKey.toBase58();
+  const cfg = loadConfig({ ...ENV, MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: dep });
+  assert.equal(cfg.state, "READY_FOR_PREPARE");
+  const app = createApp({ cfg, deps: await fixtureDeps() });
+  const r = await call(app, { path: "/internal/v1/launch/prepare", body: JSON.stringify({ ...JSON.parse(prepBody()), creator: dep }) });
+  assert.ok(JSON.stringify(r.body ?? r.json ?? r).includes("CREATOR_IS_NATIVE_DEPLOYER"));
+  assert.equal(loadConfig({ ...ENV, MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: F.FIXTURE_OPS }).state, "NOT_CONFIGURED");
+  assert.equal(loadConfig({ ...ENV, MCPX_NATIVE_DEPLOYER_PUBLIC_KEY: F.FIXTURE_PLATFORM }).state, "NOT_CONFIGURED");
+});
+
+test("B02 CREATOR_RECIPIENT_BINDING: 60% shareholder, payer and signer are all the request's creator", async () => {
+  const creator = F.kp().publicKey, mint = F.kp().publicKey;
+  const { instructions, shares } = await build("B", { creator: creator.toBase58(), mint: mint.toBase58() });
+  assert.deepEqual(shares.map((s) => [s.address.toBase58(), s.shareBps]), [[creator.toBase58(), 6000], [F.FIXTURE_OPS, 2500], [F.FIXTURE_PLATFORM, 1500]]);
+  const c = compile(instructions, creator, F.FIXTURE_BLOCKHASH, "v0");
+  assert.equal(c.signers[0], creator.toBase58());
+  assert.deepEqual(new Set(c.signers), new Set([creator.toBase58(), mint.toBase58()]));
+});
