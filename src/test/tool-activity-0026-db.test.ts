@@ -42,8 +42,8 @@ d("0026 tool activity (real Postgres)", () => {
     }
   });
   it("dashboard query uses the product index", async () => {
-    const plan = (await sql.unsafe(`set enable_seqscan = off; explain select id from public.mcpx_tool_activity where creation_id = '${c}' order by occurred_at desc, id desc limit 21`))
-      .map((r) => r["QUERY PLAN"]).join("\n");
+    const plan = await sql.begin(async (t) => { await t.unsafe("set local enable_seqscan = off");
+      return (await t.unsafe(`explain select id from public.mcpx_tool_activity where creation_id = '${c}' order by occurred_at desc, id desc limit 21`)).map((r) => r["QUERY PLAN"]).join("\n"); });
     expect(plan).toMatch(/mcpx_tool_activity_by_product/);
   });
 });
