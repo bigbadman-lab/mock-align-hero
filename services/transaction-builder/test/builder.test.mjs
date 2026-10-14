@@ -373,3 +373,15 @@ test("S01 fee-first events: self-CPI decoding, discriminator-checked, duplicates
   assert.equal(verifySimulationEvents([`Program data: ${junk.toString("base64")}`], { mint: "m", creator: "c", cfg: {} }, [junk]), "SIMULATION_EVENTS_MISSING");
   void sdk;
 });
+
+test("S02 fee-first events: real mainnet simulation bytes (stand-in parent) verify exact 60/25/15, tampering is caught", async () => {
+  const { readFileSync } = await import("node:fs");
+  const f = JSON.parse(readFileSync(new URL("./fixtures/mainnet-sim-fee-events.json", import.meta.url)));
+  const ev = f.events.map((h) => Buffer.from(h, "hex"));
+  const cfg = { opsRecipient: f.ops, platformRecipient: f.plat };
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, ev), null);
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, [...ev, ev[0]]), null); // same bytes twice = once
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg: { ...cfg, platformRecipient: f.ops } }, ev), "SIMULATION_FINAL_SHARES_MISMATCH");
+  assert.equal(verifySimulationEvents([], { mint: f.creator, creator: f.creator, cfg }, ev), "SIMULATION_EVENT_MINT_MISMATCH");
+  assert.equal(verifySimulationEvents([], { mint: f.mint, creator: f.creator, cfg }, [ev[0]]), "SIMULATION_EVENTS_MISSING");
+});
