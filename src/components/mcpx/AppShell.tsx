@@ -89,24 +89,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main id="main" className="flex-1">{children}</main>
       <footer className="border-t border-border">
-        <PageContainer className="grid gap-8 py-12 md:grid-cols-[1fr_auto]">
+        <PageContainer className="grid gap-6 py-10 md:grid-cols-[1fr_auto]">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5"><Mark /><span className="font-mono text-sm tracking-[0.2em]">MCPX</span></div>
             <p className="text-sm text-muted-foreground">Every token powers a tool.</p>
             <p className="max-w-md text-xs leading-relaxed text-subtle">
-              $MCP has not been minted. Wallet connection shows a public address only. Template tools are read-only. Token launching is not available yet.
+              The build is live, the token is next. $MCP hasn't been minted yet — but ten tools are already running on real Solana data. Connect a wallet (only your public address is shown), explore the read-only tools today, and be first through the door when token launches open.
             </p>
           </div>
           <nav aria-label="Footer">
-            <ul className="grid grid-cols-2 gap-x-8 gap-y-1 sm:grid-cols-3">
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-0 sm:grid-cols-3">
               {NAV.map((n) => (
-                <li key={n.to}><Link to={n.to} className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground">{n.label}</Link></li>
+                <li key={n.to}><Link to={n.to} className="inline-flex items-center px-1 py-1.5 text-sm text-muted-foreground hover:text-foreground">{n.label}</Link></li>
               ))}
-              <li><a href="https://x.com/mcpdotfun" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground">X / @mcpdotfun</a></li>
+              <li><a href="https://x.com/mcpdotfun" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-1 py-1.5 text-sm text-muted-foreground hover:text-foreground">X / @mcpdotfun</a></li>
             </ul>
           </nav>
         </PageContainer>
-        <PageContainer className="border-t border-border py-5">
+        <PageContainer className="border-t border-border py-4">
           <p className="font-mono text-xs text-subtle">mcpx.fun</p>
         </PageContainer>
       </footer>
