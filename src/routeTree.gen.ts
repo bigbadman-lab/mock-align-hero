@@ -38,6 +38,7 @@ import { Route as ApiCreatorLaunchArtworkRouteImport } from './routes/api/creato
 import { Route as ApiCreatorLaunchClaimRouteImport } from './routes/api/creator/launch-claim'
 import { Route as ApiCreatorLaunchDraftsRouteImport } from './routes/api/creator/launch-drafts'
 import { Route as ApiCreatorLaunchPrepareRouteImport } from './routes/api/creator/launch-prepare'
+import { Route as ApiCreatorLaunchSubmitRouteImport } from './routes/api/creator/launch-submit'
 import { Route as ApiCreatorProductsRouteImport } from './routes/api/creator/products'
 import { Route as ApiToolsAccountCheckerRouteImport } from './routes/api/tools/account-checker'
 import { Route as ApiToolsHolderIntelligenceRouteImport } from './routes/api/tools/holder-intelligence'
@@ -206,6 +207,11 @@ const ApiCreatorLaunchPrepareRoute = ApiCreatorLaunchPrepareRouteImport.update({
   path: '/api/creator/launch-prepare',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCreatorLaunchSubmitRoute = ApiCreatorLaunchSubmitRouteImport.update({
+  id: '/api/creator/launch-submit',
+  path: '/api/creator/launch-submit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCreatorProductsRoute = ApiCreatorProductsRouteImport.update({
   id: '/api/creator/products',
   path: '/api/creator/products',
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
+  '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
@@ -400,6 +407,7 @@ export interface FileRoutesByTo {
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
+  '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
@@ -452,6 +460,7 @@ export interface FileRoutesById {
   '/api/creator/launch-claim': typeof ApiCreatorLaunchClaimRoute
   '/api/creator/launch-drafts': typeof ApiCreatorLaunchDraftsRoute
   '/api/creator/launch-prepare': typeof ApiCreatorLaunchPrepareRoute
+  '/api/creator/launch-submit': typeof ApiCreatorLaunchSubmitRoute
   '/api/creator/products': typeof ApiCreatorProductsRoute
   '/api/tools/account-checker': typeof ApiToolsAccountCheckerRoute
   '/api/tools/holder-intelligence': typeof ApiToolsHolderIntelligenceRoute
@@ -505,6 +514,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
+    | '/api/creator/launch-submit'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
@@ -556,6 +566,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
+    | '/api/creator/launch-submit'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/api/creator/launch-claim'
     | '/api/creator/launch-drafts'
     | '/api/creator/launch-prepare'
+    | '/api/creator/launch-submit'
     | '/api/creator/products'
     | '/api/tools/account-checker'
     | '/api/tools/holder-intelligence'
@@ -659,6 +671,7 @@ export interface RootRouteChildren {
   ApiCreatorLaunchClaimRoute: typeof ApiCreatorLaunchClaimRoute
   ApiCreatorLaunchDraftsRoute: typeof ApiCreatorLaunchDraftsRoute
   ApiCreatorLaunchPrepareRoute: typeof ApiCreatorLaunchPrepareRoute
+  ApiCreatorLaunchSubmitRoute: typeof ApiCreatorLaunchSubmitRoute
   ApiCreatorProductsRoute: typeof ApiCreatorProductsRoute
   ApiToolsAccountCheckerRoute: typeof ApiToolsAccountCheckerRoute
   ApiToolsHolderIntelligenceRoute: typeof ApiToolsHolderIntelligenceRoute
@@ -886,6 +899,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreatorLaunchPrepareRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/creator/launch-submit': {
+      id: '/api/creator/launch-submit'
+      path: '/api/creator/launch-submit'
+      fullPath: '/api/creator/launch-submit'
+      preLoaderRoute: typeof ApiCreatorLaunchSubmitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/creator/products': {
       id: '/api/creator/products'
       path: '/api/creator/products'
@@ -1059,6 +1079,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreatorLaunchClaimRoute: ApiCreatorLaunchClaimRoute,
   ApiCreatorLaunchDraftsRoute: ApiCreatorLaunchDraftsRoute,
   ApiCreatorLaunchPrepareRoute: ApiCreatorLaunchPrepareRoute,
+  ApiCreatorLaunchSubmitRoute: ApiCreatorLaunchSubmitRoute,
   ApiCreatorProductsRoute: ApiCreatorProductsRoute,
   ApiToolsAccountCheckerRoute: ApiToolsAccountCheckerRoute,
   ApiToolsHolderIntelligenceRoute: ApiToolsHolderIntelligenceRoute,

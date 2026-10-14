@@ -7,6 +7,8 @@ import { Link } from "@tanstack/react-router";
 import { buttonPrimary } from "@/components/mcpx/primitives";
 import logo from "@/assets/mcp-monitor-logo.png.asset.json";
 import type { DraftView } from "./DraftPersistence";
+import { useWallet } from "@/lib/wallet/context";
+import { assembleTx, b64, messageSigners, sameBytes, splitTx } from "@/lib/launch/tx-wire";
 import { BLOCKER_TEXT, STAGES, claimOutcome, launchBlocker, type LaunchStage } from "@/lib/launch/launch-flow";
 
 const post = (url: string, body: unknown) => fetch(url, {
@@ -31,6 +33,7 @@ type Run =
   | { s: "failed"; msg: string };
 
 export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: DraftView | null; signedInWallet: string | null; connectedWallet: string | null }) {
+  const w = useWallet();
   const [enabled, setEnabled] = useState(false);
   const [run, setRun] = useState<Run>({ s: "idle" });
   const poll = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -74,7 +77,28 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
       if (v.status !== 200) { setRun({ s: "failed", msg: MESSAGES[v.body.code] ?? "The launch didn't pass its safety check, so nothing was signed." }); return; }
       // Wallet signing is switched off: the builder must report the transaction launch-ready first.
       if (v.body.launchReady !== true) { setRun({ s: "held" }); return; }
-      setRun({ s: "held" });
+
+      // Wallet signature. The new mint's key exists only in this tab and signs first; the wallet adds the creator's.
+      setRun({ s: "running", stage: "signing" });
+      const msg = b64.dec(p.body.messageBase64);
+      const signers = messageSigners(msg);
+      if (signers.length !== 2 || signers[0] !== connectedWallet || signers[1] !== mint) { setRun({ s: "failed", msg: "The launch transaction didn't match your wallet, so nothing was signed." }); return; }
+      if (!w.signTransaction) { setRun({ s: "failed", msg: "Your wallet can't sign transactions here. Try Phantom or Solflare." }); return; }
+      const mintSig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" } as any, kp.privateKey, msg));
+      let signed: Uint8Array;
+      try { signed = await w.signTransaction(assembleTx(msg, [null, mintSig])); }
+      catch { setRun({ s: "failed", msg: "You declined the signature in your wallet. Nothing was sent." }); return; }
+      if (!sameBytes(splitTx(signed).message, msg)) { setRun({ s: "failed", msg: "Your wallet changed the transaction, so it was not sent." }); return; }
+
+      // Broadcast + claim. From here the launch is tracked until Solana confirms it.
+      setRun({ s: "running", stage: "confirming" });
+      const sub = await post("/api/creator/launch-submit", { draftId: saved.id, revision: saved.revision, mint, signedTxBase64: b64.enc(signed), messageBase64: p.body.messageBase64, binding: p.body.binding, bindingMac: p.body.bindingMac });
+      if (sub.status !== 202 || !sub.body.claimId) {
+        setRun({ s: "failed", msg: sub.body.code === "BROADCAST_FAILED" ? "Solana refused the transaction (often low SOL for fees). Nothing was created." : MESSAGES[sub.body.code] ?? "We couldn't send your launch. Try again." });
+        return;
+      }
+      sessionStorage.setItem(CLAIM_KEY, sub.body.claimId);
+      watch(sub.body.claimId);
     } catch {
       setRun({ s: "failed", msg: "Something went wrong before signing. Nothing was signed or sent." });
     }
