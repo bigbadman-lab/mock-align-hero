@@ -53,3 +53,5 @@
 
 - [x] Launch flow rebuilt: form → Review (quiet save) → Launch with processing graphic and live link; launch button off until server enables launching
 - [ ] Wallet transaction signing step — waits on launch-ready builder (lookup table, $MCP mint) and sign-off
+- [x] Real launch path built: wallet signing, server re-check + broadcast + claim, live link; ALT creation script (deployer-owned); go-live runbook docs/GO_LIVE_MCP.md
+- [ ] Go-live steps (mint, lookup table, settings, switches) — need approval
