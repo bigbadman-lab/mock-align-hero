@@ -39,7 +39,7 @@ export function checkChildTx(ixs: TransactionInstruction[], keeper: string, c: C
     const disc = Buffer.from(ix.data.subarray(0, 8)).toString("hex");
     if (!allow.has(disc)) return { ok: false, code: "INSTRUCTION_NOT_ALLOWED" };
     for (const k of ix.keys) if (k.isSigner && k.pubkey.toBase58() !== keeper) return { ok: false, code: "UNEXPECTED_SIGNER" };
-    if (!ix.keys.some((k) => k.pubkey.toBase58() === c.mint)) return { ok: false, code: "WRONG_MINT" };
+    if (p === PUMP && !ix.keys.some((k) => k.pubkey.toBase58() === c.mint)) return { ok: false, code: "WRONG_MINT" };
     names.push(disc === d8("distribute_creator_fees_v2") ? "distribute" : disc === d8("sweep_creator_fee") ? "sweep" : "amm_transfer");
   }
   const want = graduated ? ["cu", "amm_transfer", "sweep", "distribute"] : ["cu", "sweep", "distribute"];
