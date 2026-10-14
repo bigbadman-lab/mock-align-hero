@@ -187,8 +187,10 @@ export function createService({ cfg: baseCfg, deps, now = () => Date.now() }) {
       // The ATA directly before the fee update must be the sharing-config creator vault's quote ATA.
       const vault = pump.creatorVaultPda(pump.feeSharingConfigPda(new web3.PublicKey(b.mint))).toBase58();
       const va = ixs[ui - 1];
-      checks.creatorVaultAtaExact = names[ui - 1] === "ata_create_idempotent" && va.keys[0].pubkey.toBase58() === b.creator
-        && va.keys[2].pubkey.toBase58() === vault && va.keys[3].pubkey.toBase58() === b.quoteMint;
+      // Native SOL rehearsal: the creator vault holds lamports, so the candidate must contain NO quote ATA at all.
+      checks.creatorVaultAtaExact = scope.rehearsal === true ? !names.includes("ata_create_idempotent")
+        : names[ui - 1] === "ata_create_idempotent" && va?.keys[0].pubkey.toBase58() === b.creator
+          && va.keys[2].pubkey.toBase58() === vault && va.keys[3].pubkey.toBase58() === b.quoteMint;
       const up = feeProgram.coder.instruction.decode(ixs[ui].data);
       checks.feeSharesExact = canonical(up.data.shareholders.map((s) => ({ address: s.address.toBase58(), bps: s.shareBps }))) === canonical(b.shareholders);
       const buys = names.filter((x) => x.startsWith("buy"));
