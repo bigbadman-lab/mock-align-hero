@@ -72,7 +72,7 @@ export function HeroOrbit() {
           </g>
         ))}
       </svg>
-      <p className="label-mono mt-2 text-center text-subtle">Tools → fees → $MCP → holders · illustrative</p>
+      <p className="label-mono mt-2 text-center text-subtle">Tools → fees → $MCP → holders</p>
     </div>
   );
 }
