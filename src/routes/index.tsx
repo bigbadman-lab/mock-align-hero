@@ -29,7 +29,7 @@ function Home() {
       <section className="relative overflow-hidden border-b border-border bg-grid">
         <PageContainer className="py-20 sm:py-28 lg:py-32">
           <div className="max-w-5xl animate-rise">
-            <SectionLabel rule={false}>CREATOR FEES PAY HOLDERS</SectionLabel>
+            <SectionLabel>CREATOR FEES PAY HOLDERS</SectionLabel>
             <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
               <span className="block">Hold <span className="text-primary">$MCP</span>.</span>
               <span className="block">Share in the ecosystem.</span>

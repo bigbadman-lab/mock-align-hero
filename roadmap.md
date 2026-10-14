@@ -30,3 +30,4 @@
   - [x] Hero CTAs → "My Rewards" (/dashboard) + "MCP Library" (/mcp)
   - [x] Hero H1 size increased (sm:text-6xl / lg:text-7xl)
   - [x] Homepage: Treasury moved to first section below hero
+  - [x] Section labels: decorative dash removed site-wide (matches hero)
