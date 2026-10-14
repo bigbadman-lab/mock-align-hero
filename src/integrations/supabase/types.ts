@@ -2237,7 +2237,7 @@ export type Database = {
           creation_id?: string | null
           creator_wallet: string
           draft_id?: string | null
-          id?: number
+          id: number
           mint?: string | null
           reserved_at?: string | null
           signature?: string | null
@@ -2576,6 +2576,7 @@ export type Database = {
         Args: { _creation: string }
         Returns: string
       }
+      mcpx_sol_rehearsal_current: { Args: never; Returns: number }
       mcpx_sol_rehearsal_grant: { Args: { _wallet: string }; Returns: string }
       mcpx_sol_rehearsal_log: {
         Args: {
