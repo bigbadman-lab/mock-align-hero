@@ -32,7 +32,7 @@ export function bundledBuyFor(ib: GateDraft["initialBuy"]): BuyRequest | null | 
   if (units <= 0n || !Number.isInteger(ib.slippageBps) || ib.slippageBps < 1 || ib.slippageBps > 1000) return "BUY_AMOUNT_INVALID";
   return { mode: "buy_exact_quote_in_v3", quoteAmount: units.toString(), slippageBps: ib.slippageBps };
 }
-const sameBuy = (a: any, b: BuyRequest | null) => b === null ? a === null || a === undefined
+const sameBuy = (a: any, b: { mode: string; quoteAmount: string; slippageBps: number } | null) => b === null ? a === null || a === undefined
   : !!a && a.mode === b.mode && a.quoteAmount === b.quoteAmount && a.slippageBps === b.slippageBps;
 /** canonicalMint: the official $MCP mint from the site's rewards config (mcpx_rw_config.mint). Every child pairs with it;
  *  missing or unreadable fails closed so a mistyped builder MCPX_QUOTE_MINT can never pair children with another token. */
