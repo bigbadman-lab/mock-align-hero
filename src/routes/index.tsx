@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageContainer, SectionHeading, SectionLabel, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
 import { ToolRail } from "@/components/mcpx/ToolRail";
 import { FlowToggle } from "@/components/mcpx/LiveFlow";
+import { HeroOrbit } from "@/components/mcpx/HeroOrbit";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
@@ -35,6 +36,7 @@ function Home() {
     <>
       <section className="relative overflow-hidden border-b border-border bg-grid">
         <PageContainer className="py-14 sm:py-20 lg:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-5xl animate-rise">
             <SectionLabel>CREATOR FEES PAY HOLDERS</SectionLabel>
             <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
@@ -48,6 +50,8 @@ function Home() {
               <Link to="/dashboard" className={buttonPrimary}>My Rewards</Link>
               <Link to="/mcp" className={buttonOutline}>MCP Library</Link>
             </div>
+          </div>
+          <HeroOrbit />
           </div>
         </PageContainer>
       </section>
