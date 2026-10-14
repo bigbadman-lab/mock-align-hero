@@ -98,11 +98,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <nav aria-label="Footer">
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-0 sm:grid-cols-3">
+            <ul className="grid grid-cols-2 gap-x-5 gap-y-0 sm:grid-cols-3">
               {NAV.map((n) => (
-                <li key={n.to}><Link to={n.to} className="inline-flex items-center px-1 py-1.5 text-sm text-muted-foreground hover:text-foreground">{n.label}</Link></li>
+                <li key={n.to}><Link to={n.to} className="inline-flex items-center px-1 py-1 text-sm text-muted-foreground hover:text-foreground">{n.label}</Link></li>
               ))}
-              <li><a href="https://x.com/mcpdotfun" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-1 py-1.5 text-sm text-muted-foreground hover:text-foreground">X / @mcpdotfun</a></li>
+              <li><a href="https://x.com/mcpdotfun" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-1 py-1 text-sm text-muted-foreground hover:text-foreground">X / @mcpdotfun</a></li>
             </ul>
           </nav>
         </PageContainer>
