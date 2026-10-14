@@ -113,7 +113,7 @@ function Launch() {
   return (
     <>
       <PageHeader label="Launch" title="Launch your token. Power it with MCP." intro="Choose your tools, configure your token and bring your own MCP-powered product to life on Solana." />
-      <PageContainer className="space-y-12 py-16">
+      <PageContainer className="space-y-6 py-8">
 
 
         {notice && <StatusMessage tone="warning" title={notice} />}
@@ -121,8 +121,8 @@ function Launch() {
         {session.s === "signed_in" && <SavedDrafts drafts={drafts} current={saved?.id ?? null} onOpen={openDraft} onNew={() => { setSaved(null); setInput(EMPTY); setReview(null); }} onAbandoned={(id) => { if (saved?.id === id) { setSaved(null); setInput(EMPTY); setReview(null); } }} />}
 
         {!review ? (
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-          <form onSubmit={onReview} noValidate className="min-w-0 space-y-8" aria-labelledby="draft">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <form onSubmit={onReview} noValidate className="min-w-0 space-y-4" aria-labelledby="draft">
             <SectionHeading label="Draft" title={<span id="draft">Your tool token</span>} />
             {errorCount > 0 && (
               <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-lg border border-warning/40 bg-surface-2 p-4 text-sm text-foreground">
@@ -137,9 +137,9 @@ function Launch() {
               <StatusMessage tone="warning" title={`${param.name} can't be launched yet`}>This template is planned and has no working tool, so it can't be paired with a token. Choose an available template below.</StatusMessage>
             )}
 
-            <section aria-labelledby="sec-token" className="space-y-6 rounded-lg border border-border p-5">
+            <section aria-labelledby="sec-token" className="space-y-4 rounded-lg border border-border p-4">
               <h3 id="sec-token" className="label-mono text-xs text-primary">1 · Token identity</h3>
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <TextField id="tokenName" label="Token name" hint={`Up to ${LIMITS.tokenNameBytes} bytes. ${new TextEncoder().encode(input.tokenName).length}/${LIMITS.tokenNameBytes}`} value={input.tokenName} onChange={setTokenName} err={errors.tokenName} />
                 <TextField id="symbol" label="Token symbol" hint="1–10 letters or numbers." value={input.symbol} onChange={(v) => set("symbol", v.toUpperCase())} err={errors.symbol} mono />
               </div>
@@ -152,7 +152,7 @@ function Launch() {
               <TextField id="link" label="Project link (optional)" hint="One https:// link. MCPX never opens or fetches it." value={input.link} onChange={(v) => set("link", v)} err={errors.link} />
             </section>
 
-            <section aria-labelledby="sec-tool" className="space-y-5 rounded-lg border border-border p-5">
+            <section aria-labelledby="sec-tool" className="space-y-4 rounded-lg border border-border p-4">
               <h3 id="sec-tool" className="label-mono text-xs text-primary">2 · MCP tool</h3>
               <ToolPreview id={input.templateId} />
               <fieldset aria-describedby="templateId-hint templateId-err">
@@ -202,7 +202,7 @@ function Launch() {
               )}
             </section>
 
-            <section aria-labelledby="sec-ai" className="rounded-lg border border-border p-5 text-sm">
+            <section aria-labelledby="sec-ai" className="rounded-lg border border-border p-4 text-sm">
               <h3 id="sec-ai" className="label-mono text-xs text-primary">3 · AI enhancement · optional</h3>
               <p className="mt-2 text-muted-foreground">Add your own API key to enhance your MCP tool, available in creator management. It's optional — your tool works without it, and the usage is billed to your own account.</p>
               <p className="mt-2 text-muted-foreground">Nothing here asks for a key. You add one later, when you're ready.</p>
@@ -252,7 +252,7 @@ function Launch() {
           <DraftSummaryAside input={input} />
           </div>
         ) : (
-          <section aria-labelledby="review" className="space-y-6">
+          <section aria-labelledby="review" className="space-y-4">
             <h2 id="review" ref={reviewRef} tabIndex={-1} className="text-xl text-foreground">Draft review — preparation only</h2>
             <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-sm text-muted-foreground">{summary}</pre>
             {saved && !dirty ? (
@@ -313,7 +313,7 @@ function DraftSummaryAside({ input }: { input: DraftInput }) {
     <div className="flex justify-between gap-3 py-1.5"><dt className="text-subtle">{k}</dt><dd className="min-w-0 truncate text-right text-foreground">{v}</dd></div>
   );
   return (
-    <aside aria-label="Draft summary" className="rounded-lg border border-border bg-card p-5 text-sm lg:sticky lg:top-24">
+    <aside aria-label="Draft summary" className="rounded-lg border border-border bg-card p-4 text-sm lg:sticky lg:top-24">
       <p className="label-mono text-xs text-primary">Summary</p>
       {t && <img src={t.image} alt="" width={1024} height={640} loading="lazy" className="mt-3 aspect-[16/10] w-full rounded object-cover" />}
       <dl className="mt-3 divide-y divide-border font-mono text-xs">
@@ -324,7 +324,7 @@ function DraftSummaryAside({ input }: { input: DraftInput }) {
         {row("MCP", t ? (t.mcpAdapter ? "adapter available" : "not yet") : "—")}
         {row("Initial buy", input.buyEnabled ? `${input.buyAmount || "?"} $MCP` : "none")}
       </dl>
-      <p className="mt-4 rounded border border-warning/40 p-2 text-xs text-muted-foreground">Draft only. Token creation is unavailable — nothing is created, signed or sent.</p>
+      <p className="mt-3 rounded border border-warning/40 p-2 text-xs text-muted-foreground">Draft only. Token creation is unavailable — nothing is created, signed or sent.</p>
     </aside>
   );
 }
