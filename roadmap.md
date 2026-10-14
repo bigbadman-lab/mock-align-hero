@@ -24,3 +24,5 @@
 - [x] CHILD-FEES-01B keeper module + tests (PARTIAL; 0021 pending, not wired/deployed)
 - [x] CANVAS-01 live UI activation correction
 - [x] TREASURY-01 built + tested in preview (publish awaits approval)
+- [ ] UI cleanup + design optimisation series (manual requests, in progress)
+  - [x] Hero label → "CREATOR FEES PAY HOLDERS"
