@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { verifyRecipients, verifyChild, planChild, verifyChildSettlement, memoryChildStore, runChildFeePass, childIntentKey, TOKEN_2022, type ChildRecord, type OnchainChild, type KeeperDeps, type FinalTx } from "../../services/rewards-worker/src/child-fees";
+import { verifyRecipients, verifyChild, planChild, verifyChildSettlement, memoryChildStore, runChildFeePass, childIntentKey, TOKEN_2022, type ChildRecord, type Shareholder, type OnchainChild, type KeeperDeps, type FinalTx } from "../../services/rewards-worker/src/child-fees";
 
 const k = () => Keypair.generate().publicKey.toBase58();
 const MCP = k();
@@ -16,7 +16,7 @@ describe("child fee split verification", () => {
   it("rejects unlocked, tampered, reordered or missing configs", () => {
     const c = mk();
     expect(verifyChild(c, onchain(c, { sharingConfig: { ...onchain(c).sharingConfig!, adminRevoked: false } }), MCP)).toEqual({ ok: false, code: "SHARES_NOT_LOCKED" });
-    const sh = onchain(c).sharingConfig!.shareholders;
+    const sh = onchain(c).sharingConfig!.shareholders as [Shareholder, Shareholder, Shareholder];
     expect(verifyChild(c, onchain(c, { sharingConfig: { mint: c.mint, adminRevoked: true, shareholders: [{ ...sh[0], shareBps: 6001 }, sh[1], { ...sh[2], shareBps: 1499 }] } }), MCP)).toMatchObject({ code: "SHARES_MISMATCH" });
     expect(verifyChild(c, onchain(c, { sharingConfig: { mint: c.mint, adminRevoked: true, shareholders: [sh[1], sh[0], sh[2]] } }), MCP)).toMatchObject({ code: "SHARES_MISMATCH" });
     expect(verifyChild(c, onchain(c, { sharingConfig: { mint: c.mint, adminRevoked: true, shareholders: [{ address: k(), shareBps: 6000 }, sh[1], sh[2]] } }), MCP)).toMatchObject({ code: "SHARES_MISMATCH" });
