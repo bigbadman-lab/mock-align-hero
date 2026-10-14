@@ -87,7 +87,8 @@ describe("Canvas on the product MCP endpoint", () => {
   const list = (t = "good") => new Request("https://mcpx.fun/x", { method: "POST", headers: { authorization: `Bearer ${t}`, "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) });
   it("lists exactly one run_canvas tool for an authorized active Canvas product", async () => {
     const r = await handleProductMcp(ID, list(), deps(), exec);
-    const b = await r.json();
+    const t = await r.text();
+    const b = JSON.parse(t.startsWith("{") ? t : t.split("\n").find((l) => l.startsWith("data: "))!.slice(6));
     expect(b.result.tools.map((t: any) => t.name)).toEqual(["run_canvas"]);
   });
   it("wrong key → 401; unbound, inactive or missing-version products → 404", async () => {
