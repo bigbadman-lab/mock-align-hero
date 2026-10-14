@@ -40,3 +40,4 @@
   - [x] Homepage: "Current status" → "Live flow" animated fee-flow graphic (logo, flowing dots, 30/30/40)
   - [x] Homepage: Live flow moved above Treasury (Treasury now section 2)
   - [x] Footer: tighter links + user mission statement replaces status note
+- MCP page header: heading 'Explore the MCP Tool Library' + new intro copy
