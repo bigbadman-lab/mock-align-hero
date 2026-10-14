@@ -91,6 +91,49 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
 ];
 
+TEMPLATES.push(
+  {
+    id: "holder-intelligence",
+    name: "Holder Intelligence",
+    engine: "TOKEN",
+    purpose: "Inspect a token's largest token accounts, their owners and concentration against total supply.",
+    details: [
+      "Coverage is stated; never a full holder count.",
+      "Inputs are asked for each time the tool runs, not fixed at launch.",
+    ],
+  },
+  {
+    id: "token-risk-analyst",
+    name: "Token Risk Analyst",
+    engine: "TOKEN",
+    purpose: "Read a token's risk signals: authorities, Token-2022 extensions and concentration.",
+    details: [
+      "Evidence checklist only — observed, not observed or unknown. No score, no verdict.",
+      "Inputs are asked for each time the tool runs, not fixed at launch.",
+    ],
+  },
+  {
+    id: "smart-money-tracker",
+    name: "Smart Money Tracker",
+    engine: "WALLET",
+    purpose: "Look up recent activity for up to 3 wallets you choose, with larger moves highlighted.",
+    details: [
+      "On demand, not continuous monitoring or alerting.",
+      "Wallets are chosen each time the tool runs, not fixed at launch.",
+    ],
+  },
+  {
+    id: "onchain-report-builder",
+    name: "Onchain Report Builder",
+    engine: "COMPOSE",
+    purpose: "Build one sourced, point-in-time report for a wallet or token from existing MCPX tools.",
+    details: [
+      "Partial parts are marked, never filled in.",
+      "The wallet or token is chosen each time the tool runs, not fixed at launch.",
+    ],
+  },
+);
+
 TEMPLATES.push({
   id: "canvas",
   name: "Canvas",
