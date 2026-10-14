@@ -118,7 +118,7 @@ function Distributions() {
   );
 }
 
-function DistPage({ asset, wallet, beforeSlot, last, onMore }: { asset?: "SOL" | "MCP"; wallet?: string; beforeSlot?: number; last: boolean; onMore: (s: number) => void }) {
+function DistPage({ asset, wallet, beforeSlot, last, onMore }: { asset?: "SOL" | "MCP" | undefined; wallet?: string | undefined; beforeSlot?: number | undefined; last: boolean; onMore: (s: number) => void }) {
   const q = useQuery(distributionsQuery({ asset, wallet, beforeSlot }));
   const rows: DistributionRow[] = q.data?.rows ?? [];
   return (

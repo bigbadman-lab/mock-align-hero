@@ -62,7 +62,7 @@ export function ModeBadge({ mode }: { mode: Overview["mode"] }) {
 
 export const DISCLAIMER = "Holder rewards depend on eligible fees actually collected and finalized. No APY or guaranteed payout.";
 
-export function Updated({ at, stale }: { at?: string; stale?: boolean }) {
+export function Updated({ at, stale }: { at?: string | undefined; stale?: boolean }) {
   if (!at) return null;
   return <p className={cn("font-mono text-[11px]", stale ? "text-warning" : "text-subtle")}>{stale ? "Showing last known values — refresh failed. " : ""}Updated {new Date(at).toUTCString().slice(17, 25)} UTC</p>;
 }

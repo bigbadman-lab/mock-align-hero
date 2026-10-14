@@ -14,7 +14,7 @@ export const overviewQuery = queryOptions({ queryKey: ["treasury", "overview"], 
 export const childQuery = queryOptions({ queryKey: ["treasury", "child"], queryFn: () => get<ChildEcosystem>("/api/public/treasury/child-ecosystem"), ...common, refetchInterval: 60_000 });
 export const windowsQuery = (range: "24h" | "7d" | "all") =>
   queryOptions({ queryKey: ["treasury", "windows", range], queryFn: () => get<{ mode: Mode; rows: WindowRow[]; next: string | null }>(`/api/public/treasury/windows?range=${range}`), ...common });
-export const distributionsQuery = (p: { asset?: "SOL" | "MCP"; wallet?: string; beforeSlot?: number }) => {
+export const distributionsQuery = (p: { asset?: "SOL" | "MCP" | undefined; wallet?: string | undefined; beforeSlot?: number | undefined }) => {
   const s = new URLSearchParams();
   if (p.asset) s.set("asset", p.asset);
   if (p.wallet) s.set("wallet", p.wallet);

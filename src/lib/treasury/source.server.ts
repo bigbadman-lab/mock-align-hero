@@ -117,7 +117,7 @@ export async function getWindows(range: "24h" | "7d" | "all", before?: string): 
   });
 }
 
-export async function getDistributions(p: { asset?: "SOL" | "MCP"; wallet?: string; beforeSlot?: number }): Promise<{ mode: Mode; rows: DistributionRow[]; nextBeforeSlot: number | null }> {
+export async function getDistributions(p: { asset?: "SOL" | "MCP" | undefined; wallet?: string | undefined; beforeSlot?: number | undefined }): Promise<{ mode: Mode; rows: DistributionRow[]; nextBeforeSlot: number | null }> {
   return cached(`dist:${p.asset ?? ""}:${p.wallet ?? ""}:${p.beforeSlot ?? ""}`, 15_000, async () => {
     const ns = await namespace();
     if (!ns.mint) return { mode: ns.mode, rows: [], nextBeforeSlot: null };
