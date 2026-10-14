@@ -489,6 +489,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_canvas_product_versions: {
+        Row: {
+          actor_wallet: string
+          catalog_version: number
+          config: Json
+          created_at: string
+          creation_id: string
+          source_draft_id: string | null
+          source_draft_revision: number | null
+          version: number
+        }
+        Insert: {
+          actor_wallet: string
+          catalog_version: number
+          config: Json
+          created_at?: string
+          creation_id: string
+          source_draft_id?: string | null
+          source_draft_revision?: number | null
+          version: number
+        }
+        Update: {
+          actor_wallet?: string
+          catalog_version?: number
+          config?: Json
+          created_at?: string
+          creation_id?: string
+          source_draft_id?: string | null
+          source_draft_revision?: number | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_canvas_product_versions_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcpx_canvas_product_versions_source_draft_id_fkey"
+            columns: ["source_draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcpx_canvas_revisions: {
         Row: {
           catalog_version: number
@@ -2223,6 +2271,20 @@ export type Database = {
           _usage: string
         }
         Returns: boolean
+      }
+      mcpx_canvas_bind: {
+        Args: { _creation: string; _draft: string; _rev: number }
+        Returns: string
+      }
+      mcpx_canvas_put_version: {
+        Args: {
+          _catalog: number
+          _config: Json
+          _creation: string
+          _expected: number
+          _wallet: string
+        }
+        Returns: string
       }
       mcpx_free_test_take: {
         Args: { _bucket: string; _limit: number }
