@@ -10,6 +10,8 @@ const pk = (v: string | undefined) => (v && B58.test(v) ? v : null);
 export function gateConfig(): GateConfig {
   return {
     enabled: process.env["MCPX_CHILD_LAUNCH_ENABLED"] === "1",
+    // Second, separate switch: lets the creator's wallet sign and the site broadcast real launches.
+    signingEnabled: process.env["MCPX_CHILD_LAUNCH_SIGNING"] === "1",
     opsRecipient: pk(process.env["MCPX_FEE_OPS_RECIPIENT"]),
     platformRecipient: pk(process.env["MCPX_FEE_PLATFORM_RECIPIENT"]),
     nativeDeployer: pk(process.env["MCPX_NATIVE_DEPLOYER_PUBLIC_KEY"]),

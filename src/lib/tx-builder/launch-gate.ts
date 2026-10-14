@@ -10,7 +10,7 @@ import type { BuyMode, TxFormat } from "./contract";
 export const LAUNCH_AUTH_FRESH_MS = 10 * 60_000;
 
 export type GateSession = { wallet: string; expiresAt: string } | null;
-export type GateConfig = { enabled: boolean; opsRecipient: string | null; platformRecipient: string | null; nativeDeployer: string | null };
+export type GateConfig = { enabled: boolean; signingEnabled?: boolean; opsRecipient: string | null; platformRecipient: string | null; nativeDeployer: string | null };
 export type BuilderCall = (op: "prepare" | "inspect", body: unknown) => Promise<{ status: number; body: any }>;
 /** Saved draft as owned by the session wallet (null = not theirs / missing). Metadata URI must exist. */
 export type GateDraft = { id: string; revision: number; templateId: string; name: string; symbol: string; uri: string | null };
@@ -109,5 +109,5 @@ export async function gateVerify(input: VerifyInput, session: GateSession, d: Ga
   const c = r.body?.checks ?? {};
   if (r.status !== 200 || r.body?.valid !== true) return err(403, String(r.body?.code ?? "CANDIDATE_INCONSISTENT"));
   if (!(c.payerIsCreator && c.signersExactlyCreatorAndMint && c.feeSharesExact)) return err(403, "CANDIDATE_INCONSISTENT");
-  return { http: 200, body: { ok: true, creator: ctx.sessionWallet, launchReady: false } };
+  return { http: 200, body: { ok: true, creator: ctx.sessionWallet, launchReady: d.config.signingEnabled === true } };
 }

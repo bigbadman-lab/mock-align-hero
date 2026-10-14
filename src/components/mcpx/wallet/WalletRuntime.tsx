@@ -41,7 +41,7 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
   const { caipNetworkId, switchNetwork } = useAppKitNetwork();
   const { disconnect } = useDisconnect();
   const { walletInfo } = useWalletInfo();
-  const { walletProvider } = useAppKitProvider<{ signMessage?: (m: Uint8Array) => Promise<Uint8Array> }>("solana");
+  const { walletProvider } = useAppKitProvider<{ signMessage?: (m: Uint8Array) => Promise<Uint8Array>; signTransaction?: (tx: unknown) => Promise<unknown> }>("solana");
   const [timedOut, setTimedOut] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -88,6 +88,16 @@ export default function WalletRuntime({ onChange }: { onChange: (v: WalletView) 
               try { return Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)); } catch { /* fall through */ }
             }
             throw new Error("unexpected_signature_format");
+          }
+        : undefined,
+      signTransaction: connected
+        ? async (bytes: Uint8Array) => {
+            const p = fns.current.walletProvider;
+            if (!p || typeof p.signTransaction !== "function") throw new Error("unsupported_wallet");
+            const { VersionedTransaction } = await import("@solana/web3.js");
+            const signed = (await p.signTransaction.call(p, VersionedTransaction.deserialize(bytes))) as { serialize?: () => Uint8Array };
+            if (!signed || typeof signed.serialize !== "function") throw new Error("unexpected_transaction_format");
+            return Uint8Array.from(signed.serialize());
           }
         : undefined,
     };
