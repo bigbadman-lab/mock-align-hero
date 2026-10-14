@@ -3,6 +3,10 @@ import { useWallet } from "@/lib/wallet/context";
 import { explorerAccountUrl, shortAddress } from "@/lib/wallet/state";
 import { buttonOutline, buttonPrimary } from "../primitives";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { Check, ChevronDown, Copy, LayoutDashboard, LogOut, Repeat, ShieldCheck } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { sessionMatchesWallet, useCreatorSessionContext } from "@/lib/creator-auth/session-context";
 
 export function useCopy() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -29,11 +33,7 @@ export function WalletButton({ className }: { className?: string }) {
     case "connecting":
       return <button type="button" onClick={w.open} className={cn(buttonOutline, sm, className)} aria-live="polite">Connecting…</button>;
     case "connected_mainnet":
-      return (
-        <button type="button" onClick={w.openAccount} className={cn(buttonOutline, sm, "gap-2 font-mono", className)} aria-label={`Wallet connected: ${w.address}. Open account controls`}>
-          <span aria-hidden className="h-2 w-2 rounded-full bg-primary" />{shortAddress(w.address!)}
-        </button>
-      );
+      return <WalletMenu className={className} />;
     case "connected_unsupported_network":
       return <button type="button" onClick={w.switchToMainnet} className={cn(buttonOutline, sm, "border-warning text-warning", className)}>Unsupported network</button>;
     case "error":
@@ -43,7 +43,50 @@ export function WalletButton({ className }: { className?: string }) {
   }
 }
 
-/** Full panel for /dashboard. */
+/** Connected header control: one menu for dashboard, verify, copy, switch and disconnect. */
+function WalletMenu({ className }: { className?: string | undefined }) {
+  const w = useWallet();
+  const session = useCreatorSessionContext();
+  const { msg, copy } = useCopy();
+  const verified = sessionMatchesWallet(session, w);
+  const addr = w.address!;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className={cn(buttonOutline, "min-h-11 gap-2 px-4 font-mono", className)}
+          aria-label={`Wallet ${shortAddress(addr)}${verified ? ", verified" : ", not verified"}. Open wallet menu`}>
+          <span aria-hidden className="h-2 w-2 rounded-full bg-primary" />
+          {shortAddress(addr)}
+          {verified && <ShieldCheck aria-hidden className="h-3.5 w-3.5 text-primary" />}
+          <ChevronDown aria-hidden className="h-3.5 w-3.5 text-subtle" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64 border-border-strong bg-card">
+        <DropdownMenuLabel className="space-y-1 font-normal">
+          <span className="block font-mono text-sm text-foreground">{shortAddress(addr)}</span>
+          <span className={cn("block text-xs", verified ? "text-primary" : "text-muted-foreground")}>
+            {verified ? "Verified creator" : "Connected · not verified"}{w.walletName ? ` · ${w.walletName}` : ""}
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard aria-hidden />Dashboard</Link></DropdownMenuItem>
+        {!verified && (
+          <DropdownMenuItem disabled={!!session.pending} onSelect={() => void session.signIn()}>
+            <ShieldCheck aria-hidden />{session.pending ? "Check your wallet…" : "Verify wallet"}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); void copy(addr); }}>
+          {msg === "Copied" ? <Check aria-hidden /> : <Copy aria-hidden />}{msg === "Copied" ? "Copied" : "Copy address"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => (w.openAccount ?? w.open)?.()}><Repeat aria-hidden />Switch wallet</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => w.disconnect?.()}><LogOut aria-hidden />Disconnect</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Full panel (kept for tests/legacy use). */
 export function WalletPanel() {
   const w = useWallet();
   const { msg, copy } = useCopy();
