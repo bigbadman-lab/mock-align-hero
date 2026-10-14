@@ -93,6 +93,16 @@ d("0020 immutable payout plans (real Postgres)", () => {
     const b = (await sql`select tokens::text from public.mcpx_rw_budget_remaining(to_timestamp(${E}))`)[0]!;
     expect(b["tokens"]).toBe("776995"); // fill minus the 5 already reserved token payout
   });
+  it("01E: one fee collection per window, no funds out, 20 racing workers → one wins; buyback needs the window's budget", async () => {
+    const c = { idempotencyKey: `w${E}:collect`, cycleId: `w${E}`, kind: "FEE_COLLECTION" as const, epoch: E + 3000, messageSha256: H, lamports: 0n, tokens: 0n, opsCostLamports: 5000n, lastValidBlockHeight: 500 };
+    const r = await Promise.all(Array.from({ length: 20 }, (_, i) => intentStore(db, `w${i}`).reserve(c)));
+    expect(r.filter((x) => x === "NEW")).toHaveLength(1);
+    expect(await intentStore(db, "w").reserve({ ...c, idempotencyKey: `w${E}:collect-x`, lamports: 1n })).not.toBe("NEW");
+    const buy = { ...c, idempotencyKey: `w${E}:buy-key`, kind: "BUYBACK" as const, lamports: 30_000_001n, epoch: E };
+    expect(await intentStore(db, "w").reserve(buy)).toBe("NO_BUYBACK_BUDGET");
+    expect(await intentStore(db, "w").reserve({ ...buy, epoch: E + 300 })).toBe("NO_EVIDENCE"); // another window's funds
+    expect(await intentStore(db, "w").reserve({ ...buy, lamports: 1_000_000n })).toBe("NEW");
+  });
   it("only service_role can reach intents and fills", async () => {
     const g = await sql`select table_name from information_schema.role_table_grants where table_name in ('mcpx_rw_intents','mcpx_rw_buyback_fills') and grantee in ('anon','authenticated')`;
     expect(g).toHaveLength(0);

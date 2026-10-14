@@ -60,6 +60,10 @@ export function memoryBudgetStore(budgets: Map<number, EpochBudget>, opsCarry = 
     setState(k, st) { rows.get(k)!.state = st; },
     async reserve(i): Promise<ReserveResult> {
       if (rows.has(i.idempotencyKey)) return "DUPLICATE";
+      if (i.kind === "FEE_COLLECTION") { // mirrors SQL: moves no funds out; income proven later from finalized events
+        if (i.lamports !== 0n || i.tokens !== 0n) return "NO_EVIDENCE";
+        rows.set(i.idempotencyKey, { cycleId: i.cycleId, kind: i.kind, epoch: i.epoch, lamports: 0n, tokens: 0n, ops: i.opsCostLamports, state: "RESERVED" }); return "NEW";
+      }
       const b = budgets.get(i.epoch); if (!b) return "NO_EVIDENCE";
       const used = live().filter((r) => r.epoch === i.epoch);
       const sum = (k: PlanKind, f: (r: R) => bigint) => used.filter((r) => r.kind === k).reduce((a, r) => a + f(r), 0n);

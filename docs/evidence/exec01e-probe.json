@@ -1,0 +1,167 @@
+{
+  "at": "2026-10-14T08:34:27.626Z",
+  "network": "mainnet-beta",
+  "signedOrSent": 0,
+  "standInCurve": {
+    "mint": "Hz8o8sbV4uMFeBT3PsXzGg9jJXKKZU7pvKoa11qHpump",
+    "payer": "BNSLPvqenqxz82AA5deJxP4MqPjZUZRsm4u2axLDbhqF",
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+  },
+  "curveCollect": {
+    "bytes": 634,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "signerCheck": {
+      "ok": true,
+      "maxSpend": "0",
+      "venue": null
+    },
+    "sim": {
+      "err": null,
+      "cu": 48666,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 151452 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  },
+  "curveBuyback": {
+    "expectedTokens": "19914699679",
+    "bytes": 821,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
+    ],
+    "signerCheck": {
+      "ok": true,
+      "maxSpend": "999999",
+      "venue": "PUMP"
+    },
+    "sim": {
+      "err": {
+        "InstructionError": [
+          3,
+          {
+            "Custom": 6002
+          }
+        ]
+      },
+      "cu": 59609,
+      "logsTail": [
+        "Program return: 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P AAAAAAAAAABfAAAAAAAAAB4AAAAAAAAA",
+        "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P failed: custom program error: 0x1772"
+      ]
+    }
+  },
+  "token2022PayoutSource": {
+    "wallet": "7g5CJ754NboeY6D44MDdGwQmVX4Fvu59Q47c9ZKLPMkE",
+    "balance": "90658978578967"
+  },
+  "token2022Payout": {
+    "recipients": 30,
+    "batches": 4,
+    "bytes": [
+      1167,
+      1167,
+      1167,
+      621
+    ],
+    "firstBatchSim": {
+      "err": null,
+      "cu": 191802,
+      "logsTail": [
+        "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb success",
+        "Log truncated"
+      ]
+    },
+    "note": "source = real on-curve holder of a Token-2022 Pump coin; recipients are fresh keys needing ATA creation"
+  },
+  "solPayout": {
+    "recipients": 40,
+    "batches": 2,
+    "bytes": [
+      1200,
+      1200
+    ],
+    "firstBatchSim": {
+      "err": null,
+      "cu": 3300,
+      "logsTail": [
+        "Program 11111111111111111111111111111111 invoke [1]",
+        "Program 11111111111111111111111111111111 success"
+      ]
+    }
+  },
+  "ammCreator": "7fhb4SNzTrWb6SdanuR6Ufegg56M4JbCwcMvJyY7ryD4",
+  "standInAmm": {
+    "mint": "G9o5R8G3LfjakdpS3hJLZP4HKCMWh3AkPYQ9SAAVpump",
+    "pool": "4ivKcJnoDkQ94ddc89Zp7VMD8Yt1s1dhyq2otsgSibQh",
+    "coinCreator": "7fhb4SNzTrWb6SdanuR6Ufegg56M4JbCwcMvJyY7ryD4",
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+  },
+  "ammCollect": {
+    "bytes": 512,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "signerCheck": {
+      "ok": true,
+      "maxSpend": "0",
+      "venue": null
+    },
+    "sim": {
+      "err": null,
+      "cu": 32669,
+      "logsTail": [
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 118 of 167449 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"
+      ]
+    }
+  },
+  "ammBuyback": {
+    "pool": "4ivKcJnoDkQ94ddc89Zp7VMD8Yt1s1dhyq2otsgSibQh",
+    "expectedTokens": "1775814135",
+    "minOut": "1722539710",
+    "bytes": 815,
+    "signers": 1,
+    "programs": [
+      "ComputeBudget111111111111111111111111111111",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "11111111111111111111111111111111",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+    ],
+    "signerCheck": {
+      "ok": true,
+      "maxSpend": "1000000",
+      "venue": "PUMP_AMM"
+    },
+    "sim": {
+      "err": {
+        "InstructionError": [
+          5,
+          {
+            "Custom": 6040
+          }
+        ]
+      },
+      "cu": 49057,
+      "logsTail": [
+        "Program pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA consumed 34993 of 285936 compute units",
+        "Program pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA failed: custom program error: 0x1798"
+      ]
+    }
+  }
+}

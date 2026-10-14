@@ -11,6 +11,8 @@ import { loadSigner, readLimits, executionReadiness } from "./signer";
 import { intentStore } from "./intents";
 import { reconcileOpen, type Chain } from "./executor";
 import { runPassWindows } from "./orchestrator";
+import { submitStage } from "./build";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { sealedFromFrozen, vaultLamports, settlementChain, captureFills, pendingFills, ingestFees, deployerProvenance, creatorVaults, type RpcCall } from "./pipeline";
 import { heliusRpc, cutoffDeps, credits, type Meter } from "./helius-history";
 import { indexPass, selectPendingCutoffs } from "./index-pass";
@@ -169,6 +171,7 @@ async function main() {
       // EXEC-01D: one pass = reconcile → fees → fills → windows. All reads finalized; no sender exists (null) so
       // nothing is ever broadcast in this bundle. Readiness is computed from real checks and is not READY here.
       const call = rpcCall(env("MCPX_REWARDS_RPC_URL")!);
+      const conn = new Connection(env("MCPX_REWARDS_RPC_URL")!, "finalized");
       const deployer = cfg.deployerWallet!;
       const rec = await reconcileOpen(intentStore(db, workerId), settlementChain(call, db, deployer), null);
       const prov = await deployerProvenance(call, deployer);
@@ -194,7 +197,12 @@ async function main() {
           vaultLamports: async () => (await vaultLamports(call, deployer))?.total ?? null,
           pendingFills: (w) => pendingFills(db, w),
           budget: budgetOf,
-          submit: async () => "REFUSED", // unreachable while readiness ≠ READY; building+signing is the rehearsal gate
+          // 01E: build → validate → sign → persist bytes. Sender is null: signed bytes are HELD, never broadcast. Only
+          // reachable when readiness is READY (it is not in this bundle) and the signer validated against the public key.
+          submit: (kind, key, cycle, w, rows, lamports) => submitStage({ conn, deployer: new PublicKey(deployer), mint: new PublicKey(cfg.mint!), decimals: decimals ?? -1,
+            cuPrice: 1000, sign: decimals === null ? null : signer.sign, store: intentStore(db, workerId), sender: null,
+            ctx: async () => ({ limits: limits.ok ? limits.limits : null, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1",
+              currentBlockHeight: await conn.getBlockHeight("finalized").catch(() => null), store: intentStore(db, workerId), ataRentLamports: await conn.getMinimumBalanceForRentExemption(170, "finalized").then(BigInt).catch(() => null) }) }, kind, key, cycle, w, rows, lamports),
         }, [lastPlanned], 1);
         log({ event: "financial_cycle", correlationId, windows: fin.map((x) => ({ window: x.window, last: x.stages.at(-1) })) });
       }
