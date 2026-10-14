@@ -21,3 +21,4 @@
 - [x] REWARDS-EXEC-01E — sign fee collection + buybacks (PARTIAL; no deploy/broadcast)
 
 - [x] CHILD-FEES-01 audit + builder fix (PARTIAL; real-mint proofs pending)
+- [x] CHILD-FEES-01B keeper module + tests (PARTIAL; 0021 pending, not wired/deployed)
