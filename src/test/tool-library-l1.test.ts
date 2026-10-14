@@ -71,8 +71,8 @@ describe("launch deep links", () => {
   it("relay ids map to canonical ids", () => {
     expect(resolveTemplateParam("wallet_inspector")).toEqual({ kind: "launchable", id: "wallet-inspector" });
   });
-  it("planned templates are never launchable", () => {
-    expect(resolveTemplateParam("holder-intelligence").kind).toBe("not_launchable");
+  it("intelligence templates are launchable", () => {
+    expect(resolveTemplateParam("holder-intelligence").kind).toBe("launchable");
   });
   it("unknown values are reported, not guessed", () => {
     expect(resolveTemplateParam("../etc").kind).toBe("unknown");
