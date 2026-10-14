@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Activity, Boxes, Coins, Copy, Check, LayoutGrid, LogOut, Repeat, ShieldCheck, Wallet, Workflow } from "lucide-react";
 import { CreatorProducts } from "@/components/mcpx/CreatorSignIn";
+import { CreatorData } from "@/components/mcpx/dashboard/CreatorData";
 import { CanvasWorkspace } from "@/components/mcpx/dashboard/CanvasWorkspace";
 import { useCopy } from "@/components/mcpx/wallet/WalletControls";
 import { PageContainer, PageHeader, FeatureAvailability, RouteError, buttonOutline, buttonPrimary } from "@/components/mcpx/primitives";
@@ -236,11 +237,7 @@ function Authenticated() {
 
       <CanvasWorkspace />
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <Pending id="d-earn" icon={<Coins className="h-5 w-5" />} title="Creator earnings" reason="Not live yet — appears once your token earns creator fees." />
-        <Pending id="d-rew" icon={<LayoutGrid className="h-5 w-5" />} title="Native rewards" reason="Not live yet — $MCP has not been minted." />
-        <Pending id="d-act" icon={<Activity className="h-5 w-5" />} title="Tool activity" reason="Not live yet — appears after a verified token launch." />
-      </div>
+      <CreatorData />
 
       <div className="flex flex-wrap gap-3">
         <Link to="/launch" className={buttonPrimary}>Launch a token</Link>
@@ -248,15 +245,5 @@ function Authenticated() {
         <Link to="/docs" className={buttonOutline}>Docs</Link>
       </div>
     </>
-  );
-}
-
-function Pending({ id, icon, title, reason }: { id: string; icon: ReactNode; title: string; reason: string }) {
-  return (
-    <section aria-labelledby={id} className="space-y-2 rounded-lg border border-border bg-card p-4">
-      <div aria-hidden className="text-subtle">{icon}</div>
-      <h2 id={id} className="text-sm font-semibold text-foreground">{title}</h2>
-      <p className="text-xs leading-relaxed text-muted-foreground">{reason}</p>
-    </section>
   );
 }
