@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageContainer, SectionHeading, SectionLabel, InfoCard, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
-import { TEMPLATES, ENGINES } from "@/lib/templates";
+import { ToolRail } from "@/components/mcpx/ToolRail";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
 export const Route = createFileRoute("/")({
@@ -76,19 +76,7 @@ function Home() {
             <SectionHeading label="Tool library" title={<span id="tpl">Ten live tools, plus Canvas</span>} intro="Read-only Solana tools you can run today, and Canvas to chain 2–4 of them into one pipeline." />
             <Link to="/mcp" className={buttonOutline}>View all templates</Link>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {ENGINES.map((e) => (
-              <div key={e.id} className="rounded-lg border border-border bg-card p-6">
-                <p className="label-mono text-primary">{e.id}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{e.blurb}</p>
-                <ul className="mt-4 space-y-1">
-                  {TEMPLATES.filter((t) => t.engine === e.id).map((t) => (
-                    <li key={t.id} className="font-mono text-sm text-foreground">{t.name}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <ToolRail />
         </PageContainer>
       </section>
 
