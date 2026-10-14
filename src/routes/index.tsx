@@ -52,6 +52,13 @@ function Home() {
         </PageContainer>
       </section>
 
+      <section aria-labelledby="status" className="border-b border-border">
+        <PageContainer className="py-12 sm:py-14">
+          <SectionHeading label="Live flow" title={<span id="status">From every trade to every holder</span>} intro="Fees collected from native $MCP trades flow into MCPX, then out to eligible wallets in SOL and bought-back $MCP." />
+          <div className="mt-8"><LiveFlow /></div>
+        </PageContainer>
+      </section>
+
       <section aria-labelledby="treasury" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="Treasury" title={<span id="treasury">Every fee. Every reward. Fully transparent.</span>} intro="Track native $MCP creator fees, five-minute reward cycles and verified holder distributions — all in one place." />
@@ -87,7 +94,7 @@ function Home() {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="vision" className="border-b border-border">
+      <section aria-labelledby="vision">
         <PageContainer className="py-12 sm:py-14">
           <SectionHeading label="What you can build" title={<span id="vision">Build a live tool. Pair it. Plug it into AI.</span>} intro="Tools run on live Solana data today. Pairing one to a $MCP token is the last piece still in front of you." />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -106,12 +113,6 @@ function Home() {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="status">
-        <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="Live flow" title={<span id="status">From every trade to every holder</span>} intro="Fees collected from native $MCP trades flow into MCPX, then out to eligible wallets in SOL and bought-back $MCP." />
-          <div className="mt-8"><LiveFlow /></div>
-        </PageContainer>
-      </section>
     </>
   );
 }
