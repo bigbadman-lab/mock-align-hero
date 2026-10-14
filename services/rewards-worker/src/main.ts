@@ -202,7 +202,7 @@ async function main() {
           submit: (kind, key, cycle, w, rows, lamports) => submitStage({ conn, deployer: new PublicKey(deployer), mint: new PublicKey(cfg.mint!), decimals: decimals ?? -1,
             cuPrice: 1000, sign: decimals === null ? null : signer.sign, store: intentStore(db, workerId), sender: null,
             ctx: async () => ({ limits: limits.ok ? limits.limits : null, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1",
-              currentBlockHeight: await conn.getBlockHeight("finalized").catch(() => null), store: intentStore(db, workerId), ataRentLamports: 2_074_080n }) }, kind, key, cycle, w, rows, lamports),
+              currentBlockHeight: await conn.getBlockHeight("finalized").catch(() => null), store: intentStore(db, workerId), ataRentLamports: await conn.getMinimumBalanceForRentExemption(170, "finalized").then(BigInt).catch(() => null) }) }, kind, key, cycle, w, rows, lamports),
         }, [lastPlanned], 1);
         log({ event: "financial_cycle", correlationId, windows: fin.map((x) => ({ window: x.window, last: x.stages.at(-1) })) });
       }
