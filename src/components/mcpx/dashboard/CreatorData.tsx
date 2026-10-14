@@ -25,7 +25,7 @@ export function CreatorData() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet]);
 
-  const all = (k: keyof Payload) => (d === "loading" ? "loading" : d === "error" ? ({ state: "unavailable" } as const) : d[k]);
+  const all = <K extends keyof Payload>(k: K): Payload[K] | "loading" => (d === "loading" ? "loading" : d === "error" ? ({ state: "unavailable" } as Payload[K]) : d[k]);
   return (
     <div className="grid gap-3 lg:grid-cols-3">
       <Card id="d-earn" icon={<Coins className="h-5 w-5" />} title="Creator earnings" s={all("earnings")}
