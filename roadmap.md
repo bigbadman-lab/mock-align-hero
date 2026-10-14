@@ -69,3 +69,6 @@ Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SO
 - [x] Part 4: Worker #3 rehearsal confirmation, atomic register+consume, isolation, 1% on-chain min-out buy (not deployed)
 - [ ] "Rehearsal (SOL pair)" label; product lifecycle + tool activity checks
 - [ ] Report + activation sequence
+
+- [x] Hide the four SOL test tokens (pair_kind SOL_REHEARSAL) from the Paired page
+- [x] Bundled $MCP first buy: site side (gate + launch page copy)

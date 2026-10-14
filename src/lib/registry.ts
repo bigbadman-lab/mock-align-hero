@@ -54,6 +54,8 @@ export async function fetchVerifiedCreations(page: number, signal?: AbortSignal)
     let q = supabase
       .from("mcp_creations")
       .select(PUBLIC_COLUMNS)
+      // Public list shows $MCP-paired products only; SOL rehearsal tokens stay reachable by their own pages.
+      .eq("pair_kind", "MCP")
       .order("verified_at", { ascending: false })
       .order("id", { ascending: false })
       .range(from, from + REGISTRY_PAGE_SIZE); // one extra row to detect more

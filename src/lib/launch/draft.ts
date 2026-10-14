@@ -169,7 +169,7 @@ export function draftSummary(d: Draft, settingsText: string[], wallet: string | 
     `Creator wallet: ${wallet ?? "not connected"}`,
     `Fee split: ${FEE_SPLIT.map((f) => `${f.bps / 100}% ${f.role.toLowerCase()}`).join(" / ")} (fixed by MCPX)`,
     d.initialBuy
-      ? `Initial buy preference: ${d.initialBuy.amountMcp} $MCP, slippage ${d.initialBuy.slippageBps} bps — separate purchase after verified creation; not part of creation transaction`
+      ? `Initial buy preference: ${d.initialBuy.amountMcp} $MCP, slippage ${d.initialBuy.slippageBps} bps — bought inside the launch transaction, after the 60/25/15 fee lock`
       : "Initial buy: none",
   ].join("\n");
 }

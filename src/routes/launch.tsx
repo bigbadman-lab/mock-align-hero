@@ -253,7 +253,7 @@ function Launch() {
 
             <fieldset className="rounded-lg border border-border bg-card p-4 text-sm">
               <legend className="px-1 text-foreground">Initial buy (optional)</legend>
-              <p className="text-muted-foreground">Separate purchase after verified creation; not part of creation transaction. This is a preference only — no buy happens and no price or order is promised. It would need your separate approval later.</p>
+              <p className="text-muted-foreground">Bought in the same transaction as your token launch, right after the 60/25/15 fee split is locked. You approve it once in your wallet together with the launch. Price is not guaranteed; if the price moves past your slippage limit, the whole launch is cancelled and nothing is created.</p>
               <label className="mt-3 flex items-center gap-2 text-foreground">
                 <input type="checkbox" checked={input.buyEnabled} onChange={(e) => set("buyEnabled", e.target.checked)} /> I'd like an initial buy later
               </label>
@@ -343,7 +343,7 @@ function ReviewCard({ draft, wallet, settings, artworkUrl }: { draft: Draft; wal
           </dd>
         </div>
         {row("Initial buy", draft.initialBuy
-          ? `${draft.initialBuy.amountMcp} $MCP (max ${draft.initialBuy.slippageBps / 100}% slippage) — a separate purchase later, with your approval`
+          ? `${draft.initialBuy.amountMcp} $MCP (max ${draft.initialBuy.slippageBps / 100}% slippage) — bought in the same transaction as your token launch`
           : "None")}
       </dl>
     </div>
