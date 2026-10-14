@@ -13,7 +13,7 @@ export async function pinBytes(bytes: Uint8Array, name: string, type: string): P
     const form = new FormData();
     form.append("network", "public");
     form.append("name", name);
-    form.append("file", new Blob([bytes], { type }), name);
+    form.append("file", new Blob([bytes as Uint8Array<ArrayBuffer>], { type }), name);
     const res = await fetch("https://uploads.pinata.cloud/v3/files", {
       method: "POST", headers: { Authorization: `Bearer ${process.env["PINATA_JWT"]}` }, body: form, signal: AbortSignal.timeout(15_000),
     });
