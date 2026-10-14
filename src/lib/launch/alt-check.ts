@@ -29,6 +29,22 @@ export function parseV0Lookups(msg: Uint8Array): Lookup[] {
   return out;
 }
 
+/** Full static view of a v0 message: account keys, instructions (program + data), lookups. */
+export function parseV0(msg: Uint8Array): { keys: string[]; ixs: { program: string; data: Uint8Array }[]; lookups: number } {
+  if ((msg[0]! & 0x80) === 0 || (msg[0]! & 0x7f) !== 0) throw new Error("not_v0");
+  let o = 4;
+  const rd = () => { const [v, l] = readCompactU16(msg, o); o += l; return v; };
+  const nKeys = rd();
+  const keys = Array.from({ length: nKeys }, (_, i) => bs58.encode(msg.subarray(o + i * 32, o + (i + 1) * 32)));
+  o += nKeys * 32 + 32;
+  const nIx = rd(), ixs: { program: string; data: Uint8Array }[] = [];
+  for (let i = 0; i < nIx; i++) {
+    const pi = msg[o]!; o += 1; const a = rd(); o += a; const d = rd();
+    ixs.push({ program: keys[pi] ?? "?", data: msg.slice(o, o + d) }); o += d;
+  }
+  return { keys, ixs, lookups: parseV0Lookups(msg).length };
+}
+
 export function parseAlt(data: Uint8Array): { active: boolean; addresses: number } {
   if (data.length < ALT_HEADER || (data.length - ALT_HEADER) % 32 !== 0) throw new Error("bad_alt");
   const type = new DataView(data.buffer, data.byteOffset).getUint32(0, true);

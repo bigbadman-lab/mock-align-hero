@@ -87,7 +87,8 @@ export function RehearsalBuy({ connectedWallet }: { connectedWallet: string | nu
         <div className="space-y-2">
           <ul className="space-y-1 text-muted-foreground">
             <li>Spend: <span className="text-foreground">0.05 SOL</span> (max slippage {st.c.slippageBps / 100}%)</li>
-            <li>Estimated tokens: <span className="text-foreground">{st.c.estimatedTokens ?? "—"}</span> (not guaranteed)</li>
+            <li>Estimated tokens: <span className="text-foreground">{st.c.estimatedTokens ?? "—"}</span> base units</li>
+            <li>Minimum you'll receive: <span className="text-foreground">{st.c.minTokensOut}</span> base units, enforced by the Pump program (the buy fails instead of filling lower)</li>
             <li>Network fee: about 0.000005 SOL plus any priority fee your wallet adds</li>
             <li>Simulation: <span className="text-foreground">{st.c.simulation ?? "not run"}</span></li>
           </ul>
