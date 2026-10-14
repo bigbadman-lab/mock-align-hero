@@ -110,9 +110,10 @@ describe("registry states", () => {
 });
 
 describe("template definitions", () => {
-  it("are the six tools plus Canvas, with stable ids", () => {
+  it("are the ten tools plus Canvas, with stable ids", () => {
     expect(TEMPLATES.map((t) => t.id)).toEqual([
-      "wallet-inspector", "whale-watch", "token-scanner", "supply-monitor", "tx-verifier", "account-checker", "canvas",
+      "wallet-inspector", "whale-watch", "token-scanner", "supply-monitor", "tx-verifier", "account-checker",
+      "holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder", "canvas",
     ]);
   });
 });
