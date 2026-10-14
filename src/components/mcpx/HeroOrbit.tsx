@@ -2,7 +2,7 @@ import logo from "@/assets/mcp-monitor-logo.png.asset.json";
 
 // Illustrative diagram only — no live data. Tools orbit the $MCP core;
 // fee pulses travel inward from tools, then out to holders and operations.
-const TOOLS = ["Wallet Inspector", "Token Scanner", "Tx Explainer", "Holder Map", "Swap Quote", "Canvas"];
+const TOOLS = ["Wallet Inspector", "Whale Watch", "Token Scanner", "Supply Monitor", "TX Verifier", "Canvas"];
 const C = 200;
 const R = 140;
 
