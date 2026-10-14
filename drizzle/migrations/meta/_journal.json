@@ -162,6 +162,13 @@
       "when": 1791971498484,
       "tag": "0022_mcpx_cf_revoke_client_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791973487486,
+      "tag": "0023_0023_mcpx_canvas_drafts",
+      "breakpoints": true
     }
   ]
 }

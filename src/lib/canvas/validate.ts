@@ -9,7 +9,9 @@ export interface CanvasStepInput {
   /** Absent for step 0; otherwise an earlier step index and one of its output ids. */
   from?: { step: number; output: string };
 }
-export interface CanvasConfig { catalogVersion: number; steps: CanvasStepInput[] }
+/** Optional final AI step: summarise the pipeline's results with the creator's own OpenAI key (fixed prompt, no tools/URLs). */
+export interface CanvasAi { summarize: true }
+export interface CanvasConfig { catalogVersion: number; steps: CanvasStepInput[]; ai?: CanvasAi }
 
 export type CanvasCheck = { ok: true; config: CanvasConfig; entryKind: ValueKind } | { ok: false; errors: string[] };
 
@@ -18,8 +20,11 @@ const ALLOWED_KEYS = new Set(["capabilityId", "version", "from"]);
 export function validateCanvas(raw: unknown): CanvasCheck {
   const errors: string[] = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, errors: ["Canvas configuration is missing."] };
-  const r = raw as { catalogVersion?: unknown; steps?: unknown };
-  if (Object.keys(r).some((k) => k !== "catalogVersion" && k !== "steps")) return { ok: false, errors: ["Canvas configuration has unexpected fields."] };
+  const r = raw as { catalogVersion?: unknown; steps?: unknown; ai?: unknown };
+  if (Object.keys(r).some((k) => k !== "catalogVersion" && k !== "steps" && k !== "ai")) return { ok: false, errors: ["Canvas configuration has unexpected fields."] };
+  const ai = r.ai;
+  if (ai !== undefined && !(ai && typeof ai === "object" && !Array.isArray(ai) && Object.keys(ai).length === 1 && (ai as { summarize?: unknown }).summarize === true))
+    return { ok: false, errors: ["The AI step is malformed."] };
   if (r.catalogVersion !== CANVAS_CATALOG_VERSION) return { ok: false, errors: ["This Canvas was built for a different capability catalog. Rebuild it."] };
   if (!Array.isArray(r.steps)) return { ok: false, errors: ["Add at least two steps."] };
   const steps = r.steps as unknown[];
@@ -53,7 +58,7 @@ export function validateCanvas(raw: unknown): CanvasCheck {
   });
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, config: { catalogVersion: CANVAS_CATALOG_VERSION, steps: out }, entryKind: CAPABILITY_BY_ID[out[0]!.capabilityId]!.input.kind };
+  return { ok: true, config: { catalogVersion: CANVAS_CATALOG_VERSION, steps: out, ...(r.ai ? { ai: { summarize: true as const } } : {}) }, entryKind: CAPABILITY_BY_ID[out[0]!.capabilityId]!.input.kind };
 }
 
 /** Outputs that a step at index `i` may legally read, for the guided picker. */

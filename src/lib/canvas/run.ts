@@ -15,6 +15,8 @@ export interface RunDeps {
   execute: (payload: string) => Promise<{ ok: true; out: unknown } | { ok: false; error: string }>;
   now: () => number;
   traceId: string;
+  /** Final AI step (product context only): creator-owned key via src/lib/byok/execute.ts. Absent = draft dry run. */
+  summarise?: (results: unknown) => Promise<{ status: string; text?: string; model?: string }>;
 }
 
 export type StepTrace =
@@ -25,7 +27,12 @@ export type StepTrace =
 export type DryRun =
   | { ok: false; error: "invalid_canvas"; errors: string[] }
   | { ok: false; error: "invalid_input" }
-  | { ok: true; dryRun: true; traceId: string; complete: boolean; steps: StepTrace[] };
+  | { ok: true; dryRun: true; traceId: string; complete: boolean; steps: StepTrace[]; ai?: AiTrace };
+
+export type AiTrace =
+  | { status: "ok"; model: string; text: string }
+  | { status: "not_run"; reason: string }
+  | { status: "failed"; error: string };
 
 export async function runCanvas(rawConfig: unknown, entryValue: unknown, d: RunDeps): Promise<DryRun> {
   const v = validateCanvas(rawConfig);
@@ -67,5 +74,14 @@ export async function runCanvas(rawConfig: unknown, entryValue: unknown, d: RunD
     const eid = (r.out as { executionId?: unknown }).executionId;
     steps.push({ step: i, capabilityId: cap.id, status: "ok", input: value, executionId: typeof eid === "string" ? eid : null, passed, result: r.out });
   }
-  return { ok: true, dryRun: true, traceId: d.traceId, complete: steps.every((s) => s.status === "ok"), steps };
+  const complete = steps.every((s) => s.status === "ok");
+  if (!v.config.ai) return { ok: true, dryRun: true, traceId: d.traceId, complete, steps };
+  let ai: AiTrace;
+  if (!complete) ai = { status: "not_run", reason: "An earlier step did not complete." };
+  else if (!d.summarise) ai = { status: "not_run", reason: "The AI step runs only for a launched product with the creator's own AI key active." };
+  else {
+    const o = await d.summarise({ steps: steps.map((s) => (s.status === "ok" ? { tool: s.capabilityId, input: s.input, result: s.result } : null)) }).catch((): { status: string; text?: string; model?: string } => ({ status: "unavailable" }));
+    ai = o.status === "ok" && o.text ? { status: "ok", model: o.model ?? "", text: o.text } : { status: "failed", error: o.status };
+  }
+  return { ok: true, dryRun: true, traceId: d.traceId, complete: complete && ai.status === "ok", steps, ai };
 }

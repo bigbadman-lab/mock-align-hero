@@ -489,6 +489,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_canvas_revisions: {
+        Row: {
+          catalog_version: number
+          config: Json
+          created_at: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+        }
+        Insert: {
+          catalog_version: number
+          config: Json
+          created_at?: string
+          creator_wallet: string
+          draft_id: string
+          draft_revision: number
+        }
+        Update: {
+          catalog_version?: number
+          config?: Json
+          created_at?: string
+          creator_wallet?: string
+          draft_id?: string
+          draft_revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_canvas_revisions_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mcpx_cf_children: {
         Row: {
           created_at: string
@@ -755,6 +790,7 @@ export type Database = {
           abandoned_at: string | null
           artwork_id: string | null
           buy_preference: Json | null
+          canvas_config: Json | null
           chain_status: string
           create_key: string
           created_at: string
@@ -778,6 +814,7 @@ export type Database = {
           abandoned_at?: string | null
           artwork_id?: string | null
           buy_preference?: Json | null
+          canvas_config?: Json | null
           chain_status?: string
           create_key: string
           created_at?: string
@@ -801,6 +838,7 @@ export type Database = {
           abandoned_at?: string | null
           artwork_id?: string | null
           buy_preference?: Json | null
+          canvas_config?: Json | null
           chain_status?: string
           create_key?: string
           created_at?: string
