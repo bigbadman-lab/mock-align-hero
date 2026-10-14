@@ -17,6 +17,26 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
   );
 }
 
+/** The value itself is the copy control: one click puts it on the clipboard, nothing opens. */
+export function CopyValue({ text, hint = "Click to copy" }: { text: string; hint?: string }) {
+  const [state, setState] = useState<"idle" | "ok" | "fail">("idle");
+  return (
+    <span className="inline-flex flex-wrap items-baseline gap-2">
+      <button
+        type="button"
+        title={hint}
+        className="break-all text-left font-mono text-sm text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-primary"
+        onClick={() => {
+          navigator.clipboard?.writeText(text).then(() => setState("ok"), () => setState("fail")) ?? setState("fail");
+        }}
+      >{text}</button>
+      <span role="status" aria-live="polite" className="font-mono text-xs text-subtle">
+        {state === "ok" ? "Copied" : state === "fail" ? "Copy failed — select and copy manually" : hint}
+      </span>
+    </span>
+  );
+}
+
 const Code = ({ children }: { children: string }) => (
   <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-3 font-mono text-xs text-foreground"><code>{children}</code></pre>
 );

@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { productProfileQuery } from "@/lib/product-profile.functions";
 import type { Availability, PublicProfile } from "@/lib/product-profile";
 import { EmptyState, PageContainer, PageHeader, RouteError, StatusMessage } from "@/components/mcpx/primitives";
-import { CopyButton, McpConnection } from "@/components/mcpx/McpConnection";
+import { CopyButton, CopyValue, McpConnection } from "@/components/mcpx/McpConnection";
 import { TokenMarket } from "@/components/mcpx/TokenMarket";
 
 export const Route = createFileRoute("/mcp/$slug")({
@@ -60,12 +60,12 @@ function ProductPage() {
 
 const solscan = (kind: "token" | "tx" | "account", v: string) => `https://solscan.io/${kind}/${v}`;
 
-function Fact({ k, v, href }: { k: string; v: string; href?: string }) {
+function Fact({ k, v, href, copy }: { k: string; v: string; href?: string; copy?: boolean }) {
   return (
     <div className="grid gap-0.5 border-b border-border py-1.5 last:border-0 sm:grid-cols-[10rem_1fr]">
       <dt className="label-mono text-subtle">{k}</dt>
       <dd className="break-all font-mono text-sm text-foreground">
-        {href ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-4">{v}</a> : v}
+        {copy ? <CopyValue text={v} /> : href ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-4">{v}</a> : v}
       </dd>
     </div>
   );
@@ -82,7 +82,7 @@ function Profile({ p }: { p: PublicProfile }) {
           <dl>
             <Fact k="Template" v={`${p.templateName} · v${p.templateVersion}${p.engine ? ` · ${p.engine}` : ""}`} />
             <Fact k="Creator wallet" v={p.creatorWallet} href={solscan("account", p.creatorWallet)} />
-            <Fact k="Token mint" v={p.childMint} href={solscan("token", p.childMint)} />
+            <Fact k="Token mint" v={p.childMint} copy />
             <Fact k="Quote mint" v={p.quoteMint} href={solscan("token", p.quoteMint)} />
             <Fact k="Creation transaction" v={p.verifiedTx} href={solscan("tx", p.verifiedTx)} />
             <Fact k="Verified" v={`${new Date(p.verifiedAt).toISOString().slice(0, 16).replace("T", " ")} UTC · slot ${p.verifiedSlot} · ${p.network}`} />
