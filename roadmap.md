@@ -61,8 +61,8 @@
 
 ## SOL rehearsal (one-time SOL-paired child launch)
 Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SOL. No signing/broadcast/migration/deploy without approval.
-- [ ] Migration SQL (one-use permission + rehearsal marker) in docs/pending-migrations, throwaway-DB tests
-- [ ] Builder #2 SOL create_v2 branch (+ 0.05 SOL buy), size check, mainnet simulation
+- [x] Migration SQL 0027 (one-use permission + rehearsal marker), throwaway-DB tests pass
+- [x] Builder #2 SOL create_v2 branch, size check, mainnet simulation PASS (0.05 SOL buy = separate tx after creation)
 - [ ] Site gate: MCPX_SOL_REHEARSAL path, reserve/consume permission, production $MCP route unchanged
 - [ ] Worker #3: rehearsal products plan-only, excluded from native accounting
 - [ ] "Rehearsal (SOL pair)" label; product lifecycle + tool activity checks

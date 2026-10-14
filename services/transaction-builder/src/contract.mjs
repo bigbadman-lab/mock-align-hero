@@ -12,7 +12,8 @@ const bad = (field) => ({ ok: false, code: "INVALID_REQUEST", field });
 
 export function validatePrepare(b) {
   const K = ["schema", "idempotencyKey", "creator", "mint", "name", "symbol", "uri", "initialBuy", "format"];
-  if (!keysExact(b, K)) return bad("fields");
+  if (!keysExact(b, K) && !keysExact(b, [...K, "rehearsal"])) return bad("fields");
+  if ("rehearsal" in b && b.rehearsal !== "SOL") return bad("rehearsal");
   if (b.schema !== PREPARE_SCHEMA) return bad("schema");
   if (typeof b.idempotencyKey !== "string" || !UUID.test(b.idempotencyKey)) return bad("idempotencyKey");
   if (!isPubkey(b.creator)) return bad("creator");
@@ -46,7 +47,9 @@ export const SEPARATE_BUY_MODES = Object.freeze(["buy_v3", "buy_exact_quote_in_v
 
 /** Second, separate transaction: only after creation + final fee config are verified on chain. */
 export function validatePrepareBuy(b) {
-  if (!keysExact(b, ["schema", "idempotencyKey", "creator", "mint", "mode", "quoteAmount", "slippageBps", "format"])) return bad("fields");
+  const KB = ["schema", "idempotencyKey", "creator", "mint", "mode", "quoteAmount", "slippageBps", "format"];
+  if (!keysExact(b, KB) && !keysExact(b, [...KB, "rehearsal"])) return bad("fields");
+  if ("rehearsal" in b && b.rehearsal !== "SOL") return bad("rehearsal");
   if (b.schema !== PREPARE_BUY_SCHEMA) return bad("schema");
   if (typeof b.idempotencyKey !== "string" || !UUID.test(b.idempotencyKey)) return bad("idempotencyKey");
   if (!isPubkey(b.creator)) return bad("creator");
@@ -59,7 +62,8 @@ export function validatePrepareBuy(b) {
 }
 
 export function validateStatus(b) {
-  if (!keysExact(b, ["schema", "creator", "mint"])) return bad("fields");
+  if (!keysExact(b, ["schema", "creator", "mint"]) && !keysExact(b, ["schema", "creator", "mint", "rehearsal"])) return bad("fields");
+  if ("rehearsal" in b && b.rehearsal !== "SOL") return bad("rehearsal");
   if (b.schema !== STATUS_SCHEMA) return bad("schema");
   if (!isPubkey(b.creator)) return bad("creator");
   if (!isPubkey(b.mint)) return bad("mint");

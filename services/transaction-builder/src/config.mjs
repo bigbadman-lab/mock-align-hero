@@ -24,10 +24,13 @@ export function loadConfig(env) {
   const q = env.MCPX_QUOTE_MINT || null;
   if (q && !isPubkey(q)) invalid.push("MCPX_QUOTE_MINT");
   // Optional: MCPX-owned, pre-warmed address lookup table. Not created in 04-A (that is an on-chain write).
+  // One-time SOL rehearsal: the single creator wallet allowed to build a SOL-paired candidate. Unset = off.
+  const solc = env.MCPX_SOL_REHEARSAL_CREATOR || null;
+  if (solc && (!isPubkey(solc) || solc === dep || solc === ops || solc === plat)) invalid.push("MCPX_SOL_REHEARSAL_CREATOR");
   const lut = env.MCPX_LOOKUP_TABLE || null;
   if (lut && !isPubkey(lut)) invalid.push("MCPX_LOOKUP_TABLE");
   // The builder never holds keys: any private-key-shaped variable refuses readiness.
   for (const k of Object.keys(env)) if (/PRIVATE_KEY|SECRET_KEY|KEYPAIR|MNEMONIC|SEED_PHRASE/i.test(k) && env[k]) invalid.push(`FORBIDDEN_KEY_MATERIAL:${k}`);
   const state = missing.length || invalid.length ? "NOT_CONFIGURED" : "READY_FOR_PREPARE";
-  return { state, missing, invalid, secret, rpcUrl, quoteMint: q && isPubkey(q) ? q : null, lookupTable: lut && isPubkey(lut) ? lut : null, opsRecipient: ops, platformRecipient: plat, nativeDeployer: dep && isPubkey(dep) ? dep : null, port: Number(env.PORT) || 10000 };
+  return { state, missing, invalid, secret, rpcUrl, quoteMint: q && isPubkey(q) ? q : null, lookupTable: lut && isPubkey(lut) ? lut : null, opsRecipient: ops, platformRecipient: plat, nativeDeployer: dep && isPubkey(dep) ? dep : null, solRehearsalCreator: solc && !invalid.includes("MCPX_SOL_REHEARSAL_CREATOR") ? solc : null, port: Number(env.PORT) || 10000 };
 }

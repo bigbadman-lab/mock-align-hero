@@ -17,7 +17,18 @@ const READ_DEADLINE_MS = 8000;
 const deadline = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("deadline")), ms))]);
 const blocked = (reasons, extra = {}) => ({ http: 200, body: { status: "BLOCKED", reasons, launchReady: false, ...extra } });
 
-export function createService({ cfg, deps, now = () => Date.now() }) {
+export const NATIVE_SOL = "So11111111111111111111111111111111111111112";
+
+/** Rehearsal requests run against a copy of cfg whose quote is native SOL — only for the one configured creator. */
+export function quoteScope(cfg, rehearsal, creator) {
+  if (!rehearsal) return { cfg };
+  if (!cfg.solRehearsalCreator) return { code: "SOL_REHEARSAL_NOT_ENABLED" };
+  if (creator !== cfg.solRehearsalCreator) return { code: "SOL_REHEARSAL_CREATOR_NOT_PERMITTED" };
+  return { cfg: { ...cfg, quoteMint: NATIVE_SOL }, rehearsal: true };
+}
+
+export function createService({ cfg: baseCfg, deps, now = () => Date.now() }) {
+  const cfg = baseCfg;
   const idem = new Map(); // idempotencyKey -> { hash, result, exp } (single-instance; documented)
 
   const baseEvidence = (format) => ({
@@ -27,7 +38,10 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
   });
 
   async function prepareInner(req) {
-    if (cfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
+    if (baseCfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
+    const scope = quoteScope(baseCfg, req.rehearsal === "SOL", req.creator);
+    if (scope.code) return blocked([scope.code]);
+    const cfg = scope.cfg, sol = scope.rehearsal === true;
     if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
     if (req.creator === cfg.opsRecipient || req.creator === cfg.platformRecipient) return blocked(["FEE_RECIPIENT_DUPLICATE"]);
     if (cfg.nativeDeployer && req.creator === cfg.nativeDeployer) return blocked(["CREATOR_IS_NATIVE_DEPLOYER"]);
@@ -40,13 +54,14 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     let global, feeConfig, qtp, pumpQuote, bh, slot, alt = null;
     try {
       [global, feeConfig, qtp, bh, slot] = await deadline(Promise.all([
-        deps.getGlobal(), deps.getFeeConfig(), deps.getQuoteTokenProgram(cfg.quoteMint), deps.getLatestBlockhash(), deps.getSlot(),
+        deps.getGlobal(), deps.getFeeConfig(), sol ? Promise.resolve(PROGRAMS.token) : deps.getQuoteTokenProgram(cfg.quoteMint), deps.getLatestBlockhash(), deps.getSlot(),
       ]), READ_DEADLINE_MS);
-      pumpQuote = await deadline(deps.getPumpQuote(cfg.quoteMint, global), READ_DEADLINE_MS);
+      if (!sol) pumpQuote = await deadline(deps.getPumpQuote(cfg.quoteMint, global), READ_DEADLINE_MS);
       if (req.format === "v0_alt") alt = await deadline(deps.getLookupTable(cfg.lookupTable), READ_DEADLINE_MS);
     } catch { return { http: 503, body: { status: "ERROR", code: "RPC_UNAVAILABLE", launchReady: false } }; }
 
-    const parent = assessParent({ global, quoteMint: cfg.quoteMint, quoteTokenProgram: qtp, pumpQuote });
+    const parent = sol ? { ok: true, scenario: "SOL_NATIVE", accounts: null, curve: null }
+      : assessParent({ global, quoteMint: cfg.quoteMint, quoteTokenProgram: qtp, pumpQuote });
     if (!parent.ok) return blocked([parent.code], { evidence });
     evidence.parentScenario = parent.scenario; evidence.parentSlot = slot;
     if (req.format === "v0_alt") {
@@ -96,7 +111,7 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
 
     const preparationId = randomUUID();
     const binding = {
-      schema: BINDING_SCHEMA, preparationId, candidate, format: req.format, creator: req.creator, mint: req.mint,
+      schema: BINDING_SCHEMA, preparationId, candidate, ...(sol ? { rehearsal: "SOL" } : {}), format: req.format, creator: req.creator, mint: req.mint,
       name: req.name, symbol: req.symbol, uri: req.uri, initialBuy: req.initialBuy,
       quoteMint: cfg.quoteMint, quoteTokenProgram: qtp.toBase58(), lookupTable: alt ? cfg.lookupTable : null,
       shareholders: evidence.feeShares, blockhash: bh.blockhash, lastValidBlockHeight: bh.lastValidBlockHeight,
@@ -124,7 +139,10 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
   async function inspect(body) {
     const fail = (code, extra = {}) => ({ http: 200, body: { valid: false, code, ...extra } });
     const b = body.binding;
-    if (!verifyBindingMac(cfg.secret, b, body.bindingMac)) return fail("INTEGRITY_FAILED");
+    if (!verifyBindingMac(baseCfg.secret, b, body.bindingMac)) return fail("INTEGRITY_FAILED");
+    const scope = quoteScope(baseCfg, b.rehearsal === "SOL", b.creator);
+    if (scope.code) return fail(scope.code);
+    const cfg = scope.cfg;
     if (b.schema !== BINDING_SCHEMA) return fail("INTEGRITY_FAILED");
     if (!(Date.parse(b.expiresAt) > now())) return fail("CANDIDATE_EXPIRED");
     const bytes = Buffer.from(body.messageBase64, "base64");
@@ -190,6 +208,9 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
   }
 
   async function status(req) {
+    const scope = quoteScope(baseCfg, req.rehearsal === "SOL", req.creator);
+    if (scope.code) return { http: 200, body: { state: "UNKNOWN", code: scope.code } };
+    const cfg = scope.cfg;
     if (cfg.state !== "READY_FOR_PREPARE" || !cfg.quoteMint) return { http: 200, body: { state: "UNKNOWN", code: cfg.quoteMint ? "NOT_CONFIGURED" : "QUOTE_MINT_MISSING" } };
     let st;
     try { st = await deadline(deps.getMintState(req.mint), READ_DEADLINE_MS); }
@@ -199,6 +220,9 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
 
   /** Separate buy: built only against a creation whose final 60/25/15 config is verified on chain. */
   async function prepareBuy(req) {
+    const scope = quoteScope(baseCfg, req.rehearsal === "SOL", req.creator);
+    if (scope.code) return blocked([scope.code]);
+    const cfg = scope.cfg;
     if (cfg.state !== "READY_FOR_PREPARE") return { http: 503, body: { status: "ERROR", code: "NOT_CONFIGURED" } };
     if (!cfg.quoteMint) return blocked(["QUOTE_MINT_MISSING"]);
     const hash = sha256hex(canonical(req));
@@ -216,7 +240,7 @@ export function createService({ cfg, deps, now = () => Date.now() }) {
     try {
       tokens = pump.getBuyV3TokenAmountFromQuoteAmount({ global, feeConfig, mintSupply: new BN(st.mintSupply), bondingCurve: st.bondingCurve, amount: quoteAmount, curveBaseTokenBalance: new BN(st.curveBaseTokenBalance) });
       if (tokens.isZero()) return blocked(["BUY_QUOTE_FAILED"]);
-      const qtp = await deadline(deps.getQuoteTokenProgram(cfg.quoteMint), READ_DEADLINE_MS);
+      const qtp = scope.rehearsal ? PROGRAMS.token : await deadline(deps.getQuoteTokenProgram(cfg.quoteMint), READ_DEADLINE_MS);
       const p = { bondingCurve: st.bondingCurve, associatedUserAccountInfo: null, mint, user, amount: tokens, quoteAmount, slippage: req.slippageBps / 100, tokenProgram: new PublicKey(st.mintOwner), quoteTokenProgram: qtp };
       ixs = req.mode === "buy_v3" ? await pump.PUMP_SDK.buyV3Instructions(p) : await pump.PUMP_SDK.buyExactQuoteInV3Instructions(p);
     } catch { return blocked(["BUY_NOT_BUILDABLE"]); }
