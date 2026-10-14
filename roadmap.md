@@ -46,3 +46,4 @@
 - [ ] Docs page: "optional initial buy in $MCP" — confirm whether it should say SOL (awaiting user)
 - [x] Launch page: removed "Launch preparation" warning + prerequisites section; new header "Launch your token. Power it with MCP."; "Token launching is coming soon" notice removed (unpublished)
 - [x] Mobile: form fields forced to 16px below 40rem so phone browsers no longer auto-zoom on tap (desktop unchanged at 14px)
+- [x] Launch form: artwork picker is now a clear lime "Choose image file" button (verified picker opens, file name + preview show, phone + desktop)
