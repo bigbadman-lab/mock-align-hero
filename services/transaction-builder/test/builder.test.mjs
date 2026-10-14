@@ -222,6 +222,7 @@ test("T08 $MCP first buy is inside the launch transaction, last, after the fee l
     assert.equal(names[names.length - 1], mode, "buy is the last instruction");
     assert.ok(names.indexOf("update_fee_shares_v2") < names.indexOf(mode), "fee shares locked before the buy");
     assert.ok(r.json.evidence.serializedBytes <= PACKET_LIMIT, `fits: ${r.json.evidence.serializedBytes} bytes`);
+    if (process.env.SHOW_SIZES) console.log("SIZE", mode, r.json.evidence.serializedBytes, r.json.evidence.instructions.map((i) => i.name).join(","));
     assert.deepEqual(r.json.binding.initialBuy, ib);
     const ins = await call(app, { path: "/internal/v1/launch/inspect", body: JSON.stringify({ schema: "mcpx.launch.inspect.v1", messageBase64: r.json.messageBase64, binding: r.json.binding, bindingMac: r.json.bindingMac }) });
     assert.equal(ins.json.valid, true, JSON.stringify(ins.json.checks));
