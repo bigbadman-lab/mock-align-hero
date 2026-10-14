@@ -217,8 +217,25 @@ function Launch() {
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
-              <p className="text-foreground">Child creator-fee sharing — <span className="text-muted-foreground">Design intent / not live</span></p>
-              <ul className="mt-2 flex flex-wrap gap-4 font-mono text-muted-foreground">{FEE_SPLIT.map((f) => <li key={f.role}>{f.bps / 100}% {f.role}</li>)}</ul>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="text-foreground">Child creator-fee sharing</p>
+                <span className="rounded border border-border-strong px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-subtle">Design intent · not live</span>
+              </div>
+
+              <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-secondary" role="img" aria-label="Fee split: 60% creator, 25% tool operations, 15% platform">
+                {FEE_SPLIT.map((f, i) => <span key={f.role} style={{ width: `${f.bps / 100}%` }} className={["bg-primary", "bg-primary/60", "bg-primary/35"][i]} />)}
+              </div>
+
+              <ul className="mt-1 divide-y divide-border">
+                {FEE_SPLIT.map((f, i) => (
+                  <li key={f.role} className="flex items-center gap-3 py-2">
+                    <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-sm ${["bg-primary", "bg-primary/60", "bg-primary/35"][i]}`} />
+                    <span className="w-16 shrink-0 font-mono text-2xl font-semibold tabular-nums text-foreground">{f.bps / 100}%</span>
+                    <span className="text-muted-foreground">{f.role}</span>
+                  </li>
+                ))}
+              </ul>
+
               <p className="mt-2 text-muted-foreground">Of actually collected child creator fees. Fixed by MCPX, not editable. Pair: CHILD / $MCP, subject to quote eligibility. Network fees and account rent (about 0.016 SOL in testing) will be shown before your wallet signs.</p>
             </div>
 
