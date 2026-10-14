@@ -1,6 +1,6 @@
 // Operator-only lookup-table creation. Transactions are built here, checked + simulated by the server, signed
 // only in the operator's wallet, then relayed. Data comes only from /api/operator/alt (deployer sign-in required).
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline } from "@/components/mcpx/primitives";
 import { useWallet } from "@/lib/wallet/context";
@@ -51,7 +51,7 @@ function OperatorAlt() {
         {st.s === "error" && <StatusMessage tone="warning" title="Couldn't load operator status. Try again." />}
         {st.s === "forbidden" && (
           <StatusMessage tone="warning" title="Operator only">
-            Sign in from the <Link to="/dashboard" className="underline">Dashboard</Link> with the authorised deployer wallet to view this page.
+            Verify from the <a href="/dashboard?next=/operator/alt" className="underline">Dashboard</a> with the authorised deployer wallet to view this page.
           </StatusMessage>
         )}
         {st.s === "ok" && (
