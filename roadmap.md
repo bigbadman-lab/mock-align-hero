@@ -17,3 +17,5 @@
 
 - [x] L7-B creator BYOK management built behind MCPX_BYOK_ENABLED (fixture/mocked tests)
 - [ ] L7-B activation: apply 0015, set MCPX_BYOK_ENABLED=1, publish (needs approval)
+- [x] REWARDS-EXEC-01D — 0020 applied, pipeline wired (PARTIAL)
+- [ ] REWARDS-EXEC-01E — sign fee collection + buybacks (no deploy/broadcast)
