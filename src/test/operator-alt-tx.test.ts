@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { AddressLookupTableProgram, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { AddressLookupTableProgram, TransactionInstruction, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { validateAltMessage } from "@/lib/operator/alt-tx";
 import { ALT_AUTHORITY, STATIC_ALT_ENTRIES } from "@/lib/operator/alt-manifest";
 
 const auth = new PublicKey(ALT_AUTHORITY);
-const msg = (payer: PublicKey, ixs: Parameters<typeof TransactionMessage>[0]["instructions"]) =>
+const msg = (payer: PublicKey, ixs: TransactionInstruction[]) =>
   new TransactionMessage({ payerKey: payer, recentBlockhash: "11111111111111111111111111111111", instructions: ixs }).compileToV0Message().serialize();
 const [createIx, table] = AddressLookupTableProgram.createLookupTable({ authority: auth, payer: auth, recentSlot: 123 });
 const ext = (addrs: string[], authority = auth) => AddressLookupTableProgram.extendLookupTable({ lookupTable: table, authority, payer: authority, addresses: addrs.map((a) => new PublicKey(a)) });
