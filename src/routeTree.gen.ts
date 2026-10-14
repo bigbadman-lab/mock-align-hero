@@ -17,6 +17,7 @@ import { Route as PairedRouteImport } from './routes/paired'
 import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
+import { Route as OperatorAltRouteImport } from './routes/operator.alt'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as ToolsAccountCheckerRouteImport } from './routes/tools.account-checker'
 import { Route as ToolsHolderIntelligenceRouteImport } from './routes/tools.holder-intelligence'
@@ -99,6 +100,11 @@ const McpIndexRoute = McpIndexRouteImport.update({
 const McpSlugRoute = McpSlugRouteImport.update({
   id: '/mcp/$slug',
   path: '/mcp/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperatorAltRoute = OperatorAltRouteImport.update({
+  id: '/operator/alt',
+  path: '/operator/alt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -392,6 +399,7 @@ export interface FileRoutesByTo {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -446,6 +454,7 @@ export interface FileRoutesById {
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
+  '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
   '/tools/holder-intelligence': typeof ToolsHolderIntelligenceRoute
@@ -501,6 +510,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -554,6 +564,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/paired'
     | '/treasury'
     | '/mcp/$slug'
+    | '/operator/alt'
     | '/templates/$templateId'
     | '/tools/account-checker'
     | '/tools/holder-intelligence'
@@ -661,6 +673,7 @@ export interface RootRouteChildren {
   PairedRoute: typeof PairedRoute
   TreasuryRoute: typeof TreasuryRoute
   McpSlugRoute: typeof McpSlugRoute
+  OperatorAltRoute: typeof OperatorAltRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
   ToolsHolderIntelligenceRoute: typeof ToolsHolderIntelligenceRoute
@@ -763,6 +776,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp/$slug'
       fullPath: '/mcp/$slug'
       preLoaderRoute: typeof McpSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operator/alt': {
+      id: '/operator/alt'
+      path: '/operator/alt'
+      fullPath: '/operator/alt'
+      preLoaderRoute: typeof OperatorAltRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates/$templateId': {
@@ -1077,6 +1097,7 @@ const rootRouteChildren: RootRouteChildren = {
   PairedRoute: PairedRoute,
   TreasuryRoute: TreasuryRoute,
   McpSlugRoute: McpSlugRoute,
+  OperatorAltRoute: OperatorAltRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
   ToolsHolderIntelligenceRoute: ToolsHolderIntelligenceRoute,
