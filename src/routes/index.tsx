@@ -45,6 +45,13 @@ function Home() {
         </PageContainer>
       </section>
 
+      <section aria-labelledby="treasury" className="border-b border-border">
+        <PageContainer className="py-20">
+          <SectionHeading label="Treasury" title={<span id="treasury">Native $MCP rewards, in the open</span>} intro="Fees collected, five-minute reward windows and finalized holder payouts — verified data only." />
+          <div className="mt-10"><TreasuryModule /></div>
+        </PageContainer>
+      </section>
+
       <section aria-labelledby="flow" className="border-b border-border">
         <PageContainer className="py-20">
           <SectionHeading label="Planned product flow" title={<span id="flow">From template to working tool</span>} intro="This is the intended journey. None of these steps can be performed yet." />
@@ -79,13 +86,6 @@ function Home() {
               </div>
             ))}
           </div>
-        </PageContainer>
-      </section>
-
-      <section aria-labelledby="treasury" className="border-b border-border">
-        <PageContainer className="py-20">
-          <SectionHeading label="Treasury" title={<span id="treasury">Native $MCP rewards, in the open</span>} intro="Fees collected, five-minute reward windows and finalized holder payouts — verified data only." />
-          <div className="mt-10"><TreasuryModule /></div>
         </PageContainer>
       </section>
 
