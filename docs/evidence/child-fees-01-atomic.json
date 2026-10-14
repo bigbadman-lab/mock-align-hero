@@ -1,0 +1,175 @@
+{
+ "note": "Local LiteSVM 1.6.0 execution with programs+accounts cloned from mainnet (finalized). Stand-in parent is NOT $MCP. Lookup table exists only in the local VM. Nothing signed with a real key or sent.",
+ "threeInstructionForm": {
+  "label": "LOCAL_SVM_FULL_ATOMIC_EXECUTION_STAND_IN_PARENT_NOT_MCP",
+  "standInParent": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "parent": "active_curve_token2022",
+  "slot": 456783268,
+  "cloned": {
+   "programs": [
+    "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "MAyhSmzXzV1pTf7LsNkrNwkWKTo4ougAJ1PPg47MD4e",
+    "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
+    "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+   ],
+   "accounts": 9,
+   "absent": 14
+  },
+  "altEntries": 15,
+  "tx": {
+   "instructions": [
+    "create_v2",
+    "create_fee_sharing_config",
+    "update_fee_shares_v2"
+   ],
+   "bytesWithoutAlt": 1417,
+   "bytesWithLocalAlt": 986,
+   "limit": 1232,
+   "signers": [
+    "CREATOR",
+    "NEW_MINT"
+   ],
+   "staticAccounts": 15,
+   "lookedUpAccounts": 15
+  },
+  "execution": "FAIL",
+  "err": "TransactionErrorInstructionError { index: 2, error: InvalidAccountData }",
+  "computeUnits": 265292,
+  "logsTail": [
+   "Program log: Instruction: DistributeCreatorFeesV2",
+   "Program log: ProgramError occurred. Error Code: InvalidAccountData. Error Number: 17179869184. Error Message: An account's data contents was invalid.",
+   "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 17069 of 351777 compute units",
+   "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P failed: invalid account data for instruction",
+   "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ consumed 59988 of 394696 compute units",
+   "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ failed: invalid account data for instruction"
+  ]
+ },
+ "fixedFourInstructionForm": {
+  "label": "LOCAL_SVM_FULL_ATOMIC_EXECUTION_STAND_IN_PARENT_NOT_MCP",
+  "standInParent": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "parent": "active_curve_token2022",
+  "slot": 456783284,
+  "cloned": {
+   "programs": [
+    "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "MAyhSmzXzV1pTf7LsNkrNwkWKTo4ougAJ1PPg47MD4e",
+    "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
+    "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+   ],
+   "accounts": 9,
+   "absent": 14
+  },
+  "altEntries": 14,
+  "tx": {
+   "instructions": [
+    "create_v2",
+    "create_fee_sharing_config",
+    "ata_create_idempotent",
+    "update_fee_shares_v2"
+   ],
+   "bytesWithoutAlt": 1427,
+   "bytesWithLocalAlt": 1027,
+   "limit": 1232,
+   "signers": [
+    "CREATOR",
+    "NEW_MINT"
+   ],
+   "staticAccounts": 16,
+   "lookedUpAccounts": 14
+  },
+  "execution": "PASS",
+  "err": null,
+  "computeUnits": 360366,
+  "logsTail": [
+   "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb consumed 2153 of 462764 compute units",
+   "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb success",
+   "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 23108 of 483436 compute units",
+   "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+   "Program data: pTeBcASzyijDRs9qAAAAALqVTW1U8Fr/cEQpLqNdoHip5u9brEb0XjntwfYpvQ2EOsvtnNRmj767TTESkUVBpMt0m8NgNMZyzXATQTptmUpPpn18UMS/k/Ljb9NjJD87FnzE25D+K9SV1XHaPd8ZXlcoZj5+4JwSKdh009gTLHRdRJR8mhhAI10mEikubDa5AQAAAFcoZj5+4JwSKdh009gTLHRdRJR8mhhAI10mEikubDa5ECcAAAAAAAAAAG0nqDwgHo8nBidf/rMEEt+w8IrQlBhdpWL8ka4419Uf",
+   "Log truncated"
+  ],
+  "sharingConfig": {
+   "exists": true,
+   "mintMatches": true,
+   "adminRevoked": true,
+   "shareholders": [
+    {
+     "role": "CREATOR",
+     "bps": 6000
+    },
+    {
+     "role": "TOOL_OPS",
+     "bps": 2500
+    },
+    {
+     "role": "PLATFORM",
+     "bps": 1500
+    }
+   ]
+  },
+  "bondingCurve": {
+   "creatorIsSharingConfig": true,
+   "isMayhemMode": false,
+   "quoteMintMatches": true,
+   "depth": 1
+  },
+  "creatorLamportsSpent": "15879920"
+ },
+ "rpcSimulation": {
+  "label": "READ_ONLY_PROXY_PARENT_SIMULATION_NOT_MCP",
+  "proxyParent": "8M6WhZFXoEBr6iMc1DBapDoCHEF9RZnaUpk3Q3unpump",
+  "parent": "active_curve_token2022",
+  "runs": [
+   {
+    "label": "create_v2",
+    "instructions": [
+     "create_v2"
+    ],
+    "serializedBytes": 924,
+    "limit": 1232,
+    "simulation": "PASS",
+    "err": null,
+    "unitsConsumed": 155259,
+    "slot": 456782611
+   },
+   {
+    "label": "create_v2+create_fee_sharing_config",
+    "instructions": [
+     "create_v2",
+     "create_fee_sharing_config"
+    ],
+    "serializedBytes": 1108,
+    "limit": 1232,
+    "simulation": "PASS",
+    "err": null,
+    "unitsConsumed": 224450,
+    "slot": 456782611,
+    "initialShareholders": [
+     {
+      "isCreator": true,
+      "bps": 10000
+     }
+    ],
+    "adminIsCreator": true
+   },
+   {
+    "label": "B: +update_fee_shares_v2",
+    "instructions": [
+     "create_v2",
+     "create_fee_sharing_config",
+     "update_fee_shares_v2"
+    ],
+    "serializedBytes": 1406,
+    "limit": 1232,
+    "simulation": "BLOCKED_TX_TOO_LARGE_WITHOUT_ALT"
+   }
+  ],
+  "bWithAlt": {
+   "altEntries": 17,
+   "serializedBytes": 944,
+   "note": "ALT not on chain: size measured, simulation BLOCKED_ALT_NOT_PROVISIONED"
+  }
+ }
+}
