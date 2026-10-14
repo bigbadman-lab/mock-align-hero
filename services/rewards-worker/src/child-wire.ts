@@ -6,13 +6,15 @@ import type { Db } from "../../../src/lib/rewards/store.pg";
 import type { RpcCall } from "./pipeline";
 import { runChildFeePass, verifyChild, verifyRecipients, TOKEN_2022, type ChildRecord, type ChildOutcome } from "./child-fees";
 import { childStorePg, loadChildren, pendingRegistry, insertChild } from "./child-store.pg";
+import { runLaunchVerifier, readLaunchTx, launchStorePg } from "./launch-verify";
 import { readChild, balances, fetchFinal, finalizedBlockHeight, curveVaultOwner, mintOwner, sharingConfigOf } from "./child-chain";
 
-export type ChildEnv = { ops: string | null; platform: string | null; nativeDeployer: string | null; dailyGasLamports: bigint | null; minDistributable: bigint; estCostLamports: bigint };
+export type ChildEnv = { launchVerifier: boolean; ops: string | null; platform: string | null; nativeDeployer: string | null; dailyGasLamports: bigint | null; minDistributable: bigint; estCostLamports: bigint };
 
 export function readChildEnv(env: (k: string) => string | null): ChildEnv {
   const big = (k: string) => { const v = env(k); return v && /^\d{1,19}$/.test(v) ? BigInt(v) : null; };
   return {
+    launchVerifier: env("MCPX_LAUNCH_VERIFIER") === "1", // needs migration 0025
     ops: env("MCPX_FEE_OPS_RECIPIENT"), platform: env("MCPX_FEE_PLATFORM_RECIPIENT"),
     nativeDeployer: env("MCPX_DEPLOYER_PUBLIC_KEY") ?? env("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY"),
     dailyGasLamports: big("MCPX_CHILD_FEES_DAILY_GAS_LAMPORTS"),
@@ -41,6 +43,15 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
   const e = opts.env;
   if (!opts.canonicalQuote) return [{ mint: "*", result: "HELD:QUOTE_MINT_UNSET" }];
   if (!opts.feePayer) return [{ mint: "*", result: "HELD:FEE_PAYER_UNSET" }];
+  // Post-launch verifier runs first so newly verified products are onboarded in the same pass.
+  const launches = e.launchVerifier ? await runLaunchVerifier({
+    ...launchStorePg(db),
+    readTx: (sig) => readLaunchTx(call, sig),
+    readChild: (c) => readChild(call, { mint: c.mint, creator: c.creator, ops: e.ops ?? "", platform: e.platform ?? "", quoteMint: opts.canonicalQuote!, quoteTokenProgram: TOKEN_2022, sharingConfig: sharingConfigOf(c.mint) }),
+    quoteProgram: () => mintOwner(call, opts.canonicalQuote!),
+    sharingConfigOf,
+  }, opts.canonicalQuote, { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer }).then((xs) => xs.map((x) => ({ mint: `claim:${x.claim}`, result: x.result })))
+    : [];
   const onboard = await onboardChildren(db, call, opts.canonicalQuote, e).catch(() => [{ mint: "*", result: "ONBOARD_HELD:DISCOVERY_UNAVAILABLE" }]);
   const list = await loadChildren(db);
   const byMint = new Map(list.map((c) => [c.mint, c]));
@@ -63,5 +74,5 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
     registeredCreator: async (m) => byMint.get(m)?.registeredCreator ?? null,
     signingEnabled: false,
   });
-  return [...onboard, ...pass];
+  return [...launches, ...onboard, ...pass];
 }
