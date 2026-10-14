@@ -64,7 +64,7 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
         if (o === "live") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "live", slug: b.slug, mint: b.mint }); return; }
         if (o === "rejected") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "failed", msg: "Solana didn't confirm this launch. Nothing was registered." }); return; }
         // Solana has the token; only product registration is outstanding. Never reported as "live".
-        if (chainConfirmed(b) || b.chain === "finalized") setRun({ s: "running", stage: "registering", mint: b.mint, signature: b.signature, slow: Date.now() - started > 10 * 60_000 });
+        if (chainConfirmed(b)) setRun({ s: "running", stage: "registering", mint: b.mint, signature: b.signature, slow: Date.now() - started > 10 * 60_000 });
         else if (b.chain === "failed") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "failed", msg: "Solana rejected this transaction. No token was created." }); return; }
       } catch { /* keep waiting */ }
       poll.current = setTimeout(tick, 5000);

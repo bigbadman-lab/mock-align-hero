@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { claimOutcome, launchBlocker } from "@/lib/launch/launch-flow";
+import { chainConfirmed, claimOutcome, launchBlocker } from "@/lib/launch/launch-flow";
 
 const W = "2ZrpSo3SmuKnFG69XMEYv2Ew54oKGB2DXPVBAJHBGYx2";
 const ok = { serverEnabled: true, signedInWallet: W, connectedWallet: W, metadataReady: true };
@@ -21,5 +21,12 @@ describe("live link", () => {
     expect(claimOutcome({ status: "VERIFIED", slug: null })).toBe("pending");
     expect(claimOutcome({ status: "PENDING", slug: "my-tool" })).toBe("pending");
     expect(claimOutcome({ status: "REJECTED" })).toBe("rejected");
+  });
+  it("token counts as created on Solana only once confirmed or finalized", () => {
+    expect(chainConfirmed({ chain: "confirmed" })).toBe(true);
+    expect(chainConfirmed({ chain: "finalized" })).toBe(true);
+    expect(chainConfirmed({ chain: "processed" })).toBe(false);
+    expect(chainConfirmed({ chain: "unknown" })).toBe(false);
+    expect(chainConfirmed({ chain: "failed" })).toBe(false);
   });
 });
