@@ -112,7 +112,7 @@ function Launch() {
 
   return (
     <>
-      <PageHeader label="Launch" title="Launch your token. Power it with MCP." intro="Choose your tools, configure your token and bring your own MCP-powered product to life on Solana." />
+      <PageHeader label="Launch" title="Launch your token. Power it with MCP." intro="Choose your tools, configure your token and bring your own MCP-powered product to life on Solana." className="py-8 sm:py-10" />
       <PageContainer className="space-y-6 py-8">
 
 

@@ -29,11 +29,11 @@ export function SectionHeading({
   );
 }
 
-export function PageHeader(props: { label: string; title: ReactNode; intro?: ReactNode }) {
+export function PageHeader({ label, title, intro, className }: { label: string; title: ReactNode; intro?: ReactNode; className?: string }) {
   return (
     <header className="border-b border-border bg-grid">
-      <PageContainer className="py-14 sm:py-20 animate-rise">
-        <SectionHeading as="h1" {...props} />
+      <PageContainer className={cn("py-14 sm:py-20 animate-rise", className)}>
+        <SectionHeading as="h1" label={label} title={title} intro={intro} />
       </PageContainer>
     </header>
   );
