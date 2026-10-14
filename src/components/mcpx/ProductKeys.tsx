@@ -11,7 +11,7 @@ const post = (body: unknown) =>
   fetch("/api/creator/products", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json", "x-mcpx-csrf": "1" }, body: JSON.stringify(body) });
 const newIdem = () => Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 32);
 
-export function ProductKeys({ creationId, displayName, onSessionEnded }: { creationId: string; displayName: string; onSessionEnded: () => void }) {
+export function ProductKeys({ creationId, displayName, onSessionEnded, details }: { creationId: string; displayName: string; onSessionEnded: () => void; details?: React.ReactNode }) {
   const [keys, setKeys] = useState<KeyMeta[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -56,6 +56,7 @@ export function ProductKeys({ creationId, displayName, onSessionEnded }: { creat
         <span className="text-foreground">{displayName}</span>
         <button type="button" disabled={busy} onClick={() => void load()} className={buttonOutline}>{keys ? "Reload keys" : "Manage keys"}</button>
       </div>
+      {details}
       {fresh && (
         <div role="alert" className="space-y-2 rounded-md border border-warning p-3">
           <p className="text-foreground">New key — shown once. Copy it now; MCPX can't show it again.</p>
