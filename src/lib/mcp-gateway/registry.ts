@@ -8,6 +8,7 @@ import { SMT_SCHEMA, SMT_TOOL_ID, SMT_MAX_WALLETS, isSmartMoneyResult } from "@/
 import { ORB_SCHEMA, ORB_TOOL_ID, isOnchainReport, type TargetType } from "@/lib/tools/onchain-report";
 import { TRA_SCHEMA, TRA_TOOL_ID, isTokenRiskResult, STATE_MEANING } from "@/lib/tools/token-risk-analyst";
 import { TS_SCHEMA, TS_TOOL_ID, isTokenScannerResult } from "@/lib/tools/token-scanner";
+import { AI_TOOLS, isAiResult } from "@/lib/ai-tools/defs";
 
 /** Server-validated, per-template product settings. Never contains URLs, programs or secrets. */
 export type ProductSettings = Record<string, string>;
@@ -31,6 +32,8 @@ export interface TemplateAdapter {
   toWorkerPayload(input: Record<string, unknown>, settings: ProductSettings): string;
   /** Strict check of the worker response before it reaches the client. */
   validOutput(out: unknown, input: Record<string, unknown>, settings: ProductSettings): boolean;
+  /** "ai" = executed by the platform OpenAI adapter (src/lib/ai-tools), not the Solana worker. */
+  engine?: "worker" | "ai";
 }
 
 const addressSchema = () =>
@@ -169,6 +172,13 @@ export const ADAPTERS: Record<string, TemplateAdapter> = {
   [tokenRiskAnalyst.templateId]: tokenRiskAnalyst,
   [smartMoneyTracker.templateId]: smartMoneyTracker,
   [onchainReportBuilder.templateId]: onchainReportBuilder,
+  ...Object.fromEntries(AI_TOOLS.map((d): [string, TemplateAdapter] => [d.templateId, {
+    templateId: d.templateId, version: "1.0.0", toolName: d.toolId, workerToolId: d.toolId, engine: "ai",
+    title: `${d.name} (entertainment AI)`, description: `${d.description} Platform-funded; shared rate limits and AI spend caps apply.`,
+    inputSchema: d.inputSchema, ...noSettings, describeSettings: () => ["No product-level settings: every caller gets the same personality."],
+    toWorkerPayload: (i) => JSON.stringify(i), // never sent to the Solana worker
+    validOutput: (out) => isAiResult(out, d),
+  }])),
 };
 
 /** An endpoint profile = which templates (at which version) one MCP endpoint exposes. */

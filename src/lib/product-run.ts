@@ -4,10 +4,11 @@
 import type { ProfileResult } from "./product-profile";
 import type { ProductSettings, TemplateAdapter } from "./mcp-gateway/registry";
 import type { callWorker, takeShared, toolAvailability, workerConfig } from "./tools/relay";
-import { track, type ActivityRecorder } from "./mcp-gateway/server";
+import { productionAiToolExec, track, type ActivityRecorder, type AiToolExec } from "./mcp-gateway/server";
 
 /** Templates with a finished website interface (Canvas excluded: it spends the creator's AI key). */
-export const WEB_RUNNABLE = ["token-scanner", "wallet-inspector", "whale-watch", "holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder"] as const;
+export const WEB_RUNNABLE = ["token-scanner", "wallet-inspector", "whale-watch", "holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder",
+  "gibberish-ai", "roast-bot", "excuse-machine", "conspiracy-potato", "argument-machine"] as const;
 export const isWebRunnable = (templateId: string) => (WEB_RUNNABLE as readonly string[]).includes(templateId);
 
 export interface Resolved { result: ProfileResult; adapter: TemplateAdapter | null; settings: ProductSettings | null }
@@ -19,6 +20,8 @@ export interface RunDeps {
   callWorker: typeof callWorker;
   /** Present only when MCPX_TOOL_ACTIVITY=1. */
   recordActivity?: ActivityRecorder | undefined;
+  /** Entertainment AI tools; defaults to the platform OpenAI adapter. */
+  ai?: AiToolExec | undefined;
 }
 export interface RunReply { status: number; body: unknown }
 
@@ -38,14 +41,15 @@ export async function runProductTool(deps: RunDeps, slug: string, body: unknown,
   const input = parsed.data as Record<string, unknown>;
   const cfg = deps.workerConfig();
   if (!cfg) return e(503, "unavailable");
-  const avail = await deps.toolAvailability(a.workerToolId);
+  const aiExec = a.engine === "ai" ? (deps.ai ?? (await productionAiToolExec())) : null;
+  const avail = aiExec ? aiExec.available() : await deps.toolAvailability(a.workerToolId);
   if (!avail.available) return e(503, "unavailable");
   // Same per-tool free bucket as the Tool Library: one daily allowance per visitor per tool, not per product.
   const lim = await deps.takeShared(cfg, request, a.workerToolId);
   if (lim === "limited") return e(429, "rate_limited");
   if (lim === "free_limit") return e(429, "free_limit");
   if (lim === "unavailable") return e(503, "unavailable");
-  const r = await deps.callWorker(cfg, a.toWorkerPayload(input, settings), request);
+  const r = aiExec ? await aiExec.run(a.templateId, input) : await deps.callWorker(cfg, a.toWorkerPayload(input, settings), request);
   const ok = r.ok && a.validOutput(r.out, input, settings);
   await track(deps.recordActivity, p.creationId, a.workerToolId, ok ? "ok" : "error"); // exactly one record per executed call
   if (!r.ok) return e(r.status, r.error);

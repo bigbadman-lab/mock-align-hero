@@ -54,6 +54,7 @@ import { Route as ApiToolsTokenScannerRouteImport } from './routes/api/tools/tok
 import { Route as ApiToolsTransactionVerifierRouteImport } from './routes/api/tools/transaction-verifier'
 import { Route as ApiToolsWalletInspectorRouteImport } from './routes/api/tools/wallet-inspector'
 import { Route as ApiToolsWhaleWatchRouteImport } from './routes/api/tools/whale-watch'
+import { Route as ToolsAiToolRouteImport } from './routes/tools.ai.$tool'
 import { Route as ApiCreatorDashboardActivityRouteImport } from './routes/api/creator/dashboard.activity'
 import { Route as ApiCreatorDashboardEarningsRouteImport } from './routes/api/creator/dashboard.earnings'
 import { Route as ApiProductsSlugRunRouteImport } from './routes/api/products/$slug.run'
@@ -66,6 +67,7 @@ import { Route as ApiPublicTreasuryChildEcosystemRouteImport } from './routes/ap
 import { Route as ApiPublicTreasuryDistributionsRouteImport } from './routes/api/public/treasury/distributions'
 import { Route as ApiPublicTreasuryOverviewRouteImport } from './routes/api/public/treasury/overview'
 import { Route as ApiPublicTreasuryWindowsRouteImport } from './routes/api/public/treasury/windows'
+import { Route as ApiToolsAiToolRouteImport } from './routes/api/tools/ai/$tool'
 import { Route as ApiPublicMcpProductsCreationIdRouteImport } from './routes/api/public/mcp/products.$creationId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -300,6 +302,11 @@ const ApiToolsWhaleWatchRoute = ApiToolsWhaleWatchRouteImport.update({
   path: '/api/tools/whale-watch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsAiToolRoute = ToolsAiToolRouteImport.update({
+  id: '/tools/ai/$tool',
+  path: '/tools/ai/$tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCreatorDashboardActivityRoute =
   ApiCreatorDashboardActivityRouteImport.update({
     id: '/activity',
@@ -369,6 +376,11 @@ const ApiPublicTreasuryWindowsRoute =
     path: '/api/public/treasury/windows',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiToolsAiToolRoute = ApiToolsAiToolRouteImport.update({
+  id: '/api/tools/ai/$tool',
+  path: '/api/tools/ai/$tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMcpProductsCreationIdRoute =
   ApiPublicMcpProductsCreationIdRouteImport.update({
     id: '/api/public/mcp/products/$creationId',
@@ -422,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/tools/ai/$tool': typeof ToolsAiToolRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
@@ -434,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
   '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
   '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
+  '/api/tools/ai/$tool': typeof ApiToolsAiToolRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesByTo {
@@ -482,6 +496,7 @@ export interface FileRoutesByTo {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/tools/ai/$tool': typeof ToolsAiToolRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
@@ -494,6 +509,7 @@ export interface FileRoutesByTo {
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
   '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
   '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
+  '/api/tools/ai/$tool': typeof ApiToolsAiToolRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRoutesById {
@@ -543,6 +559,7 @@ export interface FileRoutesById {
   '/api/tools/transaction-verifier': typeof ApiToolsTransactionVerifierRoute
   '/api/tools/wallet-inspector': typeof ApiToolsWalletInspectorRoute
   '/api/tools/whale-watch': typeof ApiToolsWhaleWatchRoute
+  '/tools/ai/$tool': typeof ToolsAiToolRoute
   '/api/creator/dashboard/activity': typeof ApiCreatorDashboardActivityRoute
   '/api/creator/dashboard/earnings': typeof ApiCreatorDashboardEarningsRoute
   '/api/products/$slug/run': typeof ApiProductsSlugRunRoute
@@ -555,6 +572,7 @@ export interface FileRoutesById {
   '/api/public/treasury/distributions': typeof ApiPublicTreasuryDistributionsRoute
   '/api/public/treasury/overview': typeof ApiPublicTreasuryOverviewRoute
   '/api/public/treasury/windows': typeof ApiPublicTreasuryWindowsRoute
+  '/api/tools/ai/$tool': typeof ApiToolsAiToolRoute
   '/api/public/mcp/products/$creationId': typeof ApiPublicMcpProductsCreationIdRoute
 }
 export interface FileRouteTypes {
@@ -605,6 +623,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/tools/ai/$tool'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
     | '/api/products/$slug/run'
@@ -617,6 +636,7 @@ export interface FileRouteTypes {
     | '/api/public/treasury/distributions'
     | '/api/public/treasury/overview'
     | '/api/public/treasury/windows'
+    | '/api/tools/ai/$tool'
     | '/api/public/mcp/products/$creationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -665,6 +685,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/tools/ai/$tool'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
     | '/api/products/$slug/run'
@@ -677,6 +698,7 @@ export interface FileRouteTypes {
     | '/api/public/treasury/distributions'
     | '/api/public/treasury/overview'
     | '/api/public/treasury/windows'
+    | '/api/tools/ai/$tool'
     | '/api/public/mcp/products/$creationId'
   id:
     | '__root__'
@@ -725,6 +747,7 @@ export interface FileRouteTypes {
     | '/api/tools/transaction-verifier'
     | '/api/tools/wallet-inspector'
     | '/api/tools/whale-watch'
+    | '/tools/ai/$tool'
     | '/api/creator/dashboard/activity'
     | '/api/creator/dashboard/earnings'
     | '/api/products/$slug/run'
@@ -737,6 +760,7 @@ export interface FileRouteTypes {
     | '/api/public/treasury/distributions'
     | '/api/public/treasury/overview'
     | '/api/public/treasury/windows'
+    | '/api/tools/ai/$tool'
     | '/api/public/mcp/products/$creationId'
   fileRoutesById: FileRoutesById
 }
@@ -786,6 +810,7 @@ export interface RootRouteChildren {
   ApiToolsTransactionVerifierRoute: typeof ApiToolsTransactionVerifierRoute
   ApiToolsWalletInspectorRoute: typeof ApiToolsWalletInspectorRoute
   ApiToolsWhaleWatchRoute: typeof ApiToolsWhaleWatchRoute
+  ToolsAiToolRoute: typeof ToolsAiToolRoute
   ApiProductsSlugRunRoute: typeof ApiProductsSlugRunRoute
   ApiPublicLaunchAssetsSplatRoute: typeof ApiPublicLaunchAssetsSplatRoute
   ApiPublicMcpPlatformDemoRoute: typeof ApiPublicMcpPlatformDemoRoute
@@ -796,6 +821,7 @@ export interface RootRouteChildren {
   ApiPublicTreasuryDistributionsRoute: typeof ApiPublicTreasuryDistributionsRoute
   ApiPublicTreasuryOverviewRoute: typeof ApiPublicTreasuryOverviewRoute
   ApiPublicTreasuryWindowsRoute: typeof ApiPublicTreasuryWindowsRoute
+  ApiToolsAiToolRoute: typeof ApiToolsAiToolRoute
   ApiPublicMcpProductsCreationIdRoute: typeof ApiPublicMcpProductsCreationIdRoute
 }
 
@@ -1116,6 +1142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiToolsWhaleWatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/ai/$tool': {
+      id: '/tools/ai/$tool'
+      path: '/tools/ai/$tool'
+      fullPath: '/tools/ai/$tool'
+      preLoaderRoute: typeof ToolsAiToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/creator/dashboard/activity': {
       id: '/api/creator/dashboard/activity'
       path: '/activity'
@@ -1200,6 +1233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTreasuryWindowsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tools/ai/$tool': {
+      id: '/api/tools/ai/$tool'
+      path: '/api/tools/ai/$tool'
+      fullPath: '/api/tools/ai/$tool'
+      preLoaderRoute: typeof ApiToolsAiToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mcp/products/$creationId': {
       id: '/api/public/mcp/products/$creationId'
       path: '/api/public/mcp/products/$creationId'
@@ -1269,6 +1309,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiToolsTransactionVerifierRoute: ApiToolsTransactionVerifierRoute,
   ApiToolsWalletInspectorRoute: ApiToolsWalletInspectorRoute,
   ApiToolsWhaleWatchRoute: ApiToolsWhaleWatchRoute,
+  ToolsAiToolRoute: ToolsAiToolRoute,
   ApiProductsSlugRunRoute: ApiProductsSlugRunRoute,
   ApiPublicLaunchAssetsSplatRoute: ApiPublicLaunchAssetsSplatRoute,
   ApiPublicMcpPlatformDemoRoute: ApiPublicMcpPlatformDemoRoute,
@@ -1279,6 +1320,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicTreasuryDistributionsRoute: ApiPublicTreasuryDistributionsRoute,
   ApiPublicTreasuryOverviewRoute: ApiPublicTreasuryOverviewRoute,
   ApiPublicTreasuryWindowsRoute: ApiPublicTreasuryWindowsRoute,
+  ApiToolsAiToolRoute: ApiToolsAiToolRoute,
   ApiPublicMcpProductsCreationIdRoute: ApiPublicMcpProductsCreationIdRoute,
 }
 export const routeTree = rootRouteImport

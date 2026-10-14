@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { smartMoneyTrackerStatusQuery, onchainReportStatusQuery, holderIntelligenceStatusQuery, tokenRiskAnalystStatusQuery, accountCheckerStatusQuery, whaleWatchStatusQuery, supplyMonitorStatusQuery, tokenScannerStatusQuery, transactionVerifierStatusQuery, walletInspectorStatusQuery } from "@/lib/tools/status";
 import type { LibraryTemplate } from "@/lib/templates";
+import { aiToolStatusQuery } from "@/lib/tools/status";
+import { AI_TOOLS } from "@/lib/ai-tools/defs";
 import { cn } from "@/lib/utils";
 
 // Explicit toolId → status query mapping (relay ids are not derived from catalogue ids).
@@ -17,7 +19,8 @@ const STATUS = {
   token_risk_analyst: tokenRiskAnalystStatusQuery,
   smart_money_tracker: smartMoneyTrackerStatusQuery,
   onchain_report_builder: onchainReportStatusQuery,
-} as const;
+  ...Object.fromEntries(AI_TOOLS.map((d) => [d.toolId, aiToolStatusQuery(d.toolId)])),
+} as Record<string, typeof walletInspectorStatusQuery>;
 
 export function CapabilityRow({ t }: { t: LibraryTemplate }) {
   if (t.id === "canvas") {
@@ -70,8 +73,8 @@ function Capability({ label, value, on }: { label: string; value: ReactNode; on?
 }
 
 function useAvailable(toolId: string) {
-  const q = STATUS[toolId as keyof typeof STATUS];
-  const { data, isPending } = useQuery({ ...(q ?? STATUS.wallet_inspector), enabled: !!q });
+  const q = STATUS[toolId];
+  const { data, isPending } = useQuery({ ...(q ?? STATUS["wallet_inspector"]!), enabled: !!q });
   return { ready: !!q && !!data?.available, checking: !!q && isPending };
 }
 

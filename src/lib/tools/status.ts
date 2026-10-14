@@ -1,3 +1,4 @@
+import { AI_ENDPOINT } from "@/lib/ai-tools/defs";
 import { queryOptions } from "@tanstack/react-query";
 import { WI_ENDPOINT } from "./wallet-inspector";
 import { TV_ENDPOINT } from "./transaction-verifier";
@@ -37,3 +38,6 @@ export const holderIntelligenceStatusQuery = statusQuery("holder_intelligence", 
 export const tokenRiskAnalystStatusQuery = statusQuery("token_risk_analyst", TRA_ENDPOINT);
 export const smartMoneyTrackerStatusQuery = statusQuery("smart_money_tracker", SMT_ENDPOINT);
 export const onchainReportStatusQuery = statusQuery("onchain_report_builder", ORB_ENDPOINT);
+
+// Entertainment & Experimental AI tools: one status query per tool id, same caching rules.
+export const aiToolStatusQuery = (toolId: string) => statusQuery(toolId, AI_ENDPOINT(toolId));

@@ -33,6 +33,19 @@ export interface ExecDeps {
   callWorker: typeof callWorker;
   /** Product endpoints only, and only once tool-activity tracking is switched on. Never affects results. */
   recordActivity?: ActivityRecorder;
+  /** Entertainment AI tools (adapter.engine === "ai"); defaults to the platform OpenAI adapter. */
+  ai?: AiToolExec;
+}
+export interface AiToolExec {
+  available(): { available: boolean };
+  run(templateId: string, input: Record<string, unknown>): Promise<{ ok: true; out: unknown } | { ok: false; status: number; error: string }>;
+}
+export async function productionAiToolExec(): Promise<AiToolExec> {
+  const [{ aiAvailability, runAiTool }, { AI_TOOL_BY_TEMPLATE }] = await Promise.all([import("@/lib/ai-tools/execute"), import("@/lib/ai-tools/defs")]);
+  return {
+    available: () => aiAvailability(),
+    run: async (t, i) => { const d = AI_TOOL_BY_TEMPLATE[t]; return d ? runAiTool(d, i) : { ok: false, status: 404, error: "not_found" }; },
+  };
 }
 export type ActivityRecorder = (e: { creationId: string; toolId: string; outcome: "ok" | "error"; ref: string }) => Promise<void>;
 const ACTIVITY_TIMEOUT_MS = 1500;
@@ -75,12 +88,13 @@ function buildServer(info: { name: string; title: string }, entries: ToolEntry[]
         const input = parsed.data as Record<string, unknown>;
         const cfg = exec.workerConfig();
         if (!cfg) return fail("unavailable: execution service not configured");
-        const avail = await exec.toolAvailability(a.workerToolId);
+        const aiExec = a.engine === "ai" ? (exec.ai ?? (await productionAiToolExec())) : null;
+        const avail = aiExec ? aiExec.available() : await exec.toolAvailability(a.workerToolId);
         if (!avail.available) return fail("unavailable: tool not ready");
         const lim = await exec.takeShared(cfg, request); // same buckets as the website: MCP cannot bypass site quota
         if (lim === "limited") return fail("rate_limited: shared quota reached, retry later");
         if (lim === "unavailable") return fail("unavailable: rate limiter unavailable");
-        const r = await exec.callWorker(cfg, a.toWorkerPayload(input, settings), request);
+        const r = aiExec ? await aiExec.run(a.templateId, input) : await exec.callWorker(cfg, a.toWorkerPayload(input, settings), request);
         const execOk = r.ok && a.validOutput(r.out, input, settings);
         if (productId) await track(exec.recordActivity, productId, a.workerToolId, execOk ? "ok" : "error");
         if (!r.ok) return fail(r.error);
@@ -170,7 +184,7 @@ export async function handleProductMcp(rawId: string, request: Request, deps: Pr
     return err(503, "unavailable"); // never open on lookup failure
   }
   if (!authorized) return unauthorized();
-  const avail = await exec.toolAvailability(p.adapter.workerToolId);
+  const avail = p.adapter.engine === "ai" ? (exec.ai ?? (await productionAiToolExec())).available() : await exec.toolAvailability(p.adapter.workerToolId);
   if (!avail.available) return err(503, "unavailable");
   const entry: ToolEntry = {
     adapter: p.adapter,
