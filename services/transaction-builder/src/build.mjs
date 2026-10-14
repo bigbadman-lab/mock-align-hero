@@ -73,10 +73,11 @@ export async function assemble(x) {
   const shares = shareholdersFor(x.creator, x.opsRecipient, x.platformRecipient);
   const wrap = async (code, f) => { try { return await f(); } catch (e) { if (e instanceof BuildError) throw e; throw new BuildError(code, e?.constructor?.name ?? "error"); } };
 
-  const createIx = await wrap("CREATE_V2_NOT_BUILDABLE", () => sdk.createV2Instruction({
-    mint, name: x.name, symbol: x.symbol, uri: x.uri, creator, user: creator, mayhemMode: false,
-    quoteMint, quoteTokenProgram: qtp, pumpQuote: x.parent.accounts,
-  }));
+  // SOL rehearsal: Pump's native SOL quote path (no parent curve, no quote token account).
+  const native = quoteMint.equals(spl.NATIVE_MINT);
+  const createIx = await wrap("CREATE_V2_NOT_BUILDABLE", () => sdk.createV2Instruction(native
+    ? { mint, name: x.name, symbol: x.symbol, uri: x.uri, creator, user: creator, mayhemMode: false }
+    : { mint, name: x.name, symbol: x.symbol, uri: x.uri, creator, user: creator, mayhemMode: false, quoteMint, quoteTokenProgram: qtp, pumpQuote: x.parent.accounts }));
   if (x.candidate === "A") return { instructions: [createIx], shares };
 
   const cfgIx = await wrap("FEE_SHARING_NOT_BUILDABLE", () => sdk.createFeeSharingConfig({ creator, mint, pool: null }));
@@ -92,7 +93,7 @@ export async function assemble(x) {
   const vault = pump.creatorVaultPda(pump.feeSharingConfigPda(mint));
   const vaultAtaIx = spl.createAssociatedTokenAccountIdempotentInstruction(
     creator, spl.getAssociatedTokenAddressSync(quoteMint, vault, true, qtp), vault, quoteMint, qtp);
-  const fee = [cfgIx, vaultAtaIx, updIx];
+  const fee = native ? [cfgIx, updIx] : [cfgIx, vaultAtaIx, updIx];
   if (x.candidate === "B") return { instructions: [createIx, ...fee], shares };
 
   const ib = x.initialBuy;
