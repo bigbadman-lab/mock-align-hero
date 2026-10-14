@@ -218,6 +218,13 @@
       "when": 1792016856384,
       "tag": "0030_mcpx_registrable_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792017693559,
+      "tag": "0031_mcpx_creations_template_check",
+      "breakpoints": true
     }
   ]
 }
