@@ -55,3 +55,4 @@
 - [ ] Wallet transaction signing step — waits on launch-ready builder (lookup table, $MCP mint) and sign-off
 - [x] Real launch path built: wallet signing, server re-check + broadcast + claim, live link; ALT creation script (deployer-owned); go-live runbook docs/GO_LIVE_MCP.md
 - [ ] Go-live steps (mint, lookup table, settings, switches) — need approval
+- [ ] Static lookup table: dry-run PASS (13 entries); creation awaits approval + deployer SOL

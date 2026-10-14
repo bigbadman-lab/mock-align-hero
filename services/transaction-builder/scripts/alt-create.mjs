@@ -96,9 +96,10 @@ try {
     const onChain = await checkOnMainnet(c, plan.entries.map((e) => e.address));
     const rent = await c.getMinimumBalanceForRentExemption(56 + 32 * plan.entries.length);
     const balance = await c.getBalance(new web3.PublicKey(DEPLOYER));
-    const summary = { authorityAndPayer: DEPLOYER, staticEntries: plan.entries.length, allExistOnMainnet: onChain.every((x) => x.exists), rentLamports: rent, networkFeeLamports: 10_000, deployerBalanceLamports: balance, referenceScenarios: plan.scenarios };
+    const summary = { authorityAndPayer: DEPLOYER, staticEntries: plan.entries.length, programsExecutable: plan.entries.every((e, i) => !/program/.test(e.role ?? "") || onChain[i].executable), pdasWithoutAccount: onChain.filter((x) => !x.exists).map((x) => x.address), rentLamports: rent, networkFeeLamports: 10_000, deployerBalanceLamports: balance, referenceScenarios: plan.scenarios };
     if (!SEND) { out({ result: "DRY_RUN_NOTHING_SENT", ...summary, entries: plan.entries.map((e, i) => ({ ...e, ...onChain[i] })) }); process.exit(0); }
-    if (!summary.allExistOnMainnet) { out({ result: "BLOCKED", reason: "ADDRESS_NOT_ON_MAINNET", onChain }); process.exit(1); }
+    // Event-authority PDAs often hold no account; that is normal. Program entries must be live programs.
+    if (!summary.programsExecutable) { out({ result: "BLOCKED", reason: "PROGRAM_NOT_EXECUTABLE", onChain }); process.exit(1); }
     if (balance < rent + 50_000) { out({ result: "BLOCKED", reason: "INSUFFICIENT_SOL", ...summary }); process.exit(1); }
     const kp = loadAuthority(keyPath), send = await sender(c, kp);
     const recentSlot = await c.getSlot("finalized");
