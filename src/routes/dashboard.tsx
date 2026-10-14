@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard")({
 
 // Status-honest previews. Nothing here claims a live balance or record.
 const AREAS = [
-  { id: "products", icon: Boxes, title: "Your MCP Products", body: "Manage keys and settings for tools linked to your verified token launches.", status: "Available" },
+  { id: "products", icon: Boxes, title: "Your MCP Products", body: "Manage keys and settings for tools linked to your verified token launches.", status: "After launch" },
   { id: "canvas", icon: Workflow, title: "Canvas Workspace", body: "Edit the pipeline of your launched Canvas products.", status: "After launch" },
   { id: "earnings", icon: Coins, title: "Creator Earnings", body: "Your 60% share of child-token creator fees.", status: "Not live yet" },
   { id: "rewards", icon: LayoutGrid, title: "Native $MCP Rewards", body: "SOL and $MCP paid to eligible holders.", status: "Not live yet" },
