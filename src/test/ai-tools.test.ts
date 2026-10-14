@@ -93,8 +93,8 @@ describe("execution", () => {
       expect(calls.bodies).toEqual([]); expect(aiAvailability(d).available).toBe(false);
     }
   });
-  it("platform-wide AI spend caps (per minute and per day) block before calling OpenAI", async () => {
-    for (const blocked of ["ai:global:m", "ai:global:d"]) {
+  it("platform-wide AI spend caps (per minute and per hour, = daily cap / 24) block before calling OpenAI", async () => {
+    for (const blocked of ["ai:global:m", "ai:global:h"]) {
       const { d, calls } = deps({ take: (b) => b !== blocked });
       expect(await runAiTool(AI_TOOL_BY_TEMPLATE["roast-bot"]!, IN["roast-bot"]!, d)).toEqual({ ok: false, status: 429, error: "rate_limited" });
       expect(calls.bodies).toEqual([]);
@@ -145,5 +145,14 @@ describe("launched product pages", () => {
       ai: { available: () => ({ available: true }), run: async () => { runs++; return { ok: false, status: 500, error: "x" }; } },
     }, "s", { subject: "me", intensity: "gentle" }, new Request("https://mcpx.fun/x"));
     expect(r).toEqual({ status: 429, body: { error: "free_limit" } }); expect(runs).toBe(0);
+  });
+});
+
+describe("limiter windows", () => {
+  it("never asks the shared limiter for a window over 1 hour (the database refuses it)", async () => {
+    const seen: [string, number, number][] = [];
+    const d: AiExecDeps = { env: () => env(), take: async (b, w, l) => { seen.push([b, w, l]); return true; }, fetchImpl: (async () => reply({ roast: "x" })) as never };
+    await runAiTool(AI_TOOL_BY_TEMPLATE["roast-bot"]!, IN["roast-bot"]!, d);
+    expect(seen).toEqual([["ai:global:m", 60, 30], ["ai:global:h", 3600, 83]]);
   });
 });

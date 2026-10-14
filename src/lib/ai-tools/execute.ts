@@ -36,10 +36,7 @@ export const productionAiDeps: AiExecDeps = {
   env: readAiEnv,
   async take(bucket, window, limit) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // mcpx_rate_limit_take only accepts windows ≤ 1 hour; the daily cap uses the per-UTC-day counter instead.
-    const { data, error } = window >= 86_400
-      ? await supabaseAdmin.rpc("mcpx_free_test_take", { _bucket: bucket, _limit: limit })
-      : await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: bucket, _window_seconds: window, _limit: limit });
+    const { data, error } = await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: bucket, _window_seconds: window, _limit: limit });
     if (error) throw new Error("limiter");
     return data === true;
   },
@@ -73,7 +70,8 @@ export async function runAiTool(d: AiToolDef, input: Record<string, unknown>, de
   try {
     try {
       if (!(await deps.take("ai:global:m", 60, e.perMinute))) return { ok: false, status: 429, error: "rate_limited" };
-      if (!(await deps.take("ai:global:d", 86_400, e.perDay))) return { ok: false, status: 429, error: "rate_limited" };
+      // The shared limiter accepts windows of at most 1 hour, so the daily cap is enforced as perDay/24 per hour (never more than perDay a day).
+      if (!(await deps.take("ai:global:h", 3600, Math.max(1, Math.floor(e.perDay / 24))))) return { ok: false, status: 429, error: "rate_limited" };
     } catch { return { ok: false, status: 503, error: "unavailable" }; }
 
     const hist = Array.isArray(input["history"]) ? (input["history"] as { role: "user" | "assistant"; text: string }[]) : [];
