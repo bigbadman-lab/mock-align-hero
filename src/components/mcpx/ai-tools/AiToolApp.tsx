@@ -95,7 +95,7 @@ function ChatApp({ templateId, post, available }: { templateId: "gibberish-ai" |
   };
   return (
     <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-      <Chips label={gib ? "Style" : "Personality"} options={opts} value={mode} onChange={setMode} />
+      <Chips<string> label={gib ? "Style" : "Personality"} options={opts} value={mode} onChange={setMode} />
       <div aria-live="polite" className="max-h-96 space-y-2 overflow-y-auto rounded-md border border-border bg-background p-3">
         {turns.length === 0 && <p className="text-sm text-subtle">{gib ? "Say anything. Expect nothing useful." : "Say anything. It will disagree."}</p>}
         {turns.map((t, i) => (
