@@ -190,6 +190,14 @@ export async function prepareMetadata(wallet: string, origin: string, id: string
 }
 
 /** Public read of a recorded artifact only; content type from the validated record. */
+/** Resolve a recorded IPFS gateway URL back to its storage path (hash re-checked by readArtifact). */
+export async function pathForPublicUrl(url: string): Promise<string | null> {
+  const db = await admin();
+  const { data, error } = await db.from("mcpx_launch_artifacts").select("object_path").eq("public_url", url).limit(1).maybeSingle();
+  fail(error);
+  return data?.object_path ?? null;
+}
+
 export async function readArtifact(path: string) {
   const db = await admin();
   const { data, error } = await db.from("mcpx_launch_artifacts").select("content_type, sha256").eq("object_path", path).maybeSingle();
