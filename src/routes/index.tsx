@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PageContainer, SectionHeading, SectionLabel, InfoCard, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
+import { PageContainer, SectionHeading, InfoCard, StatusMessage, RouteError, buttonPrimary, buttonOutline } from "@/components/mcpx/primitives";
 import { TEMPLATES, ENGINES } from "@/lib/templates";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 
@@ -29,8 +29,7 @@ function Home() {
       <section className="relative overflow-hidden border-b border-border bg-grid">
         <PageContainer className="py-20 sm:py-28 lg:py-32">
           <div className="max-w-3xl animate-rise">
-            <SectionLabel>Solana · MCP · $MCP</SectionLabel>
-            <h1 className="mt-6 font-mono text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-8xl">MCPX</h1>
+            <h1 className="font-mono text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-8xl">MCPX</h1>
             <p className="mt-4 text-2xl font-medium text-foreground sm:text-3xl">
               Every token powers a <span className="text-primary">tool</span>.
             </p>
