@@ -28,3 +28,4 @@
 - Launch deep links: /launch?template= is resolved only via resolveTemplateParam (explicit aliases); fills an empty form once; never overrides a restored draft.
 - /launch never signs or sends.
 - Subdirectories with their own AGENTS.md (read first): services/transaction-builder, services/mcp-worker, src/lib/mcp-gateway, src/lib/rewards, src/lib/launch, src/lib/byok.
+- Canvas (Template 11): capabilities and allowed step-to-step connections live only in src/lib/canvas/catalog.ts; src/lib/canvas/validate.ts is the one validator shared by browser and server, so the browser can never declare its own handlers. Canvas stays planned (no launch, no endpoint) until it is wired into the combined launch draft.
