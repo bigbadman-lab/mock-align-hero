@@ -14,6 +14,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as PairedRouteImport } from './routes/paired'
+import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
@@ -81,6 +82,11 @@ const LaunchRoute = LaunchRouteImport.update({
 const PairedRoute = PairedRouteImport.update({
   id: '/paired',
   path: '/paired',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreasuryRoute = TreasuryRouteImport.update({
+  id: '/treasury',
+  path: '/treasury',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpIndexRoute = McpIndexRouteImport.update({
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -369,6 +376,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
+  '/treasury': typeof TreasuryRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/account-checker': typeof ToolsAccountCheckerRoute
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/launch'
     | '/paired'
+    | '/treasury'
     | '/mcp/$slug'
     | '/templates/$templateId'
     | '/tools/account-checker'
@@ -623,6 +635,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   LaunchRoute: typeof LaunchRoute
   PairedRoute: typeof PairedRoute
+  TreasuryRoute: typeof TreasuryRoute
   McpSlugRoute: typeof McpSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsAccountCheckerRoute: typeof ToolsAccountCheckerRoute
@@ -703,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/paired'
       fullPath: '/paired'
       preLoaderRoute: typeof PairedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/treasury': {
+      id: '/treasury'
+      path: '/treasury'
+      fullPath: '/treasury'
+      preLoaderRoute: typeof TreasuryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp/': {
@@ -1015,6 +1035,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   LaunchRoute: LaunchRoute,
   PairedRoute: PairedRoute,
+  TreasuryRoute: TreasuryRoute,
   McpSlugRoute: McpSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsAccountCheckerRoute: ToolsAccountCheckerRoute,
