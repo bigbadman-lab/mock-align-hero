@@ -80,7 +80,7 @@ export async function runCanvas(rawConfig: unknown, entryValue: unknown, d: RunD
   if (!complete) ai = { status: "not_run", reason: "An earlier step did not complete." };
   else if (!d.summarise) ai = { status: "not_run", reason: "The AI step runs only for a launched product with the creator's own AI key active." };
   else {
-    const o = await d.summarise({ steps: steps.map((s) => (s.status === "ok" ? { tool: s.capabilityId, input: s.input, result: s.result } : null)) }).catch(() => ({ status: "unavailable" }));
+    const o = await d.summarise({ steps: steps.map((s) => (s.status === "ok" ? { tool: s.capabilityId, input: s.input, result: s.result } : null)) }).catch((): { status: string; text?: string; model?: string } => ({ status: "unavailable" }));
     ai = o.status === "ok" && o.text ? { status: "ok", model: o.model ?? "", text: o.text } : { status: "failed", error: o.status };
   }
   return { ok: true, dryRun: true, traceId: d.traceId, complete: complete && ai.status === "ok", steps, ai };
