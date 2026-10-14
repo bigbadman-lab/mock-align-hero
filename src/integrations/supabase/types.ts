@@ -24,6 +24,7 @@ export type Database = {
           fee_config_evidence_id: string | null
           id: string
           network: string
+          pair_kind: string
           quote_mint: string
           slug: string
           template_id: string
@@ -43,6 +44,7 @@ export type Database = {
           fee_config_evidence_id?: string | null
           id?: string
           network: string
+          pair_kind?: string
           quote_mint: string
           slug: string
           template_id: string
@@ -62,6 +64,7 @@ export type Database = {
           fee_config_evidence_id?: string | null
           id?: string
           network?: string
+          pair_kind?: string
           quote_mint?: string
           slug?: string
           template_id?: string
@@ -2218,6 +2221,90 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_sol_rehearsal: {
+        Row: {
+          creation_id: string | null
+          creator_wallet: string
+          draft_id: string | null
+          id: number
+          mint: string | null
+          reserved_at: string | null
+          signature: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          creation_id?: string | null
+          creator_wallet: string
+          draft_id?: string | null
+          id?: number
+          mint?: string | null
+          reserved_at?: string | null
+          signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          creation_id?: string | null
+          creator_wallet?: string
+          draft_id?: string | null
+          id?: number
+          mint?: string | null
+          reserved_at?: string | null
+          signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_sol_rehearsal_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_creations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcpx_sol_rehearsal_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mcpx_launch_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mcpx_sol_rehearsal_events: {
+        Row: {
+          at: string
+          event: string
+          from_status: string | null
+          id: number
+          mint: string | null
+          reason: string | null
+          signature: string | null
+          to_status: string | null
+        }
+        Insert: {
+          at?: string
+          event: string
+          from_status?: string | null
+          id?: never
+          mint?: string | null
+          reason?: string | null
+          signature?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          at?: string
+          event?: string
+          from_status?: string | null
+          id?: never
+          mint?: string | null
+          reason?: string | null
+          signature?: string | null
+          to_status?: string | null
+        }
+        Relationships: []
+      }
       mcpx_tool_activity: {
         Row: {
           creation_id: string
@@ -2390,6 +2477,20 @@ export type Database = {
         }
         Returns: string
       }
+      mcpx_cf_register_rehearsal: {
+        Args: { _claim: string; _evidence_id: string; _slot: number }
+        Returns: string
+      }
+      mcpx_cf_rehearsal_permission: {
+        Args: never
+        Returns: {
+          creation_id: string
+          creator_wallet: string
+          mint: string
+          signature: string
+          status: string
+        }[]
+      }
       mcpx_cf_reject_launch: {
         Args: { _claim: string; _reason: string }
         Returns: string
@@ -2471,6 +2572,34 @@ export type Database = {
       mcpx_rw_remote_exec: { Args: { p_steps: Json }; Returns: Json }
       mcpx_rw_remote_nonce_take: { Args: { p_nonce: string }; Returns: boolean }
       mcpx_rw_row_text: { Args: { r: Json }; Returns: Json }
+      mcpx_sol_rehearsal_consume: {
+        Args: { _creation: string }
+        Returns: string
+      }
+      mcpx_sol_rehearsal_grant: { Args: { _wallet: string }; Returns: string }
+      mcpx_sol_rehearsal_log: {
+        Args: {
+          _e: string
+          _from: string
+          _mint: string
+          _reason: string
+          _sig: string
+          _to: string
+        }
+        Returns: undefined
+      }
+      mcpx_sol_rehearsal_release: {
+        Args: { _reason: string; _revoke?: boolean }
+        Returns: string
+      }
+      mcpx_sol_rehearsal_reserve: {
+        Args: { _draft: string; _mint: string; _wallet: string }
+        Returns: string
+      }
+      mcpx_sol_rehearsal_submit: {
+        Args: { _mint: string; _sig: string; _wallet: string }
+        Returns: string
+      }
       mcpx_tool_activity_purge: { Args: { _batch: number }; Returns: number }
       mcpx_tool_activity_record: {
         Args: {
