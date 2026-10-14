@@ -77,8 +77,8 @@ function SupplyMonitorPage() {
 
   return (
     <>
-      <PageHeader label="Template tool · TOKEN engine" title="Supply Monitor" intro="A one-time snapshot of a Solana token's total onchain supply and its largest token accounts, when you press the button. No history, no alerts, nothing runs in the background." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · TOKEN engine" title="Supply Monitor" intro="A one-time snapshot of a Solana token's total onchain supply and its largest token accounts, when you press the button. No history, no alerts, nothing runs in the background." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">
           Token accounts are not people: one wallet can own several, and exchanges, pools or treasuries can hold many. Total supply is not circulating supply. No prices, holder counts or risk scores.
         </p>
@@ -97,7 +97,7 @@ function SupplyMonitorPage() {
             <input
               id="sm-mint" value={mint} onChange={(e) => setMint(e.target.value)} onBlur={() => setTouched(true)}
               maxLength={60} autoComplete="off" spellCheck={false} aria-invalid={touched && !!trimmed && !valid} aria-describedby="sm-help"
-              className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
               placeholder="Base58 mint address"
             />
             <p id="sm-help" className="text-xs text-muted-foreground">
@@ -138,7 +138,7 @@ const NOT_MINT: Record<string, string> = {
 function ResultView({ r }: { r: SupplyMonitorResult }) {
   const url = explorerAccountUrl(r.mint);
   return (
-    <section aria-labelledby="sm-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="sm-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="sm-result" className="text-lg font-semibold text-foreground">Snapshot</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

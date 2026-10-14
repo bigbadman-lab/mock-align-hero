@@ -40,8 +40,8 @@ function Page() {
 
   return (
     <>
-      <PageHeader label="Template tool · Intelligence" title="Onchain Report Builder" intro="One report for a wallet or a token, put together from existing MCPX tools, with the source of every line." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · Intelligence" title="Onchain Report Builder" intro="One report for a wallet or a token, put together from existing MCPX tools, with the source of every line." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">Wallet reports combine Wallet Inspector and Account Checker; token reports combine Token Scanner and Supply Monitor. Written by fixed rules — no AI, no scores and no safety verdicts. One report = one free test.</p>
         <ToolStatusBanner name="Onchain Report Builder" status={status} />
         {available && (
@@ -53,7 +53,7 @@ function Page() {
             </fieldset>
             <label htmlFor="orb-target" className="label-mono block text-xs text-subtle">{type === "wallet" ? "Wallet address" : "Token mint address"}</label>
             <input id="orb-target" value={target} onChange={(e) => setTarget(e.target.value)} maxLength={60} autoComplete="off" spellCheck={false} aria-invalid={!!t && !valid}
-              className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary" placeholder="Base58 address" />
+              className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary" placeholder="Base58 address" />
             <p className="text-xs text-muted-foreground">{t && !valid ? <span className="text-warning">Not a valid 32-byte Solana public key.</span> : QUOTA_HELP}</p>
             <button type="submit" className={buttonPrimary} disabled={!valid || run.isPending}>{run.isPending ? "Building…" : "Build Report"}</button>
           </form>
@@ -70,7 +70,7 @@ function Page() {
 
 function Report({ r }: { r: OnchainReport }) {
   return (
-    <section aria-labelledby="orb-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="orb-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="orb-result" className="text-lg font-semibold text-foreground">{r.targetType === "wallet" ? "Wallet" : "Token"} report</h2>
         <span className={cn("label-mono text-xs", r.status === "complete" ? "text-primary" : "text-warning")}>{r.status === "complete" ? "Complete" : "PARTIAL"}</span>

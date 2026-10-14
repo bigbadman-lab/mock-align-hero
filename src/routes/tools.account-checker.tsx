@@ -73,8 +73,8 @@ function AccountCheckerPage() {
 
   return (
     <>
-      <PageHeader label="Template tool · VERIFY engine" title="Account Checker" intro="Check one Solana mainnet account: whether it exists, which program owns it, whether it's executable, its lamports and data size — at one observed moment. Read-only." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · VERIFY engine" title="Account Checker" intro="Check one Solana mainnet account: whether it exists, which program owns it, whether it's executable, its lamports and data size — at one observed moment. Read-only." />
+      <PageContainer className="space-y-5 py-6">
         <StatusMessage title="What “owner” means on Solana">
           <p>An account's owner is the <strong>program</strong> allowed to change its data — not the person or wallet that controls its funds. A normal wallet is owned by the System Program. Nothing here is a safety or trust judgement.</p>
         </StatusMessage>
@@ -93,7 +93,7 @@ function AccountCheckerPage() {
             <input
               id="ac-address" value={address} onChange={(e) => setAddress(e.target.value)} onBlur={() => setTouched(true)}
               maxLength={60} autoComplete="off" spellCheck={false} aria-invalid={touched && !!trimmed && !valid} aria-describedby="ac-help"
-              className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
               placeholder="Base58 address"
             />
             <p id="ac-help" className="text-xs text-muted-foreground">
@@ -140,7 +140,7 @@ const CLASS_TEXT: Record<AccountClass, string> = {
 function ResultView({ r }: { r: AccountCheckerResult }) {
   const url = explorerAccountUrl(r.address);
   return (
-    <section aria-labelledby="ac-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="ac-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="ac-result" className="text-lg font-semibold text-foreground">{r.exists ? "Existing account" : "No account found"}</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

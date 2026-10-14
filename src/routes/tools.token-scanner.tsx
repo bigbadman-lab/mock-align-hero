@@ -74,8 +74,8 @@ function TokenScannerPage() {
 
   return (
     <>
-      <PageHeader label="Template tool · TOKEN engine" title="Token Scanner" intro="Read one Solana token mint: which token program owns it, decimals, exact supply, and who (if anyone) can still mint or freeze. Read-only. No wallet connection needed." />
-      <PageContainer className="space-y-10 py-12">
+      <PageHeader className="py-6 sm:py-8" label="Template tool · TOKEN engine" title="Token Scanner" intro="Read one Solana token mint: which token program owns it, decimals, exact supply, and who (if anyone) can still mint or freeze. Read-only. No wallet connection needed." />
+      <PageContainer className="space-y-5 py-6">
         <p className="max-w-2xl text-sm text-muted-foreground">
           These are onchain permissions, not a verdict. An active mint or freeze authority doesn't make a token a scam, and a revoked one doesn't make it safe. No prices, holders, names or scores.
         </p>
@@ -94,7 +94,7 @@ function TokenScannerPage() {
             <input
               id="ts-mint" value={mint} onChange={(e) => setMint(e.target.value)} onBlur={() => setTouched(true)}
               maxLength={60} autoComplete="off" spellCheck={false} aria-invalid={touched && !!trimmed && !valid} aria-describedby="ts-help"
-              className="w-full rounded-md border border-border-strong bg-surface-2 px-4 py-3 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              className="w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 font-mono text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary"
               placeholder="Base58 mint address"
             />
             <p id="ts-help" className="text-xs text-muted-foreground">
@@ -142,7 +142,7 @@ function ResultView({ r }: { r: TokenScannerResult }) {
     unparsed: "The provider couldn't decode this token-program account, so nothing is shown.",
   };
   return (
-    <section aria-labelledby="ts-result" className="space-y-6 rounded-lg border border-border bg-card p-6">
+    <section aria-labelledby="ts-result" className="space-y-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="ts-result" className="text-lg font-semibold text-foreground">Result</h2>
         <span className="label-mono text-xs text-primary">Solana mainnet</span>

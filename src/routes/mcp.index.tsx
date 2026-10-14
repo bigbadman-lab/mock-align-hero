@@ -32,8 +32,8 @@ function McpPage() {
 
   return (
     <>
-      <PageHeader label="Tool library" title="Explore the MCP Tool Library" intro="Discover powerful Solana tools built for real onchain utility. Explore live capabilities, connect through MCP and turn supported tools into token-powered products." />
-      <PageContainer className="py-12">
+      <PageHeader className="py-6 sm:py-8" label="Tool library" title="Explore the MCP Tool Library" intro="Discover powerful Solana tools built for real onchain utility. Explore live capabilities, connect through MCP and turn supported tools into token-powered products." />
+      <PageContainer className="py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-2">
             {(["All", ...LIBRARY_CATEGORIES] as Filter[]).map((c) => (
@@ -54,7 +54,7 @@ function McpPage() {
         {list.length === 0 ? (
           <p className="mt-10 text-sm text-muted-foreground">No templates match that search.</p>
         ) : (
-          <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((t) => <li key={t.id}><LibraryCard t={t} /></li>)}
           </ul>
         )}
@@ -71,7 +71,7 @@ function LibraryCard({ t }: { t: LibraryTemplate }) {
         <span className="absolute left-3 top-3 rounded border border-border bg-background/80 px-2 py-0.5 font-mono text-[11px] text-muted-foreground backdrop-blur">{t.category}</span>
         {t.planned && <span className="absolute right-3 top-3 rounded border border-border bg-background/80 px-2 py-0.5 font-mono text-[11px] text-subtle backdrop-blur">Planned</span>}
       </div>
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-3">
         <h3 className="text-lg font-semibold text-foreground">{t.name}</h3>
         <p className="mt-1 text-sm font-medium text-primary">{t.tagline}</p>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.benefit}</p>
