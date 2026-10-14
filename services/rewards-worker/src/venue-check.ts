@@ -44,7 +44,7 @@ export function checkVenueTx(kind: "FEE_COLLECTION" | "BUYBACK", keys: readonly 
       else if (d[0] === 3 && d.length === 9) { const p = u64(d, 1); if (p > BigInt(x.maxCuPrice)) return no("CU_PRICE_TOO_HIGH"); cuPrice = Number(p); }
       else return no("COMPUTE_BUDGET_IX_NOT_ALLOWED");
     } else if (prog === ATA) {
-      const ownOk = acc[2] === me && (acc[3] === WSOL || (!!x.mint && acc[3] === x.mint));
+      const ownOk = acc[2] === me && (acc[3] === WSOL || (kind === "BUYBACK" && !!x.mint && acc[3] === x.mint));
       const vaultOk = kind === "FEE_COLLECTION" && acc[2] === vaultAuth && acc[3] === WSOL;
       if (d.length !== 1 || d[0] !== 1 || acc[0] !== me || !(ownOk || vaultOk)) return no("ATA_IX_NOT_ALLOWED");
     } else if (prog === SYS) {
