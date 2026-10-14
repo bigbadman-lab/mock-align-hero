@@ -32,7 +32,7 @@ function McpPage() {
 
   return (
     <>
-      <PageHeader label="Tool library" title="Ten MCP templates" intro="Read-only Solana tools. Each card shows what is actually available today: running the tool, using it over MCP, and launching it as a token." />
+      <PageHeader label="Tool library" title="Explore the MCP Tool Library" intro="Discover powerful Solana tools built for real onchain utility. Explore live capabilities, connect through MCP and turn supported tools into token-powered products." />
       <PageContainer className="py-12">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-2">
