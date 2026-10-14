@@ -114,9 +114,6 @@ function Launch() {
     <>
       <PageHeader label="Launch" title="Launch your token. Power it with MCP." intro="Choose your tools, configure your token and bring your own MCP-powered product to life on Solana." />
       <PageContainer className="space-y-12 py-16">
-        <StatusMessage tone="info" title="Token launching is coming soon">
-          You can configure, save and review your launch today. Nothing is created, signed or sent until token launches open.
-        </StatusMessage>
 
 
         {notice && <StatusMessage tone="warning" title={notice} />}
