@@ -93,8 +93,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="space-y-3">
             <div className="flex items-center gap-2.5"><Mark /><span className="font-mono text-sm tracking-[0.2em]">MCPX</span></div>
             <p className="text-sm text-muted-foreground">Every token powers a tool.</p>
-            <p className="max-w-md text-xs leading-relaxed text-subtle">
-              The build is live, the token is next. $MCP hasn't been minted yet — but ten tools are already running on real Solana data. Connect a wallet (only your public address is shown), explore the read-only tools today, and be first through the door when token launches open.
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+              Create, launch and connect MCP tools on Solana. Powered by $MCP, built for an open ecosystem where creators build, tools deliver utility and holders participate.
             </p>
           </div>
           <nav aria-label="Footer">
