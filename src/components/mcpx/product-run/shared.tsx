@@ -101,7 +101,7 @@ export function Row({ k, children }: { k: string; children: ReactNode }) {
   return (
     <div className="grid gap-0.5 border-b border-border py-1.5 text-sm last:border-0 sm:grid-cols-[9rem_1fr]">
       <dt className="text-subtle">{k}</dt>
-      <dd className="min-w-0 break-all text-foreground">{children}</dd>
+      <dd className="min-w-0 break-words text-foreground">{children}</dd>
     </div>
   );
 }
