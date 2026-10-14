@@ -51,7 +51,7 @@ function OperatorAlt() {
         {st.s === "error" && <StatusMessage tone="warning" title="Couldn't load operator status. Try again." />}
         {st.s === "forbidden" && (
           <StatusMessage tone="warning" title="Operator only">
-            Sign in from the <Link to="/dashboard" className="underline">Dashboard</Link> with the authorised deployer wallet to view this page.
+            Verify from the <a href="/dashboard?next=/operator/alt" className="underline">Dashboard</a> with the authorised deployer wallet to view this page.
           </StatusMessage>
         )}
         {st.s === "ok" && (

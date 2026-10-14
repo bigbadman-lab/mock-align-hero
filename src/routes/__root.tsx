@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppShell } from "../components/mcpx/AppShell";
 import { WalletBoundary } from "../components/mcpx/wallet/WalletBoundary";
+import { CreatorSessionProvider } from "../lib/creator-auth/session-context";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -124,9 +125,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <WalletBoundary>
-        <AppShell>
-          <Outlet />
-        </AppShell>
+        <CreatorSessionProvider>
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        </CreatorSessionProvider>
       </WalletBoundary>
     </QueryClientProvider>
   );
