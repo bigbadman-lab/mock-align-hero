@@ -266,8 +266,9 @@ function Launch() {
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
-              <p className="text-foreground">Fee split (fixed by MCPX, not editable)</p>
-              <ul className="mt-2 flex flex-wrap gap-4 font-mono text-muted-foreground">{FEE_SPLIT.map((f) => <li key={f.role}>{f.bps / 100}% {f.role.toLowerCase()}</li>)}</ul>
+              <p className="text-foreground">Child creator-fee sharing — <span className="text-muted-foreground">Design intent / not live</span></p>
+              <ul className="mt-2 flex flex-wrap gap-4 font-mono text-muted-foreground">{FEE_SPLIT.map((f) => <li key={f.role}>{f.bps / 100}% {f.role}</li>)}</ul>
+              <p className="mt-2 text-muted-foreground">Of actually collected child creator fees. Fixed by MCPX, not editable. Pair: CHILD / $MCP, subject to quote eligibility. Network fees and account rent (about 0.016 SOL in testing) will be shown before your wallet signs.</p>
             </div>
 
             <fieldset className="rounded-lg border border-border bg-card p-4 text-sm">
