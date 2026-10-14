@@ -35,7 +35,7 @@ function Home() {
               <span className="block">Share in the ecosystem.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders — 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
+              Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders: 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link to="/dashboard" className={buttonPrimary}>My Rewards</Link>
