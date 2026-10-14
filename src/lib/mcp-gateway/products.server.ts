@@ -34,6 +34,15 @@ export const productionProductDeps: ProductDeps = {
         }
       : null;
   },
+  async getCanvasVersion(id) {
+    const { canvasProductsEnabled } = await import("@/lib/canvas/products.server");
+    if (!canvasProductsEnabled()) return null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("mcpx_canvas_product_versions").select("version, config").eq("creation_id", id)
+      .order("version", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw new Error("store_unavailable");
+    return data ? { version: data.version, config: data.config } : null;
+  },
   // Product key checked against the SAME creation id on every request; missing pepper = deny.
   async authorizeProduct(product, bearer) {
     const pepper = readPepper();

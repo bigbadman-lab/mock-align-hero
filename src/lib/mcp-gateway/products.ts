@@ -21,6 +21,8 @@ export interface ProductDeps {
   getProductConfig(id: string): Promise<ProductConfig | null>;
   /** Product-scoped credential check. Must never accept the platform-demo token. */
   authorizeProduct(product: ResolvedProduct, bearer: string): Promise<boolean>;
+  /** Canvas products only: latest immutable pipeline version. Absent = Canvas products unsupported (fail closed). */
+  getCanvasVersion?(id: string): Promise<{ version: number; config: unknown } | null>;
 }
 
 export interface ResolvedProduct {

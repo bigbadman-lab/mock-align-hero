@@ -1,4 +1,4 @@
-// Server-only Canvas product store (pending migration 0024). Canvas pipelines attach to a product ONLY through
+// Server-only Canvas product store (migration 0024). Canvas pipelines attach to a product ONLY through
 // mcpx_canvas_bind on a verified registry row (mcp_creations exists only after on-chain verification); a prepared
 // or signed transaction never binds anything and never changes a draft's status. Edits append immutable versions.
 // Off until 0024 is applied and MCPX_CANVAS_PRODUCTS=1 is set, so nothing queries tables that don't exist yet.
