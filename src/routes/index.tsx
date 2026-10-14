@@ -17,10 +17,10 @@ export const Route = createFileRoute("/")({
 });
 
 const FLOW = [
-  { n: "01", t: "Choose Tool", d: "Pick one of six template definitions." },
-  { n: "02", t: "Configure", d: "Set name, presets and display style." },
-  { n: "03", t: "Create Token", d: "A child token paired to $MCP." },
-  { n: "04", t: "Use Tool", d: "On site and via MCP-compatible clients." },
+  { n: "01", t: "Choose a tool", d: "Pick one of ten live Solana tools, or Canvas to chain them.", s: "Available now", live: true },
+  { n: "02", t: "Configure it", d: "Set the name, details and pipeline. Saved as your draft.", s: "Available now", live: true },
+  { n: "03", t: "Create the token", d: "A child token paired to $MCP, fees split 60/25/15.", s: "Not live yet", live: false },
+  { n: "04", t: "Run it", d: "Use it on site or connect it from an MCP client.", s: "Available now", live: true },
 ];
 
 function Home() {
@@ -54,13 +54,16 @@ function Home() {
 
       <section aria-labelledby="flow" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="Planned product flow" title={<span id="flow">From template to working tool</span>} intro="This is the intended journey. None of these steps can be performed yet." />
-          <ol className="mt-10 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <SectionHeading label="How it works" title={<span id="flow">From template to working tool</span>} intro="Four steps from picking a tool to running it. Choosing, configuring and running work today. Creating a token is not live yet." />
+          <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FLOW.map((s) => (
-              <li key={s.n} className="bg-background p-6">
-                <span className="font-mono text-xs text-primary">{s.n}</span>
-                <p className="mt-3 font-semibold text-foreground">{s.t}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{s.d}</p>
+              <li key={s.n} className="flex flex-col rounded-lg border border-border bg-card p-6">
+                <span className="font-mono text-5xl font-semibold leading-none tracking-tight text-primary">{s.n}</span>
+                <p className="mt-5 text-base font-semibold text-foreground">{s.t}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.d}</p>
+                <span className={`label-mono mt-6 inline-flex items-center gap-2 ${s.live ? "text-primary" : "text-warning"}`}>
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />{s.s}
+                </span>
               </li>
             ))}
           </ol>
