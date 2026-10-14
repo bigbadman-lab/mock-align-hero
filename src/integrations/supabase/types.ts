@@ -489,6 +489,101 @@ export type Database = {
         }
         Relationships: []
       }
+      mcpx_cf_children: {
+        Row: {
+          created_at: string
+          creation_signature: string
+          creator_wallet: string
+          mint: string
+          ops_recipient: string
+          platform_recipient: string
+          quote_mint: string
+          quote_token_program: string
+          sharing_config: string
+          verified_slot: number
+        }
+        Insert: {
+          created_at?: string
+          creation_signature: string
+          creator_wallet: string
+          mint: string
+          ops_recipient: string
+          platform_recipient: string
+          quote_mint: string
+          quote_token_program: string
+          sharing_config: string
+          verified_slot: number
+        }
+        Update: {
+          created_at?: string
+          creation_signature?: string
+          creator_wallet?: string
+          mint?: string
+          ops_recipient?: string
+          platform_recipient?: string
+          quote_mint?: string
+          quote_token_program?: string
+          sharing_config?: string
+          verified_slot?: number
+        }
+        Relationships: []
+      }
+      mcpx_cf_intents: {
+        Row: {
+          action: string
+          cost_lamports: number
+          created_at: string
+          distributed_amount: number | null
+          evidence: Json | null
+          finalized_slot: number | null
+          idempotency_key: string
+          last_valid_block_height: number | null
+          mint: string
+          signature: string | null
+          signed_tx_base64: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          cost_lamports: number
+          created_at?: string
+          distributed_amount?: number | null
+          evidence?: Json | null
+          finalized_slot?: number | null
+          idempotency_key: string
+          last_valid_block_height?: number | null
+          mint: string
+          signature?: string | null
+          signed_tx_base64?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          cost_lamports?: number
+          created_at?: string
+          distributed_amount?: number | null
+          evidence?: Json | null
+          finalized_slot?: number | null
+          idempotency_key?: string
+          last_valid_block_height?: number | null
+          mint?: string
+          signature?: string | null
+          signed_tx_base64?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcpx_cf_intents_mint_fkey"
+            columns: ["mint"]
+            isOneToOne: false
+            referencedRelation: "mcpx_cf_children"
+            referencedColumns: ["mint"]
+          },
+        ]
+      }
       mcpx_creator_sessions: {
         Row: {
           created_at: string
