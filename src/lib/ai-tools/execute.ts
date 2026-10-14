@@ -36,7 +36,10 @@ export const productionAiDeps: AiExecDeps = {
   env: readAiEnv,
   async take(bucket, window, limit) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: bucket, _window_seconds: window, _limit: limit });
+    // mcpx_rate_limit_take only accepts windows ≤ 1 hour; the daily cap uses the per-UTC-day counter instead.
+    const { data, error } = window >= 86_400
+      ? await supabaseAdmin.rpc("mcpx_free_test_take", { _bucket: bucket, _limit: limit })
+      : await supabaseAdmin.rpc("mcpx_rate_limit_take", { _bucket: bucket, _window_seconds: window, _limit: limit });
     if (error) throw new Error("limiter");
     return data === true;
   },
