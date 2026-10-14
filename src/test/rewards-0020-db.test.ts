@@ -37,48 +37,48 @@ d("0020 immutable payout plans (real Postgres)", () => {
   afterAll(async () => { await sql.end(); });
 
   it("exact plan (recipients, amounts, message bytes) survives a restart", async () => {
-    expect(await intentStore(db, "w1").reserve(base("p20-1"))).toBe("NEW");
-    await intentStore(db, "w1").recordSigned("p20-1", "sig20", "U0lHTkVE");
-    const open = (await intentStore(db, "w-restart").openSigned()).find((o) => o.idempotencyKey === "p20-1")!;
+    expect(await intentStore(db, "w1").reserve(base("p20-key-1"))).toBe("NEW");
+    await intentStore(db, "w1").recordSigned("p20-key-1", "sig20", "U0lHTkVE");
+    const open = (await intentStore(db, "w-restart").openSigned()).find((o) => o.idempotencyKey === "p20-key-1")!;
     expect(open.rows).toEqual(rows);
-    const p = (await persistedPlan(db, "p20-1"))!;
+    const p = (await persistedPlan(db, "p20-key-1"))!;
     expect(p.messageBase64).toBe(MSG); expect(p.rows).toEqual(rows);
   });
   it("plan, message and mint are immutable", async () => {
-    await expect(sql`update public.mcpx_rw_intents set plan_rows='[{"owner":"Thief","amount":"1000"}]' where idempotency_key='p20-1'`).rejects.toThrow(/immutable/);
-    await expect(sql`update public.mcpx_rw_intents set message_base64=${Buffer.from("x").toString("base64")} where idempotency_key='p20-1'`).rejects.toThrow(/immutable/);
-    await expect(sql`update public.mcpx_rw_intents set plan_mint='OTHER' where idempotency_key='p20-1'`).rejects.toThrow(/immutable/);
+    await expect(sql`update public.mcpx_rw_intents set plan_rows='[{"owner":"Thief","amount":"1000"}]' where idempotency_key='p20-key-1'`).rejects.toThrow(/immutable/);
+    await expect(sql`update public.mcpx_rw_intents set message_base64=${Buffer.from("x").toString("base64")} where idempotency_key='p20-key-1'`).rejects.toThrow(/immutable/);
+    await expect(sql`update public.mcpx_rw_intents set plan_mint='OTHER' where idempotency_key='p20-key-1'`).rejects.toThrow(/immutable/);
   });
   it("conflicting signature refused", async () => {
-    await expect(sql`update public.mcpx_rw_intents set signature='other' where idempotency_key='p20-1'`).rejects.toThrow(/immutable/);
+    await expect(sql`update public.mcpx_rw_intents set signature='other' where idempotency_key='p20-key-1'`).rejects.toThrow(/immutable/);
   });
   it("mismatched message bytes refused", async () => {
-    await expect(raw("p20-bad-msg", "SOL_PAYOUT", [{ owner: "A", amount: "1000" }], Buffer.from("different").toString("base64"))).rejects.toThrow(/does not match/);
+    await expect(raw("p20-key-bad-msg", "SOL_PAYOUT", [{ owner: "A", amount: "1000" }], Buffer.from("different").toString("base64"))).rejects.toThrow(/does not match/);
   });
   it("payouts without a plan, with wrong totals, duplicates or bad amounts are refused", async () => {
-    await expect(raw("p20-noplan", "SOL_PAYOUT", null, MSG)).rejects.toThrow(/requires plan_rows/);
-    await expect(raw("p20-total", "SOL_PAYOUT", [{ owner: "A", amount: "999" }], MSG)).rejects.toThrow(/total/);
-    await expect(raw("p20-dup", "SOL_PAYOUT", [{ owner: "A", amount: "500" }, { owner: "A", amount: "500" }], MSG)).rejects.toThrow(/unique/);
-    await expect(raw("p20-neg", "SOL_PAYOUT", [{ owner: "A", amount: "-1000" }], MSG)).rejects.toThrow(/amount/);
-    await expect(raw("p20-num", "SOL_PAYOUT", [{ owner: "A", amount: 1000 }], MSG)).rejects.toThrow(/amount/);
-    await expect(raw("p20-tok", "TOKEN_PAYOUT", [{ owner: "A", amount: "5" }], MSG, 0, 5)).rejects.toThrow(/mint and token program/);
-    await raw("p20-tok-ok", "TOKEN_PAYOUT", [{ owner: "A", amount: "5" }], MSG, 0, 5, "MINT", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+    await expect(raw("p20-key-noplan", "SOL_PAYOUT", null, MSG)).rejects.toThrow(/requires plan_rows/);
+    await expect(raw("p20-key-total", "SOL_PAYOUT", [{ owner: "A", amount: "999" }], MSG)).rejects.toThrow(/total/);
+    await expect(raw("p20-key-dup", "SOL_PAYOUT", [{ owner: "A", amount: "500" }, { owner: "A", amount: "500" }], MSG)).rejects.toThrow(/unique/);
+    await expect(raw("p20-key-neg", "SOL_PAYOUT", [{ owner: "A", amount: "-1000" }], MSG)).rejects.toThrow(/amount/);
+    await expect(raw("p20-key-num", "SOL_PAYOUT", [{ owner: "A", amount: 1000 }], MSG)).rejects.toThrow(/amount/);
+    await expect(raw("p20-key-tok", "TOKEN_PAYOUT", [{ owner: "A", amount: "5" }], MSG, 0, 5)).rejects.toThrow(/mint and token program/);
+    await raw("p20-key-tok-ok", "TOKEN_PAYOUT", [{ owner: "A", amount: "5" }], MSG, 0, 5, "MINT", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
   });
   it("20 competing workers reserving the same plan: exactly one wins", async () => {
-    const r = await Promise.all(Array.from({ length: 20 }, (_, i) => intentStore(db, `w${i}`).reserve(base("p20-race"))));
+    const r = await Promise.all(Array.from({ length: 20 }, (_, i) => intentStore(db, `w${i}`).reserve(base("p20-key-race"))));
     expect(r.filter((x) => x === "NEW")).toHaveLength(1);
     expect(r.filter((x) => x === "DUPLICATE")).toHaveLength(19);
   });
   it("invalid settlement transitions refused (signed is never paid)", async () => {
-    await expect(sql`update public.mcpx_rw_intents set state='LANDED' where idempotency_key='p20-race'`).rejects.toThrow();
+    await expect(sql`update public.mcpx_rw_intents set state='LANDED' where idempotency_key='p20-key-race'`).rejects.toThrow();
   });
   it("buyback fills: only LANDED buybacks, recorded once, pending until captured", async () => {
     await sql`insert into public.mcpx_rw_intents (idempotency_key,cycle_id,kind,message_sha256,lamports,last_valid_block_height,reserved_by,epoch_start,token_amount)
-      values ('p20-buy','c20','BUYBACK',${H},1000000,1,'w',to_timestamp(${E}),0)`;
+      values ('p20-key-buy','c20','BUYBACK',${H},1000000,1,'w',to_timestamp(${E}),0)`;
     await expect(sql`insert into public.mcpx_rw_buyback_fills (signature,intent_key,epoch_start,mint,decimals,token_amount,sol_spent,finalized_slot,evidence)
-      values ('buySig','p20-buy',to_timestamp(${E}),'MINT',6,10,10,1,'{}')`).rejects.toThrow(/LANDED/);
-    await sql`update public.mcpx_rw_intents set state='SIGNED', signature='buySig', signed_tx_base64='QQ==' where idempotency_key='p20-buy'`;
-    await sql`update public.mcpx_rw_intents set state='LANDED', finalized_slot=9, evidence='{}' where idempotency_key='p20-buy'`;
+      values ('buySig','p20-key-buy',to_timestamp(${E}),'MINT',6,10,10,1,'{}')`).rejects.toThrow(/LANDED/);
+    await sql`update public.mcpx_rw_intents set state='SIGNED', signature='buySig', signed_tx_base64='QQ==' where idempotency_key='p20-key-buy'`;
+    await sql`update public.mcpx_rw_intents set state='LANDED', finalized_slot=9, evidence='{}' where idempotency_key='p20-key-buy'`;
     expect(await pendingFills(db, E)).toBe(1);
     const tx = { slot: 9, transaction: { signatures: ["buySig"], message: { accountKeys: ["DEPLOYER", "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P", "ata"] } },
       meta: { err: null, fee: 5000, preBalances: [10_000_000, 1, 0], postBalances: [9_195_000, 1, 0],
