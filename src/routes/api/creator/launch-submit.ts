@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/creator/launch-submit")({
 
         // 1. Same checks as immediately before signing.
         const v = await gateVerify({ messageBase64: b.messageBase64, binding: b.binding, bindingMac: b.bindingMac, connectedWallet: session.wallet, draftId: b.draftId, revision: b.revision },
-          session, { config, builder: builderCall, now: () => Date.now(), loadDraft });
+          session, { config, builder: builderCall, now: () => Date.now(), loadDraft, canonicalMint: (await import("@/lib/tx-builder/canonical-mint.server")).canonicalMint });
         if (v.http !== 200) return reply(v.http, v.body);
         if (b.binding?.mint !== b.mint) return reply(403, { ok: false, code: "MINT_MISMATCH" });
 
