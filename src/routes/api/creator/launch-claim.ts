@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/creator/launch-claim")({
           if (!s) return reply(401, { error: "unauthorized" });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const db: any = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
-          const { data: c, error } = await db.from("mcpx_cf_launch_claims").select("status, mint, creation_id").eq("id", id).eq("creator_wallet", s.wallet).maybeSingle();
+          const { data: c, error } = await db.from("mcpx_cf_launch_claims").select("status, mint, signature, creation_id").eq("id", id).eq("creator_wallet", s.wallet).maybeSingle();
           if (error) return reply(503, { error: "unavailable" });
           if (!c) return reply(404, { error: "not_found" });
           let slug: string | null = null;
@@ -30,7 +30,10 @@ export const Route = createFileRoute("/api/creator/launch-claim")({
             const p = await db.from("mcp_creations").select("slug").eq("id", c.creation_id).maybeSingle();
             slug = p.data?.slug ?? null;
           }
-          return reply(200, { status: c.status, mint: c.mint, slug }, { "cache-control": "no-store" });
+          // Until the verifier registers the product, report Solana's own view of the signature so the page can
+          // say "token created" without waiting for registration. Read-only, bounded; unknown on any failure.
+          const chain = c.status === "PENDING" ? await signatureState(c.signature) : null;
+          return reply(200, { status: c.status, mint: c.mint, signature: c.signature, slug, chain }, { "cache-control": "no-store" });
         } catch { return reply(503, { error: "unavailable" }); }
       },
       POST: async ({ request }) => {
@@ -60,3 +63,15 @@ export const Route = createFileRoute("/api/creator/launch-claim")({
     },
   },
 });
+
+async function signatureState(sig: string): Promise<"processed" | "confirmed" | "finalized" | "failed" | "unknown"> {
+  try {
+    const { siteRpcUrl } = await import("@/lib/solana-rpc.server");
+    const r = await fetch(siteRpcUrl(), { method: "POST", headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(4000),
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getSignatureStatuses", params: [[sig], { searchTransactionHistory: true }] }) });
+    const v = ((await r.json()) as { result?: { value?: ({ err: unknown; confirmationStatus?: string } | null)[] } }).result?.value?.[0];
+    if (!v) return "unknown";
+    if (v.err) return "failed";
+    return v.confirmationStatus === "finalized" || v.confirmationStatus === "confirmed" || v.confirmationStatus === "processed" ? v.confirmationStatus : "unknown";
+  } catch { return "unknown"; }
+}

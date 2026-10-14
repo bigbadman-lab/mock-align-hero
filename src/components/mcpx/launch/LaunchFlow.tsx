@@ -10,7 +10,7 @@ import type { DraftView } from "./DraftPersistence";
 import { useWallet } from "@/lib/wallet/context";
 import { assembleTx, b64, messageSigners, sameBytes, splitTx } from "@/lib/launch/tx-wire";
 import { RehearsalBanner, RehearsalBuy } from "./RehearsalBuy";
-import { BLOCKER_TEXT, STAGES, claimOutcome, launchBlocker, type LaunchStage } from "@/lib/launch/launch-flow";
+import { BLOCKER_TEXT, STAGES, chainConfirmed, claimOutcome, launchBlocker, type LaunchStage } from "@/lib/launch/launch-flow";
 
 const post = (url: string, body: unknown) => fetch(url, {
   method: "POST", credentials: "same-origin", headers: { "content-type": "application/json", "x-mcpx-csrf": "1" }, body: JSON.stringify(body),
@@ -36,7 +36,7 @@ const CLAIM_KEY = "mcpx:launch-claim";
 
 type Run =
   | { s: "idle" }
-  | { s: "running"; stage: LaunchStage }
+  | { s: "running"; stage: LaunchStage; mint?: string; signature?: string; slow?: boolean }
   | { s: "held" }
   | { s: "live"; slug: string; mint: string }
   | { s: "failed"; msg: string };
@@ -55,6 +55,7 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
   // Resume a launch that was already submitted (e.g. after a page reload).
   const watch = (claimId: string) => {
     setRun({ s: "running", stage: "confirming" });
+    const started = Date.now();
     const tick = async () => {
       try {
         const r = await fetch(`/api/creator/launch-claim?id=${claimId}`, { credentials: "same-origin" });
@@ -62,6 +63,9 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
         const o = claimOutcome(b);
         if (o === "live") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "live", slug: b.slug, mint: b.mint }); return; }
         if (o === "rejected") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "failed", msg: "Solana didn't confirm this launch. Nothing was registered." }); return; }
+        // Solana has the token; only product registration is outstanding. Never reported as "live".
+        if (chainConfirmed(b) || b.chain === "finalized") setRun({ s: "running", stage: "registering", mint: b.mint, signature: b.signature, slow: Date.now() - started > 10 * 60_000 });
+        else if (b.chain === "failed") { sessionStorage.removeItem(CLAIM_KEY); setRun({ s: "failed", msg: "Solana rejected this transaction. No token was created." }); return; }
       } catch { /* keep waiting */ }
       poll.current = setTimeout(tick, 5000);
     };
@@ -122,7 +126,7 @@ export function LaunchFlow({ saved, signedInWallet, connectedWallet }: { saved: 
     }
   };
 
-  const showBuy = rehearsal && (run.s === "running" && run.stage === "confirming" || run.s === "live");
+  const showBuy = rehearsal && (run.s === "running" && (run.stage === "confirming" || run.stage === "registering") || run.s === "live");
   if (run.s === "idle") {
     return (
       <div className="space-y-3">
@@ -156,14 +160,24 @@ function LaunchProgress({ run, onRetry }: { run: Exclude<Run, { s: "idle" }>; on
         <div>
           <p className="label-mono text-xs text-primary">{run.s === "live" ? "Launch complete" : run.s === "held" ? "Launch ready" : run.s === "failed" ? "Launch stopped" : "Launching"}</p>
           <h3 className="mt-1 text-xl font-semibold text-foreground">
-            {run.s === "live" ? "Your token is live" : run.s === "held" ? "Everything checks out" : run.s === "failed" ? "Your launch didn't go through" : "Your token is processing"}
+            {run.s === "live" ? "Your token is live" : run.s === "running" && run.stage === "registering" ? "Token created" : run.s === "held" ? "Everything checks out" : run.s === "failed" ? "Your launch didn't go through" : "Your token is processing"}
           </h3>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             {run.s === "live" ? "It's verified on Solana and its MCP tool is ready to connect."
               : run.s === "held" ? "Your launch passed every check. Launching opens soon. Nothing was signed or sent."
               : run.s === "failed" ? run.msg
+              : run.stage === "registering" ? (run.slow
+                ? "Your token is on Solana. Setting up the MCP product is taking longer than usual — it's safe to leave; it will appear on your Dashboard once ready."
+                : "Your token is on Solana. Setting up its MCP product can take up to 5 minutes — keep this page open or check your Dashboard later.")
               : "Keep this page open. This usually takes under a minute."}
           </p>
+          {run.s === "running" && run.stage === "registering" && run.mint && (
+            <p className="mt-2 font-mono text-xs text-muted-foreground">
+              Mint {run.mint.slice(0, 6)}…{run.mint.slice(-6)} ·{" "}
+              <a className="underline underline-offset-4 hover:text-primary" href={`https://solscan.io/token/${run.mint}`} target="_blank" rel="noreferrer">Solscan</a>
+              {run.signature && <> · <a className="underline underline-offset-4 hover:text-primary" href={`https://solscan.io/tx/${run.signature}`} target="_blank" rel="noreferrer">Transaction</a></>}
+            </p>
+          )}
         </div>
         {run.s === "live" && (
           <Link to="/mcp/$slug" params={{ slug: run.slug }} className={buttonPrimary}>View your token and MCP page →</Link>
