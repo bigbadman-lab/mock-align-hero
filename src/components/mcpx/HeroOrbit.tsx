@@ -50,8 +50,8 @@ export function HeroOrbit() {
                 </circle>
                 <g transform={`translate(${x} ${y})`}>
                   <g className="ho-counter">
-                    <rect x={-48} y={-13} width={96} height={26} rx={6} className="fill-card stroke-border" />
-                    <circle cx={-38} cy={0} r={2.5} className="fill-primary" />
+                    <rect x={-56} y={-13} width={112} height={26} rx={6} className="fill-card stroke-border" />
+                    <circle cx={-46} cy={0} r={2.5} className="fill-primary" />
                     <text x={4} y={4} textAnchor="middle" fontSize={10} fontFamily="var(--font-mono, monospace)" className="fill-foreground">{t}</text>
                   </g>
                 </g>
