@@ -57,7 +57,7 @@ export function useProductRun<T>(slug: string) {
   });
 }
 
-export function RunErrorView({ error, onRetry, disabled }: { error: unknown; onRetry?: () => void; disabled?: boolean }) {
+export function RunErrorView({ error, onRetry, disabled }: { error: unknown; onRetry?: (() => void) | undefined; disabled?: boolean }) {
   const kind = error instanceof RunError ? error.kind : "provider_error";
   return (
     <StatusMessage tone="warning" title={kind === "free_limit" ? "Daily limit reached" : "Run failed"}>

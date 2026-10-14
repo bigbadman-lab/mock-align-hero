@@ -38,7 +38,7 @@ export interface RunDeps {
   takeShared: typeof takeShared;
   callWorker: typeof callWorker;
   /** Present only when MCPX_TOOL_ACTIVITY=1. */
-  recordActivity?: ActivityRecorder;
+  recordActivity?: ActivityRecorder | undefined;
 }
 export interface RunReply { status: number; body: unknown }
 
