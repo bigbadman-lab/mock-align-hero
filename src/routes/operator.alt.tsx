@@ -1,6 +1,6 @@
 // Operator-only lookup-table creation. Transactions are built here, checked + simulated by the server, signed
 // only in the operator's wallet, then relayed. Data comes only from /api/operator/alt (deployer sign-in required).
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageContainer, PageHeader, RouteError, StatusMessage, buttonOutline } from "@/components/mcpx/primitives";
 import { useWallet } from "@/lib/wallet/context";
