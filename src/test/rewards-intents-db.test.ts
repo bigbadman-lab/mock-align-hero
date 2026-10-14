@@ -2,12 +2,14 @@
 // Runs only with MCPX_TEST_PG_URL (throwaway Postgres with migration 0016 applied).
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import postgres from "postgres";
+import { createHash } from "node:crypto";
 import { intentStore } from "../../services/rewards-worker/src/intents";
 import { reconcile } from "../../services/rewards-worker/src/signer";
 
 const URL = process.env["MCPX_TEST_PG_URL"];
 const d = URL ? describe : describe.skip;
-const H = "a".repeat(64);
+const MSG = Buffer.from("MCPX-TEST-MESSAGE").toString("base64");
+const H = createHash("sha256").update(Buffer.from(MSG, "base64")).digest("hex");
 const E1 = 1_800_000_000 - (1_800_000_000 % 300), E2 = E1 + 300, E3 = E1 + 600;
 
 d("0016 durable intents (real Postgres)", () => {
@@ -22,7 +24,7 @@ d("0016 durable intents (real Postgres)", () => {
       return { aborted };
     },
   };
-  const base = (k: string, epoch = E1) => ({ idempotencyKey: k, cycleId: "cyc-1", kind: "SOL_PAYOUT" as const, epoch, messageSha256: H, lamports: 1_000_000n, tokens: 0n, opsCostLamports: 5_000n, lastValidBlockHeight: 500 });
+  const base = (k: string, epoch = E1) => ({ idempotencyKey: k, cycleId: "cyc-1", kind: "SOL_PAYOUT" as const, epoch, messageSha256: H, lamports: 1_000_000n, tokens: 0n, opsCostLamports: 5_000n, lastValidBlockHeight: 500, plan: { rows: [{ owner: "A", amount: 1_000_000n }], mint: null, tokenProgram: null, messageBase64: MSG } });
   let n = 0;
   const credit = async (epoch: number, mint = "MINT", recipient = "DEPLOYER") => { // 10M lamports → 3M sol / 3M buyback / 4M ops
     const sig = `sig${n++}`;
