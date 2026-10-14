@@ -202,13 +202,7 @@ function Launch() {
               )}
             </section>
 
-            <section aria-labelledby="sec-ai" className="rounded-lg border border-border p-4 text-sm">
-              <h3 id="sec-ai" className="label-mono text-xs text-primary">3 · AI enhancement · optional</h3>
-              <p className="mt-2 text-muted-foreground">Add your own API key to enhance your MCP tool, available in creator management. It's optional — your tool works without it, and the usage is billed to your own account.</p>
-              <p className="mt-2 text-muted-foreground">Nothing here asks for a key. You add one later, when you're ready.</p>
-            </section>
-
-            <h3 className="label-mono text-xs text-primary">4 · Artwork, wallet and fees</h3>
+            <h3 className="label-mono text-xs text-primary">3 · Artwork, wallet and fees</h3>
             <ArtworkPanel signedIn={session.s === "signed_in"} saved={saved} dirty={dirty} drafts={drafts} onSaved={(d) => { setSaved(d); setReview(null); }} />
 
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
