@@ -16,7 +16,8 @@ const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 async function loadDraft(wallet: string, id: string) {
   const { getDraft } = await import("@/lib/launch/drafts.server");
   const v = await getDraft(wallet, id);
-  return v ? { id: v.id, revision: v.revision, templateId: v.input.templateId, name: v.input.tokenName, symbol: v.input.symbol, uri: v.metadata?.url ?? null } : null;
+  return v ? { id: v.id, revision: v.revision, templateId: v.input.templateId, name: v.input.tokenName, symbol: v.input.symbol, uri: v.metadata?.url ?? null,
+    initialBuy: v.input.buyEnabled ? { amountMcp: v.input.buyAmount, slippageBps: Number(v.input.slippageBps) } : null } : null;
 }
 
 export const Route = createFileRoute("/api/creator/launch-submit")({

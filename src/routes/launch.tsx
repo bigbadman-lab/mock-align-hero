@@ -343,7 +343,7 @@ function ReviewCard({ draft, wallet, settings, artworkUrl }: { draft: Draft; wal
           </dd>
         </div>
         {row("Initial buy", draft.initialBuy
-          ? `${draft.initialBuy.amountMcp} $MCP (max ${draft.initialBuy.slippageBps / 100}% slippage) — a separate purchase later, with your approval`
+          ? `${draft.initialBuy.amountMcp} $MCP (max ${draft.initialBuy.slippageBps / 100}% slippage) — bought in the same transaction as your token launch`
           : "None")}
       </dl>
     </div>

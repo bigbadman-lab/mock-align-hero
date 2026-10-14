@@ -16,7 +16,8 @@ async function loadDraft(wallet: string, id: string): Promise<GateDraft | null> 
   const { getDraft } = await import("@/lib/launch/drafts.server");
   const v = await getDraft(wallet, id);
   if (!v) return null;
-  return { id: v.id, revision: v.revision, templateId: v.input.templateId, name: v.input.tokenName, symbol: v.input.symbol, uri: v.metadata?.url ?? null };
+  return { id: v.id, revision: v.revision, templateId: v.input.templateId, name: v.input.tokenName, symbol: v.input.symbol, uri: v.metadata?.url ?? null,
+    initialBuy: v.input.buyEnabled ? { amountMcp: v.input.buyAmount, slippageBps: Number(v.input.slippageBps) } : null };
 }
 
 export const Route = createFileRoute("/api/creator/launch-prepare")({
