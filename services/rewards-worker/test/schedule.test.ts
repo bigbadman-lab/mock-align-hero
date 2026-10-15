@@ -25,7 +25,7 @@ describe("nextBoundaryDelayMs", () => {
     }
   });
   it("fires 30 s past a boundary whenever the 60 s floor does not apply", () => {
-    for (const t of [30_001, 60_000, 150_000, 299_999, 123_456_789]) {
+    for (const t of [30_001, 60_000, 150_000, 270_000, 123_456_789]) {
       expect((t + nextBoundaryDelayMs(t)) % W).toBe(OFF);
     }
   });
