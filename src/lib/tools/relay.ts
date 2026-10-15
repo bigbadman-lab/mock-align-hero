@@ -7,8 +7,8 @@ const READY_TIMEOUT_MS = 4_000;
 const WORKER_TIMEOUT_MS = 25_000;
 export const MAX_RESPONSE_BYTES = 1_500_000;
 /** Free website test runs per visitor, per tool, per UTC day. MCP calls (bearer keys) do not use this allowance. */
-// The database counter (mcpx_free_test_take) rejects limits above 100; 500 needs migration docs/pending-migrations/review/0035.
-export const FREE_TESTS_PER_DAY = 100;
+// mcpx_free_test_take accepts limits up to 1000 (migration 0035).
+export const FREE_TESTS_PER_DAY = 500;
 export const freeTestBucket = (toolId: string, visitor: string) => ({ bucket: `${SHARED_BUCKET_PREFIX}:free:${toolId}:${visitor}`, window: 86_400, limit: FREE_TESTS_PER_DAY });
 
 export const json = (status: number, body: unknown) =>
