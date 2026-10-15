@@ -45,7 +45,7 @@ export function checkChildTx(ixs: TransactionInstruction[], keeper: string, c: C
   const want = graduated ? ["cu", "amm_transfer", "sweep", "distribute"] : ["cu", "sweep", "distribute"];
   if (names.join() !== want.join()) return { ok: false, code: "SHAPE_MISMATCH" };
   // The distribute instruction's remaining accounts must be exactly the locked shareholders (+ their ATAs).
-  const dist = ixs[ixs.length - 1].keys.map((k) => k.pubkey.toBase58());
+  const dist = (ixs[ixs.length - 1]?.keys ?? []).map((k) => k.pubkey.toBase58());
   for (const who of [c.creator, c.ops, c.platform]) if (!dist.includes(who)) return { ok: false, code: "RECIPIENT_MISSING" };
   if (dist.includes(keeper) && ![c.creator, c.ops, c.platform].includes(keeper)) {
     // keeper appears only as payer (index 0) — never as a recipient slot

@@ -18,7 +18,7 @@ export async function gatherHistory(rpc: Rpc, meter: Meter, mint: string, anchor
     const todo = accts.filter((a) => (sweptAt.get(a) ?? -1) < V); todo.forEach((a) => sweptAt.set(a, V));
     const lists = await pool(todo, 8, (a) => signatures(rpc, meter, a, V));
     const missing = [...new Map(lists.flat().filter((x) => x.slot > anchorSlot && !by.has(x.signature)).map((x) => [x.signature, x])).values()];
-    const got = await pool(missing, 8, async (x) => { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]); return t ? toIndexed({ ...t, transactionIndex: x.txIndex }, mint) : null; });
+    const got = await pool(missing, 8, async (x) => { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]); return t ? toIndexed({ ...t, transactionIndex: x.txIndex }, mint) : null; });
     for (const t of got) if (t) by.set(t.signature, t);
   };
   const accounts = () => { const x = new Set<string>(); for (const t of by.values()) for (const b of [...t.pre, ...t.post]) x.add(b.account); return [...x]; };

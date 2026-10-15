@@ -49,7 +49,7 @@ export function toIndexed(t: FullTx, mint: string): IndexedTx & { txIndex: numbe
     supplyDelta: (t.transaction.message as any).instructions ? supplyDelta(t as unknown as RawTx, mint) : { unknown: "no_instructions" } };
 }
 
-const OPTS = { sortOrder: "asc", commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 } as const;
+const OPTS = { sortOrder: "asc", commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 } as const;
 
 export async function fullHistory(rpc: Rpc, meter: Meter, address: string, mint: string, lteSlot: number, gtSlot?: number) {
   const out: ReturnType<typeof toIndexed>[] = []; let token: string | undefined;
