@@ -32,13 +32,14 @@ describe("05-E holder history", () => {
     const at1010 = reconstructAt(anchor, ch, cov, 1010); if (at1010.kind !== "OK") throw new Error();
     expect(at1010.input.accounts.map((a) => a.account).sort()).toEqual(["a1", "b1", "pool"]);
     const e2 = buildEligibility(at1010.input, { version: "fx", approved: true, poolVaults: ["POOL_PDA"], treasuries: [], reserves: [], resolvedOwners: {} });
-    expect(e2.ambiguous).toEqual([{ owner: "bob", amount: 10n, why: "delegated" }]); // delegated → review, not silently counted
-    expect(e2.livePayoutAllowed).toBe(false);
+    expect(e2.holders.find((h) => h.owner === "bob")).toEqual({ owner: "bob", amount: 10n }); // delegated wallet stays eligible
+    expect(e2.livePayoutAllowed).toBe(true);
   });
-  it("program-owned holdings are not blanket-excluded: unlisted program owner is ambiguous", () => {
+  it("unlisted program owner is auto-excluded, never ambiguous", () => {
     const r = reconstructAt(anchor, [], null, 1000); if (r.kind !== "OK") throw new Error();
     const e = buildEligibility(r.input, { version: "fx", approved: true, poolVaults: [], treasuries: [], reserves: [], resolvedOwners: {} });
-    expect(e.ambiguous.map((x) => x.owner)).toEqual(["POOL_PDA"]);
+    expect(e.ambiguous).toEqual([]);
+    expect(e.excluded.map((x) => x.owner)).toEqual(["POOL_PDA"]);
   });
   it("blocks on gaps, sequence holes, pre-anchor slots, supply mismatch and no source", async () => {
     expect(reconstructAt(null, [], null, 5)).toEqual({ kind: "BLOCKED", reason: "no_anchor_snapshot" });

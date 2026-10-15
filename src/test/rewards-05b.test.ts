@@ -98,11 +98,12 @@ describe("eligibility v1", () => {
     expect(s.status).toBe("COMPLETE");
     expect(s.livePayoutAllowed).toBe(false); // config not approved
   });
-  it("program-owned, unknown, delegated and frozen holdings are flagged ambiguous, never silently assigned or dropped", () => {
-    const s = snap([acc("a", "W1", 5n), acc("b", "PDA", 10n, { ownerKind: "PROGRAM" }), acc("c", "W3", 3n, { delegated: true }), acc("d", "U", 2n, { ownerKind: "UNKNOWN" })], 20n, { ...cfg, approved: true });
-    expect(s.ambiguous.map((a) => a.why).sort()).toEqual(["delegated", "owner_program", "owner_unknown"]);
-    expect(s.livePayoutAllowed).toBe(false);
-    expect(s.reasons).toContain("ambiguous_holdings_need_review");
+  it("program-owned, unknown and frozen holdings are auto-excluded and never pause payouts; delegated wallets stay eligible", () => {
+    const s = snap([acc("a", "W1", 5n), acc("b", "PDA", 10n, { ownerKind: "PROGRAM" }), acc("c", "W3", 3n, { delegated: true }), acc("d", "U", 2n, { ownerKind: "UNKNOWN" }), acc("e", "W5", 1n, { frozen: true })], 21n, { ...cfg, approved: true });
+    expect(s.ambiguous).toEqual([]);
+    expect(s.excluded.map((a) => a.why).sort()).toEqual(["auto_frozen", "auto_owner_program", "auto_owner_unknown"]);
+    expect(s.holders.map((h) => h.owner)).toEqual(["W1", "W3"]);
+    expect(s.livePayoutAllowed).toBe(true);
   });
   it("reviewed resolutions are honoured", () => {
     const s = snap([acc("a", "W1", 5n), acc("b", "ESCROW", 5n, { ownerKind: "PROGRAM" })], 10n, { ...cfg, approved: true, resolvedOwners: { ESCROW: "ELIGIBLE" } });

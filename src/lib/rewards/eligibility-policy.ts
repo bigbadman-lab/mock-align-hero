@@ -1,8 +1,8 @@
 // Phase 05-I — holder eligibility policy v1 as versioned, immutable, server-side data (never a frontend list).
 // v1 rules: any positive finalized $MCP holding qualifies (no minimum). Excluded: native deployer wallet, proven burn
 // destinations, identified pool/exchange vaults, MCPX-controlled reward/operational holdings. Child-token fee
-// addresses are NOT automatic exclusions and no native treasuries are invented. Unknown/PDA/delegated/frozen owners
-// are AMBIGUOUS → settlement holds. A policy changes only by publishing a new version with a later effective window;
+// addresses are NOT automatic exclusions and no native treasuries are invented. Unknown/PDA/frozen owners are auto-excluded
+// (never pause payouts). A policy changes only by publishing a new version with a later effective window;
 // frozen snapshots keep the version they were frozen with (no retroactive mutation).
 import { BURN_ADDRESSES, type ExclusionConfig } from "./eligibility";
 

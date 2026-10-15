@@ -3,8 +3,7 @@
 // - Multiple token accounts of the same owner (SPL Token and Token-2022) are aggregated.
 // - Excluded from weighting: listed pool vaults, burn/incinerator, and MCPX treasury/reserve addresses from a
 //   versioned exclusion config. Without an approved config, live payouts are BLOCKED.
-// - Program-owned / delegated / unknown-authority holdings are NOT blanket-excluded: they are flagged AMBIGUOUS
-//   for explicit review and block live payouts until resolved.
+// - Program-owned / unknown-authority / frozen holdings are auto-EXCLUDED (never pause payouts); delegated wallets are eligible.
 // - The snapshot must reconcile to total supply; otherwise it is INCOMPLETE. Current balances are never used for past epochs.
 import { proRata } from "./economics";
 
@@ -64,8 +63,10 @@ export function buildEligibility(input: SnapshotInput, cfg: ExclusionConfig): El
     const resolved = cfg.resolvedOwners[a.owner];
     const why = excludedSet.get(a.owner) ?? excludedSet.get(a.account);
     if (why || resolved === "EXCLUDED") { sum(excl, a.owner, a.amount); exclWhy.set(a.owner, why ?? "reviewed_excluded"); continue; }
-    if (resolved !== "ELIGIBLE" && (a.ownerKind !== "WALLET" || a.delegated || a.frozen)) {
-      sum(amb, a.owner, a.amount); ambWhy.set(a.owner, a.ownerKind !== "WALLET" ? `owner_${a.ownerKind.toLowerCase()}` : a.delegated ? "delegated" : "frozen"); continue;
+    // Operator decision (2026-10-15): nothing pauses payouts. Program/unknown-owned and frozen holdings are
+    // auto-excluded (can't reliably reach a person / can't receive); delegated wallets stay eligible.
+    if (resolved !== "ELIGIBLE" && (a.ownerKind !== "WALLET" || a.frozen)) {
+      sum(excl, a.owner, a.amount); exclWhy.set(a.owner, a.ownerKind !== "WALLET" ? `auto_owner_${a.ownerKind.toLowerCase()}` : "auto_frozen"); continue;
     }
     sum(elig, a.owner, a.amount);
   }
