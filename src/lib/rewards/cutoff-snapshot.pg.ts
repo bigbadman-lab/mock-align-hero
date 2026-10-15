@@ -47,6 +47,10 @@ export type PassWrite = {
   state: IndexState; expectedCoveredTo: number; source: string;
   txs: { signature: string; slot: number; blockTime: number | null; failed: boolean }[]; touched: Set<string>;
   frozen: { snap: FrozenSnapshot; supply: SupplyProof }[]; holds: { windowStart: number; reason: string; detail?: unknown }[];
+  /** Open gaps this pass fully re-covered with complete, verified history (marked repaired in the same transaction). */
+  repairedGaps?: { fromSlot: number; toSlot: number }[];
+  /** No gaps remain after repair → resolve HOLDER_HISTORY_GAP holds (they only existed because of those gaps). */
+  resolveGapHolds?: boolean;
 };
 
 /** One pass = one transaction. Returns STALE if another process already advanced the checkpoint.
@@ -86,6 +90,9 @@ export async function commitPass(db: Db, w: PassWrite): Promise<"COMMITTED" | "S
       params: [f.mint, ws, o.owner, o.amount.toString(), o.class, o.reason, f.digest] });
   }
   for (const h of w.holds) steps.push({ sql: "insert into public.mcpx_rw_hix_holds (mint, window_start, reason, detail) values ($1,$2,$3,$4::jsonb) on conflict do nothing", params: [s.mint, iso(h.windowStart), h.reason, js(h.detail ?? {})] });
+  for (const g of w.repairedGaps ?? []) steps.push({ sql: "update public.mcpx_rw_hix_gaps set repaired_at = now(), repaired_by_source = $4 where mint=$1 and from_slot=$2 and to_slot=$3 and repaired_at is null",
+    params: [s.mint, g.fromSlot, g.toSlot, `replay:${w.source}`] });
+  if (w.resolveGapHolds) steps.push({ sql: "update public.mcpx_rw_hix_holds set resolved_at = now(), resolution = 'AUTO_REPAIRED_BY_FULL_REPLAY' where mint=$1 and reason='HOLDER_HISTORY_GAP' and resolved_at is null", params: [s.mint] });
   const r = await runTx(db, steps);
   return r.aborted === "STALE" ? "STALE" : "COMMITTED";
 }
