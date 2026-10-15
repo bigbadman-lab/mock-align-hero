@@ -24,14 +24,14 @@ export const Route = createFileRoute("/")({
 const FLOW = [
   { n: "01", t: "Choose a tool", d: "Pick one of ten live Solana tools, or Canvas to chain them.", s: "Available now", live: true },
   { n: "02", t: "Configure it", d: "Set the name, details and pipeline. Saved as your draft.", s: "Available now", live: true },
-  { n: "03", t: "Create the token", d: "A child token paired to $MCP, fees split 60/25/15.", s: "Not live yet", live: false },
+  { n: "03", t: "Create the token", d: "A child token paired to $MCP, fees split 60/25/15.", s: "Available now", live: true },
   { n: "04", t: "Run it", d: "Use it on site or connect it from an MCP client.", s: "Available now", live: true },
 ];
 
 const CAPS = [
   { tag: "Build", t: "Build a tool that runs today", d: "Ten read-only Solana tools run live on site. Chain 2–4 of them into a Canvas pipeline that passes real addresses from one step to the next.", s: "Available now", live: true },
   { tag: "Connect", t: "Plug it into any AI client", d: "Each tool exposes its own MCP endpoint, so MCP-compatible clients and agents can call it directly. Six are wired up today; the rest follow.", s: "6 of 10 live", live: true },
-  { tag: "Pair", t: "Pair it with a $MCP token", d: "Launch a tool with a child token paired to $MCP. Fees actually collected split 60% creator, 25% operations, 15% platform.", s: "Not live yet", live: false },
+  { tag: "Pair", t: "Pair it with a $MCP token", d: "Launch a tool with a child token paired to $MCP. Fees actually collected split 60% creator, 25% operations, 15% platform.", s: "Available now", live: true },
 ];
 
 function Home() {
@@ -114,7 +114,7 @@ function Home() {
 
       <section aria-labelledby="flow" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="How it works" title={<span id="flow">From template to working tool</span>} intro="Four steps from picking a tool to running it. Choosing, configuring and running work today. Creating a token is not live yet." />
+          <SectionHeading label="How it works" title={<span id="flow">From template to working tool</span>} intro="Four steps from picking a tool to running it." />
           <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FLOW.map((s) => (
               <li key={s.n} className="flex flex-col rounded-lg border border-border bg-card p-6">

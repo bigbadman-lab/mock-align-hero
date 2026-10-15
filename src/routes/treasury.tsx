@@ -36,7 +36,7 @@ function Treasury() {
               <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center gap-3"><h2 id="t-token" className="text-xl font-semibold text-foreground">$MCP</h2><ModeBadge mode={v.mode} /></div>
                 <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <Row k="Mint">{v.mint ? <span className="inline-flex gap-3"><CopyText value={v.mint} label="mint address" /><a className="underline decoration-border underline-offset-4 hover:text-primary" href={explorer("token", v.mint)} target="_blank" rel="noreferrer">Explorer</a></span> : "Not minted yet"}</Row>
+                  <Row k="Mint">{v.mint ? <span className="inline-flex gap-3"><CopyText value={v.mint} label="mint address" /><a className="underline decoration-border underline-offset-4 hover:text-primary" href={explorer("token", v.mint)} target="_blank" rel="noreferrer">Explorer</a></span> : "—"}</Row>
                   <Row k="Chain / program">{v.tokenProgram === "token-2022" ? "Solana · Token-2022" : v.tokenProgram === "spl-token" ? "Solana · SPL Token" : v.mint ? "Solana · program not yet verified" : "—"}</Row>
                   <Row k="Status">{v.mode === "PRELAUNCH" ? "Not launched" : v.mode === "REHEARSAL" ? "Rehearsal mint — not production $MCP" : "Configured canonical mint"}</Row>
                   <Row k="Holders">{v.holderCount ? `${v.holderCount.count.toLocaleString()} (slot ${v.holderCount.slot})` : "—"}</Row>

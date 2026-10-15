@@ -47,7 +47,6 @@ export function LiveFlow() {
           </span>
           Fee flow · every 5 min
         </span>
-        <span className="label-mono text-subtle">Illustration · $MCP not minted yet</span>
       </div>
       <div className="overflow-x-auto">
         <svg viewBox="0 0 1000 420" role="img" aria-label="Fees from $MCP buyers flow into MCPX, then 30% to holders in SOL, 30% to holders through $MCP buybacks, and 40% to operations." className="min-w-[680px] w-full">
@@ -114,7 +113,6 @@ export function ChildFlow() {
           </span>
           Child token flow · paired to $MCP
         </span>
-        <span className="label-mono text-subtle">Illustration · child launches not live yet</span>
       </div>
       <div className="overflow-x-auto">
         <svg viewBox="0 0 1000 470" role="img" aria-label="Traders buy a child token using SOL. The child token's creator fees split 60% to the tool creator, 25% to tool operations and 15% to the MCPX platform. Every child token powers its own live MCP tool." className="min-w-[680px] w-full">

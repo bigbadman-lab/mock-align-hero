@@ -7,7 +7,7 @@ export type ChildFeeStatus =
   | { state: "SUMMARY"; pending: number; confirmed: number; confirmedTotal: string; text: string };
 
 export function childFeeStatus(live: boolean, intents: ChildFeeIntentView[] | null): ChildFeeStatus {
-  if (!live) return { state: "NOT_LIVE", text: "Child creator-fee sharing — Design intent / not live" };
+  if (!live) return { state: "NOT_LIVE", text: "No confirmed fee distributions yet" };
   if (!intents || intents.length === 0) return { state: "NO_DISTRIBUTIONS", text: "No confirmed fee distributions yet" };
   const pending = intents.filter((i) => i.status === "RESERVED" || i.status === "SIGNED").length;
   const landed = intents.filter((i) => i.status === "LANDED" && i.distributedAmount !== null);

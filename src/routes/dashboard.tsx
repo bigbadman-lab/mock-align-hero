@@ -30,9 +30,9 @@ export const Route = createFileRoute("/dashboard")({
 const AREAS = [
   { id: "products", icon: Boxes, title: "Your MCP Products", body: "Manage keys and settings for tools linked to your verified token launches.", status: "After launch" },
   { id: "canvas", icon: Workflow, title: "Canvas Workspace", body: "Edit the pipeline of your launched Canvas products.", status: "After launch" },
-  { id: "earnings", icon: Coins, title: "Creator Earnings", body: "Your 60% share of child-token creator fees.", status: "Not live yet" },
-  { id: "rewards", icon: LayoutGrid, title: "Native $MCP Rewards", body: "SOL and $MCP paid to eligible holders.", status: "Not live yet" },
-  { id: "activity", icon: Activity, title: "Tool Activity", body: "Runs of your MCP tools once your token is live.", status: "Not live yet" },
+  { id: "earnings", icon: Coins, title: "Creator Earnings", body: "Your 60% share of child-token creator fees.", status: "After launch" },
+  { id: "rewards", icon: LayoutGrid, title: "Native $MCP Rewards", body: "SOL and $MCP paid to eligible holders.", status: "After launch" },
+  { id: "activity", icon: Activity, title: "Tool Activity", body: "Runs of your MCP tools once your token is live.", status: "After launch" },
 ] as const;
 
 const REASSURE = "Wallet verification signs a readable message. No transaction, gas fee or funds transfer.";

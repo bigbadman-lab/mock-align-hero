@@ -39,7 +39,7 @@ function TemplatePage() {
       <Link to="/mcp" className="font-mono text-xs text-muted-foreground hover:text-foreground">← Tool library</Link>
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
         <div className="overflow-hidden rounded-lg border border-border bg-background">
-          <img src={t.image} alt={`${t.name} illustration`} width={1024} height={640} className="h-auto w-full" />
+          <img src={t.image} alt={t.name} width={1024} height={640} className="h-auto w-full" />
         </div>
         <div>
           <div className="flex flex-wrap gap-2">

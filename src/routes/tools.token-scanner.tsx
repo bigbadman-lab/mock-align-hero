@@ -188,7 +188,7 @@ function ResultView({ r }: { r: TokenScannerResult }) {
         </>
       )}
       <p className="text-xs text-muted-foreground">
-        Fetched (UTC) {r.fetchedAt}. Account read at slot {r.accountSlot} ({r.commitment}). Source: Solana mainnet via Helius. Observations only — not live, not trading advice.
+        Fetched (UTC) {r.fetchedAt}. Account read at slot {r.accountSlot} ({r.commitment}). Source: Solana mainnet via Helius. Observations only — not trading advice.
       </p>
       <p className="font-mono text-xs text-subtle">Execution {r.executionId}</p>
     </section>

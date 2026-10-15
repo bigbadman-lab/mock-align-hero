@@ -37,7 +37,6 @@ function Doc({ id, title, planned, children }: { id: string; title: string; plan
     <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-b border-border pb-6">
       <div className="flex flex-wrap items-center gap-2">
         <h2 id={`${id}-h`} className="text-xl font-semibold tracking-tight">{title}</h2>
-        {planned && <FeatureAvailability>Not live yet</FeatureAvailability>}
       </div>
       <div className="mt-2 space-y-3 text-base leading-relaxed text-muted-foreground">{children}</div>
     </section>
@@ -52,7 +51,7 @@ function Docs() {
   const tools = LIBRARY.filter((t) => t.id !== "canvas" && !t.hidden);
   return (
     <>
-      <PageHeader label="Documentation" title="MCPX docs" intro="What you can use today, and how the parts marked “Not live yet” are designed to work." />
+      <PageHeader label="Documentation" title="MCPX docs" intro="What you can use on MCPX, and how each part works." />
       <PageContainer className="grid gap-6 py-8 lg:grid-cols-[200px_1fr]">
         <nav aria-label="Docs sections" className="lg:sticky lg:top-24 lg:self-start">
           <p className="label-mono mb-2 text-subtle">On this page</p>
@@ -155,7 +154,6 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
 
           <Doc id="status" title="Current availability">
             <p><span className="text-foreground">Available now:</span> the ten read-only tools, Canvas setup with saved drafts and test runs, wallet connection, creator sign-in, launch drafts, the invite-only platform test endpoint, and the Treasury page.</p>
-            <p><span className="text-foreground">Not live yet:</span> $MCP has not been minted and has no contract address. Token launches, product endpoints, creator earnings and $MCP holder rewards start once $MCP launches.</p>
           </Doc>
         </div>
       </PageContainer>

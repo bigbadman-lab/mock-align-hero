@@ -19,9 +19,9 @@ export const Route = createFileRoute("/launch")({
   head: () => ({
     meta: [
       { title: "Launch your token — MCPX" },
-      { name: "description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. Token launching is coming soon — configure, save and review your launch today." },
+      { name: "description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. Configure, save and review your launch today." },
       { property: "og:title", content: "Launch your token — MCPX" },
-      { property: "og:description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. Token launching is coming soon." },
+      { property: "og:description", content: "Choose your tools, configure your token and bring your own MCP-powered product to life on Solana. " },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -231,7 +231,6 @@ function Launch() {
             <div className="rounded-lg border border-border bg-card p-4 text-sm">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <p className="text-foreground">Child creator-fee sharing</p>
-                <span className="rounded border border-border-strong px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-subtle">Design intent · not live</span>
               </div>
 
               <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-secondary" role="img" aria-label="Fee split: 60% creator, 25% tool operations, 15% platform">
