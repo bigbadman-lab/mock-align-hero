@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { livePolicy, ensureLivePolicy, liveFlags, type LiveChecks } from "../../services/rewards-worker/src/go-live";
-import { executionReadiness } from "../../services/rewards-worker/src/signer";
-import { runWindow } from "../../services/rewards-worker/src/orchestrator";
-import { policyLiveAllowed } from "@/lib/rewards/eligibility-policy";
+import { describe, it, expect } from "bun:test";
+import { livePolicy, ensureLivePolicy, liveFlags, type LiveChecks } from "../src/go-live";
+import { executionReadiness } from "../src/signer";
+import { runWindow } from "../src/orchestrator";
+import { policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
 
 const MINT = "So11111111111111111111111111111111111111112";
 const DEP = "2ZrpSo3SmuKnFG69XMEYv2Ew54oKGB2DXPVBAJHBGYx2";
