@@ -29,7 +29,7 @@ export async function runWindow(d: OrchestratorDeps, window: number): Promise<St
   const out: StageResult[] = []; const cycleId = `w${window}`;
   const stop = (r: StageResult) => { out.push(r); return out; };
   const r = d.readiness();
-  if (r.state !== "READY") return stop({ stage: "READINESS", status: "HELD", reason: "EXECUTION_NOT_READY", detail: { blockers: r.blockers } });
+  if (r.state !== "EXECUTION_READY") return stop({ stage: "READINESS", status: "HELD", reason: "EXECUTION_NOT_READY", detail: { blockers: r.blockers } });
   const s = await d.sealed(window);
   if (!s) return stop({ stage: "SNAPSHOT", status: "WAITING", reason: "WINDOW_NOT_SEALED" });
   if (!s.snapshotComplete) return stop({ stage: "SNAPSHOT", status: "HELD", reason: "SNAPSHOT_INCOMPLETE" });
