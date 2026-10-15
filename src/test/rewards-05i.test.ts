@@ -125,14 +125,14 @@ describe("05-I freeze + eligibility policy v1", () => {
     expect(f.snap.liveAllowed).toBe(false);
     expect(policyBlockers(POLICY)).toContain("TEST_FIXTURE_NEVER_LIVE");
   });
-  it("excludes a known pool vault; program-owned balances are AMBIGUOUS and hold settlement", async () => {
+  it("excludes a known pool vault; program-owned balances are auto-excluded and do not hold settlement", async () => {
     const extra = [tx("p", 45, 0, [bal("A1", "alice", 500n)], [bal("A1", "alice", 200n), bal("PV", "pool", 200n), bal("PD", "pda", 100n)])];
     const f = await freezeSnapshot({ state: stateAt(46, extra), cutoff: ev(46), supply: proven(46), checkpointSlot: 50, gaps: [], policy: POLICY, ownerKind: wallet });
     if (f.kind !== "FROZEN") throw new Error(f.reason);
     expect(f.snap.owners.find((o) => o.owner === "pool")).toMatchObject({ class: "EXCLUDED", reason: "pool_vault" });
-    expect(f.snap.owners.find((o) => o.owner === "pda")).toMatchObject({ class: "AMBIGUOUS" });
-    expect(f.snap.completeness).toBe("COMPLETE_AMBIGUOUS_HELD");
-    expect(holderBudgetOutcome(f.snap, 1000n)).toMatchObject({ kind: "HOLD", carry: 1000n });
+    expect(f.snap.owners.find((o) => o.owner === "pda")).toMatchObject({ class: "EXCLUDED" });
+    expect(f.snap.completeness).toBe("COMPLETE");
+    expect(holderBudgetOutcome(f.snap, 1000n)).toMatchObject({ kind: "DISTRIBUTE" });
   });
   it("holds on supply mismatch, unproven supply, gap, index behind cutoff, missing policy, open repair hold", async () => {
     const base = { state: stateAt(35), cutoff: ev(35), supply: proven(35), checkpointSlot: 50, gaps: [] as { fromSlot: number }[], policy: POLICY, ownerKind: wallet };
