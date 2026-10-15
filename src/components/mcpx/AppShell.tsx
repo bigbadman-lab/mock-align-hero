@@ -106,6 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <div className="flex items-center gap-3">
             <SiteNav />
+            <RewardsCountdown />
             <div className="hidden md:block"><WalletButton /></div>
             <MobileNav />
           </div>
