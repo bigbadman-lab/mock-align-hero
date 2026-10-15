@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { PageContainer, PageHeader, FeatureAvailability, RouteError } from "@/components/mcpx/primitives";
+import { CopyButton } from "@/components/mcpx/McpConnection";
 import { LIBRARY } from "@/lib/templates";
 
 export const Route = createFileRoute("/docs")({
@@ -26,6 +27,7 @@ const TOC = [
   ["endpoints", "MCP endpoints"],
   ["launch-flow", "Launch flow"],
   ["fees", "Child token fees"],
+  ["addresses", "Protocol addresses"],
   ["rewards", "$MCP holder rewards"],
   ["status", "Current availability"],
 ] as const;
