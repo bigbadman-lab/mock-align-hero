@@ -4,6 +4,7 @@ import { ToolRail } from "@/components/mcpx/ToolRail";
 import { FlowToggle } from "@/components/mcpx/LiveFlow";
 import { HeroOrbit } from "@/components/mcpx/HeroOrbit";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,24 +71,28 @@ function Home() {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="rewards" className="border-b border-border bg-card">
-        <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="$MCP rewards" title={<span id="rewards">Hold $MCP. Participate in what MCPX builds.</span>} intro="Every eligible native $MCP trade can generate creator fees. Of the fees actually collected, 30% is allocated to SOL holder rewards and 30% to $MCP buybacks and distributions, with rewards processed in five-minute cycles. Rewards are automatically sent to eligible holder wallets." />
-          <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+      <section aria-labelledby="rewards" className="border-b border-border">
+        <PageContainer className="py-10 sm:py-12">
+          <SectionHeading
+            label="$MCP rewards"
+            title={<span id="rewards">Hold $MCP. Participate in what MCPX builds.</span>}
+            intro={<span className="text-sm">Every eligible native $MCP trade can generate creator fees. Of the fees actually collected, 30% is allocated to SOL holder rewards and 30% to $MCP buybacks and distributions, with rewards processed in five-minute cycles. Rewards are automatically sent to eligible holder wallets.</span>}
+          />
+          <ul className="mt-5 grid gap-2 sm:grid-cols-3">
             {[
               { p: "30%", t: "SOL holder rewards" },
               { p: "30%", t: "$MCP buybacks & distributions" },
               { p: "40%", t: "Operations" },
             ].map((a) => (
-              <li key={a.t} className="rounded-md border border-border bg-background p-4">
-                <p className="font-mono text-2xl font-semibold text-primary">{a.p}</p>
-                <p className="mt-1 text-sm text-foreground">{a.t}</p>
+              <li key={a.t} className="flex items-baseline gap-2 rounded-md border border-border bg-card px-3 py-2">
+                <p className="font-mono text-lg font-semibold text-primary">{a.p}</p>
+                <p className="text-sm leading-snug text-muted-foreground">{a.t}</p>
               </li>
             ))}
           </ul>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/treasury" className={buttonOutline}>Treasury & reward history</Link>
-            <Link to="/dashboard" className={buttonOutline}>My Rewards</Link>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to="/treasury" className={cn(buttonOutline, "min-h-9 px-4 text-sm")}>Treasury & reward history</Link>
+            <Link to="/dashboard" className={cn(buttonOutline, "min-h-9 px-4 text-sm")}>My Rewards</Link>
           </div>
         </PageContainer>
       </section>
