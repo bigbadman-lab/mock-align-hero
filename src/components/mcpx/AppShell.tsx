@@ -32,11 +32,11 @@ function RewardsCountdown() {
   return (
     <Link
       to="/treasury"
-      className="hidden sm:inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-3 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border px-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground sm:gap-2 sm:px-3"
       aria-label={`Rewards window — next window in ${c ? `${c.mm}:${c.ss}` : "unknown"}. View Treasury`}
       title="Next 5-minute rewards window"
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
       <span className="text-subtle">Rewards</span>
       <span className="tabular-nums text-foreground">{c ? `${c.mm}:${c.ss}` : "--:--"}</span>
     </Link>
