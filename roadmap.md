@@ -72,4 +72,4 @@ Creator wallet GJRBYe1nDVszvBDYDjT3Q7DW7fTkdHxaJbL4NvHPqF3p; initial buy 0.05 SO
 
 - [x] Hide the four SOL test tokens (pair_kind SOL_REHEARSAL) from the Paired page
 - [x] Bundled $MCP first buy: site side (gate + launch page copy)
-- Compact homepage hero (reduce padding)
+- [x] Compact homepage hero (reduce padding)
