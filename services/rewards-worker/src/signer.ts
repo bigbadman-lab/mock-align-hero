@@ -7,7 +7,6 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, g
 import bs58 from "bs58";
 import { createHash } from "node:crypto";
 import { checkVenueTx, type VenueOk } from "./venue-check";
-import { buildChildDistribution, checkChildTx } from "./child-fees-build";
 import type { ChildRecord, Shareholder } from "./child-fees";
 
 export const PRIVATE_KEY_ENV = "MCPX_DEPLOYER_PRIVATE_KEY";
@@ -245,6 +244,7 @@ export function executionReadiness(x: ReadinessInput) {
 
 export type ChildSigned = { signature: string; signedBase64: string; lastValidBlockHeight: number };
 async function signChildTx(kp: Keypair, c: ChildRecord, sh: Shareholder[], graduated: boolean, blockhash: string, lastValidBlockHeight: number): Promise<ChildSigned> {
+  const { buildChildDistribution, checkChildTx } = await import("./child-fees-build"); // lazy: keeps Pump SDK out of plain signer imports
   const me = kp.publicKey.toBase58();
   const ixs = await buildChildDistribution(c, me, sh, graduated);
   const chk = checkChildTx(ixs, me, c, graduated);
