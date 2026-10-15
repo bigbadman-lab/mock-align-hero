@@ -31,6 +31,8 @@ const MESSAGES: Record<string, string> = {
   ALT_DEACTIVATED: "The lookup table is not active, so nothing was signed.",
   ALT_INSUFFICIENT: "The lookup table is missing addresses this launch needs, so nothing was signed.",
   TX_TOO_LARGE: "The launch transaction is too large, so nothing was signed.",
+  CREATOR_INSUFFICIENT_SOL: "Your wallet doesn't have enough SOL to pay the launch's network and account costs. Add about 0.05 SOL and press Launch again. Nothing was signed.",
+  SIMULATION_FAILED: "The launch failed its safety test run, so nothing was signed. Try again shortly.",
 };
 const CLAIM_KEY = "mcpx:launch-claim";
 
