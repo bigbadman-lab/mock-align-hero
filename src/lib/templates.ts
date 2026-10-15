@@ -14,6 +14,10 @@ import img_roast_bot from "@/assets/templates/roast-bot.jpg";
 import img_excuse_machine from "@/assets/templates/excuse-machine.jpg";
 import img_conspiracy_potato from "@/assets/templates/conspiracy-potato.jpg";
 import img_argument_machine from "@/assets/templates/argument-machine.jpg";
+import img_future_you from "@/assets/templates/future-you.jpg";
+import img_web3_startup_roulette from "@/assets/templates/web3-startup-roulette.jpg";
+import img_monster_factory from "@/assets/templates/monster-factory.jpg";
+import img_pigeon_ceo from "@/assets/templates/pigeon-ceo.jpg";
 // Static product-definition catalogue. These are planned templates,
 // launchable via the launch form. Live availability is never stored here.
 export type Engine = "WALLET" | "TOKEN" | "VERIFY" | "COMPOSE" | "AI";
@@ -170,8 +174,8 @@ export const AVAILABILITY_NOTE = "Live status is checked with the execution serv
 //   tool_execution — decided at runtime by the tool's status endpoint (worker /ready); null = no tool exists
 //   mcp_product    — true only when an MCP gateway adapter exists (checked against ADAPTERS by test)
 //   token_launch   — true only when the launch form accepts the template (membership in TEMPLATES)
-export type LibraryCategory = "Wallets" | "Tokens" | "Verification" | "Intelligence" | "Composition" | "Entertainment & Experimental AI";
-export const LIBRARY_CATEGORIES: LibraryCategory[] = ["Wallets", "Tokens", "Verification", "Intelligence", "Composition", "Entertainment & Experimental AI"];
+export type LibraryCategory = "Wallets" | "Tokens" | "Verification" | "Intelligence" | "Composition" | "Entertainment & Experimental AI" | "AI Playground";
+export const LIBRARY_CATEGORIES: LibraryCategory[] = ["Wallets", "Tokens", "Verification", "Intelligence", "Composition", "Entertainment & Experimental AI", "AI Playground"];
 
 export interface LibraryTemplate {
   id: string;
@@ -209,6 +213,12 @@ export const LIBRARY: LibraryTemplate[] = [
   { id: "excuse-machine", name: "Excuse Machine", category: "Entertainment & Experimental AI", tagline: "Terrible excuses. Beautifully delivered.", benefit: "Describe an everyday situation, set absurdity from 1 to 5, and receive a gloriously unbelievable excuse.", toolId: "excuse_machine", route: "/tools/ai/excuse-machine", mcpAdapter: true, tokenLaunch: true, planned: false, image: img_excuse_machine },
   { id: "conspiracy-potato", name: "Conspiracy Potato", category: "Entertainment & Experimental AI", tagline: "Everything is connected. Especially potatoes.", benefit: "A satirical investigation board for any mundane topic: headline, theory, invented clues and an absurd conclusion.", toolId: "conspiracy_potato", route: "/tools/ai/conspiracy-potato", mcpAdapter: true, tokenLaunch: true, planned: false, image: img_conspiracy_potato },
   { id: "argument-machine", name: "Argument Machine", category: "Entertainment & Experimental AI", tagline: "You're wrong. Even when you're right.", benefit: "Say anything and it will disagree — petty, dramatic or philosophical — with ridiculous counterarguments.", toolId: "argument_machine", route: "/tools/ai/argument-machine", mcpAdapter: true, tokenLaunch: true, planned: false, image: img_argument_machine },
+  // AI Playground: same platform AI adapter as above. tokenLaunch stays false until the database registration
+  // allowlist (pending migration docs/pending-migrations/review/0034) is approved and applied.
+  { id: "future-you", name: "Future You", category: "AI Playground", tagline: "Your future self has something to tell you.", benefit: "Describe where you are now, pick how far ahead, and receive a fictional letter from a future version of you.", toolId: "future_you", route: "/tools/ai/future-you", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_future_you },
+  { id: "web3-startup-roulette", name: "Web3 Startup Roulette", category: "AI Playground", tagline: "The next billion-dollar idea. Probably terrible.", benefit: "Spin up a ridiculous Web3 startup pitch with a ticker, satirical tokenomics and an imaginary valuation. Parody, never advice.", toolId: "web3_startup_roulette", route: "/tools/ai/web3-startup-roulette", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_web3_startup_roulette },
+  { id: "monster-factory", name: "Monster Factory", category: "AI Playground", tagline: "Create creatures that shouldn't exist.", benefit: "Fuse two ingredients into a collectible monster profile with abilities, a weakness and an origin story.", toolId: "monster_factory", route: "/tools/ai/monster-factory", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_monster_factory },
+  { id: "pigeon-ceo", name: "Pigeon CEO", category: "AI Playground", tagline: "Disrupt. Innovate. Steal bread.", benefit: "Bring a business problem to an incompetent pigeon executive and receive a gloriously bad corporate memo.", toolId: "pigeon_ceo", route: "/tools/ai/pigeon-ceo", mcpAdapter: true, tokenLaunch: false, planned: false, image: img_pigeon_ceo },
 ];
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,8 @@ import { productionAiToolExec, track, type ActivityRecorder, type AiToolExec } f
 
 /** Templates with a finished website interface (Canvas excluded: it spends the creator's AI key). */
 export const WEB_RUNNABLE = ["token-scanner", "wallet-inspector", "whale-watch", "holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder",
-  "gibberish-ai", "roast-bot", "excuse-machine", "conspiracy-potato", "argument-machine"] as const;
+  "gibberish-ai", "roast-bot", "excuse-machine", "conspiracy-potato", "argument-machine",
+  "future-you", "web3-startup-roulette", "monster-factory", "pigeon-ceo"] as const;
 export const isWebRunnable = (templateId: string) => (WEB_RUNNABLE as readonly string[]).includes(templateId);
 
 export interface Resolved { result: ProfileResult; adapter: TemplateAdapter | null; settings: ProductSettings | null }
