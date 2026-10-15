@@ -116,6 +116,10 @@ export async function indexPass(db: Db, rpc: Rpc, meter: Meter, o: PassOpts & { 
   s.gaps = s.gaps.filter((g) => !repairedGaps.includes(g));
   const healAll = repairedGaps.length > 0 && s.gaps.length === 0;
   const policies = await loadPolicies(db), held = await openHoldWindows(db, o.mint);
+  if (healAll) { // windows held ONLY by HOLDER_HISTORY_GAP are released for this pass (resolved in the same commit)
+    const other = new Set((await db.query("select extract(epoch from window_start)::bigint w from public.mcpx_rw_hix_holds where mint=$1 and resolved_at is null and reason <> 'HOLDER_HISTORY_GAP'", [o.mint])).rows.map((r) => Number(r.w)));
+    for (const w of [...held]) if (!other.has(w)) held.delete(w);
+  }
   const anchor = mintNow ? { slot: v.slot, supply: mintNow.amount } : null;
   const frozen: PassWrite["frozen"] = [], holds: PassWrite["holds"] = [];
   for (const c of cutoffs) {
@@ -129,7 +133,7 @@ export async function indexPass(db: Db, rpc: Rpc, meter: Meter, o: PassOpts & { 
     if (f.kind === "FROZEN") frozen.push({ snap: f.snap, supply }); else holds.push({ windowStart: c.windowStart, reason: f.reason });
   }
   const touched = accountsIn(txs);
-  const commit = await commitPass(db, { state: s, expectedCoveredTo: from, source: "helius:gTFA+gMA", txs, touched, frozen, holds });
+  const commit = await commitPass(db, { state: s, expectedCoveredTo: from, source: "helius:gTFA+gMA", txs, touched, frozen, holds, repairedGaps, resolveGapHolds: healAll });
   return { kind: commit === "COMMITTED" ? ("SYNCED" as const) : ("STALE" as const), toSlot: v.slot, newTxs: txs.length, accounts: s.balances.size,
     frozen: frozen.map((f) => ({ window: f.snap.windowStart, cutoff: f.snap.cutoffSlot, owners: f.snap.owners.length, digest: f.snap.digest.slice(0, 16) })), holds };
 }
