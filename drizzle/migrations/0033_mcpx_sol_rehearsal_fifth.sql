@@ -1,4 +1,3 @@
--- SOL-REHEARSAL #5: exactly ONE more single-use permission (id = 5), grantable only after row 4 is CONSUMED, same wallet.
 ALTER TABLE public.mcpx_sol_rehearsal DROP CONSTRAINT mcpx_sol_rehearsal_id_check;
 ALTER TABLE public.mcpx_sol_rehearsal ADD CONSTRAINT mcpx_sol_rehearsal_id_check CHECK (id IN (1, 2, 3, 4, 5));
 
