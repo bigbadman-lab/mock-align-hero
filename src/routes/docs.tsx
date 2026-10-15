@@ -116,11 +116,11 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
           <Doc id="addresses" title="Protocol addresses">
             <p>These are the only official MCPX wallets. They receive the operations and platform shares of the fee split above. Treat any other address claiming to be MCPX as fake.</p>
             <ul className="space-y-2">
-              {[
+              {([
                 ["Deployer", "2ZrpSo3SmuKnFG69XMEYv2Ew54oKGB2DXPVBAJHBGYx2", "Launches and manages MCPX tokens"],
                 ["MCPX operations", "5MzN9A2h4w4RdYvwDXUv8ssvJiPPJa9bnamh6yMWFqh5", "Receives the 25% tool operations share"],
                 ["MCPX platform", "CqaJhS4BKK791cv2fSsbbc75difqCrTiwkzeeR8WqJVB", "Receives the 15% platform share"],
-              ].map(([label, addr, role]) => (
+              ] as [string, string, string][]).map(([label, addr, role]) => (
                 <li key={addr} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border bg-card p-3">
                   <span className="w-32 shrink-0 text-sm font-medium text-foreground">{label}</span>
                   <code className="min-w-0 flex-1 break-all font-mono text-xs text-muted-foreground">{addr}</code>
