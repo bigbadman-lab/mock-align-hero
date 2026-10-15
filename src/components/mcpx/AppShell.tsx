@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { PageContainer } from "./primitives";
 import { WalletButton } from "./wallet/WalletControls";
+import { countdown } from "@/lib/treasury/core";
 import logo from "@/assets/mcpx-logo.png";
 
 export const NAV = [
@@ -17,6 +18,29 @@ export const NAV = [
 
 export function Mark() {
   return <img src={logo} alt="" aria-hidden width={32} height={32} className="h-8 w-8 [image-rendering:pixelated]" />;
+}
+
+/** Small header countdown to the next 5-minute rewards window (UTC boundary is deterministic). */
+function RewardsCountdown() {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const c = now === null ? null : countdown(0, now);
+  return (
+    <Link
+      to="/treasury"
+      className="hidden sm:inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-3 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+      aria-label={`Rewards window — next window in ${c ? `${c.mm}:${c.ss}` : "unknown"}. View Treasury`}
+      title="Next 5-minute rewards window"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+      <span className="text-subtle">Rewards</span>
+      <span className="tabular-nums text-foreground">{c ? `${c.mm}:${c.ss}` : "--:--"}</span>
+    </Link>
+  );
 }
 
 const linkCls =
@@ -82,6 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <div className="flex items-center gap-3">
             <SiteNav />
+            <RewardsCountdown />
             <div className="hidden md:block"><WalletButton /></div>
             <MobileNav />
           </div>
