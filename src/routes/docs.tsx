@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { PageContainer, PageHeader, FeatureAvailability, RouteError } from "@/components/mcpx/primitives";
+import { PageContainer, PageHeader, RouteError } from "@/components/mcpx/primitives";
 import { CopyButton } from "@/components/mcpx/McpConnection";
 import { LIBRARY } from "@/lib/templates";
 
@@ -32,7 +32,7 @@ const TOC = [
   ["status", "Current availability"],
 ] as const;
 
-function Doc({ id, title, planned, children }: { id: string; title: string; planned?: boolean; children: ReactNode }) {
+function Doc({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-b border-border pb-6">
       <div className="flex flex-wrap items-center gap-2">
@@ -97,12 +97,12 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
             <p>Each product uses its own secret key, added once in your MCP client's settings as an <code className="font-mono">Authorization: Bearer</code> header. A key works only for its own product, can be revoked or replaced, and is shown once only; a lost key can be replaced but not recovered. No products have launched yet, so no product endpoint is accepting connections today.</p>
           </Doc>
 
-          <Doc id="launch-flow" title="Launch flow" planned>
+          <Doc id="launch-flow" title="Launch flow">
             <p>The launch form collects a template, name, ticker, artwork, description, settings and an optional first buy by the creator, entered in $MCP. Signed-in creators can fill it in and save drafts today. One successful launch creates one child token, one tool configuration, one MCP endpoint and one permanent product page. A draft is only marked as launched after the token creation is verified onchain.</p>
             <p>Traders buy child tokens with SOL; each child token is paired to $MCP.</p>
           </Doc>
 
-          <Doc id="fees" title="Child token fee split" planned>
+          <Doc id="fees" title="Child token fee split">
             <p>Creator fees actually collected on each child token are split:</p>
             <ul className="grid gap-2 sm:grid-cols-3">
               {[["60%", "Creator"], ["25%", "Tool operations"], ["15%", "MCPX platform"]].map(([p, l]) => (
@@ -131,7 +131,7 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
             <p>The $MCP mint address will be listed here once $MCP is minted. $MCP has not been minted yet and has no contract address.</p>
           </Doc>
 
-          <Doc id="rewards" title="$MCP holder rewards" planned>
+          <Doc id="rewards" title="$MCP holder rewards">
             <p>Creator fees actually collected on $MCP itself are split:</p>
             <ul className="grid gap-2 sm:grid-cols-3">
               {[["30%", "Holders, paid in SOL"], ["30%", "$MCP buybacks, distributed to holders"], ["40%", "Operations"]].map(([p, l]) => (
