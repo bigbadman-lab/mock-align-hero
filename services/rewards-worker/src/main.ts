@@ -22,6 +22,7 @@ import { windowPayableForPlanning } from "../../../src/lib/rewards/recovery.pg";
 import { pipelineStatus } from "../../../src/lib/rewards/cutoff-snapshot";
 import { policyFor, policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
 import { childFeeCycle, readChildEnv } from "./child-wire";
+import { nextBoundaryDelayMs } from "./schedule";
 import { address, isOffCurveAddress } from "@solana/addresses"; // address-only; keeps web3.js (send/sign code) out of the bundle
 
 const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? ("PROGRAM" as const) : ("WALLET" as const); } catch { return "UNKNOWN" as const; } };
