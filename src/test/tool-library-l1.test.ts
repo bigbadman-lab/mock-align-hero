@@ -48,10 +48,10 @@ describe("template detail pages", () => {
 
 import { FREE_TESTS_PER_DAY, freeTestBucket, bucketsFor } from "@/lib/tools/relay";
 describe("free tests", () => {
-  it("allows 3 free website tests per visitor, per tool, per day", () => {
-    expect(FREE_TESTS_PER_DAY).toBe(3);
+  it("allows 500 free website tests per visitor, per tool, per day", () => {
+    expect(FREE_TESTS_PER_DAY).toBe(500);
     const a = freeTestBucket("whale_watch", "v1");
-    expect([a.limit, a.window]).toEqual([3, 86_400]);
+    expect([a.limit, a.window]).toEqual([500, 86_400]);
     expect(a.bucket).not.toBe(freeTestBucket("token_scanner", "v1").bucket);
     expect(a.bucket).not.toBe(freeTestBucket("whale_watch", "v2").bucket);
   });
