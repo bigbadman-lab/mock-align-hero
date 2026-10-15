@@ -26,19 +26,30 @@ const OUT: Record<string, unknown> = {
 const IN: Record<string, Record<string, unknown>> = {
   "gibberish-ai": { message: "hi", style: "alien" }, "roast-bot": { subject: "my code", intensity: "savage" }, "excuse-machine": { situation: "late", absurdity: 5 },
   "conspiracy-potato": { topic: "socks", style: "unhinged" }, "argument-machine": { message: "sky is blue", personality: "petty" },
+  "future-you": { situation: "learning guitar", years_ahead: 10, personality: "wise" }, "web3-startup-roulette": { sector: "DeFi", absurdity: 4 },
+  "monster-factory": { ingredient_one: "owl", ingredient_two: "kettle", temperament: "adorable", rarity: "random" },
+  "pigeon-ceo": { business_problem: "sales are down", management_style: "clueless", urgency: "boardroom emergency" },
 };
 
 describe("catalogue", () => {
-  it("library has 16 templates; five AI ones are launchable with MCP adapters, in their own category", () => {
-    expect(LIBRARY).toHaveLength(16);
-    for (const d of AI_TOOLS) {
+  it("library has 20 templates; five AI ones are launchable with MCP adapters, in their own category", () => {
+    expect(LIBRARY).toHaveLength(20);
+    for (const d of AI_TOOLS.slice(0, 5)) {
       const t = LIBRARY.find((x) => x.id === d.templateId)!;
       expect([t.category, t.toolId, t.mcpAdapter, t.tokenLaunch]).toEqual(["Entertainment & Experimental AI", d.toolId, true, true]);
       expect(TEMPLATES.some((x) => x.id === d.templateId)).toBe(true);
       expect(ADAPTERS[d.templateId]?.engine).toBe("ai");
       expect(ADAPTERS[d.templateId]?.toolName).toBe(d.toolId);
     }
-    expect(AI_TOOLS.map((d) => d.toolId)).toEqual(["gibberish_ai", "roast_bot", "excuse_machine", "conspiracy_potato", "argument_machine"]);
+    expect(AI_TOOLS.map((d) => d.toolId)).toEqual(["gibberish_ai", "roast_bot", "excuse_machine", "conspiracy_potato", "argument_machine", "future_you", "web3_startup_roulette", "monster_factory", "pigeon_ceo"]);
+  });
+  it("four AI Playground templates have MCP adapters but are not launchable until the DB allowlist is migrated", () => {
+    for (const id of ["future-you", "web3-startup-roulette", "monster-factory", "pigeon-ceo"]) {
+      const t = LIBRARY.find((x) => x.id === id)!;
+      expect([t.category, t.mcpAdapter, t.tokenLaunch]).toEqual(["AI Playground", true, false]);
+      expect(TEMPLATES.some((x) => x.id === id)).toBe(false);
+      expect(ADAPTERS[id]?.engine).toBe("ai");
+    }
   });
 });
 
