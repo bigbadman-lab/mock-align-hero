@@ -190,8 +190,8 @@ async function main() {
         const cut = await selectPendingCutoffs(db, opts);
         const h = await indexPass(db, rpc, meter, opts);
         const passCredits = credits(meter); totalCredits += passCredits;
-        const g = (await db.query("select count(*)::int n from public.mcpx_rw_hix_gaps where mint=$1 and repaired_at is null", [cfg.mint])).rows[0]?.n ?? 0;
-        const holds = (await db.query("select count(*)::int n from public.mcpx_rw_hix_holds where mint=$1 and resolved_at is null", [cfg.mint])).rows[0]?.n ?? 0;
+        const g = Number((await db.query("select count(*)::int n from public.mcpx_rw_hix_gaps where mint=$1 and repaired_at is null", [cfg.mint])).rows[0]?.n ?? 0);
+        const holds = Number((await db.query("select count(*)::int n from public.mcpx_rw_hix_holds where mint=$1 and resolved_at is null", [cfg.mint])).rows[0]?.n ?? 0);
         const lastCut = (await db.query("select max(cutoff_slot)::text c from public.mcpx_rw_hix_window_cutoffs where mint=$1 and status='SELECTED'", [cfg.mint])).rows[0]?.c ?? null;
         const pol = policyFor(opts.nowSec, await loadPolicies(db));
         // AWAITING_CUTOFF_SELECTION = index is current up to the newest unselected window end (finality lag right after a
