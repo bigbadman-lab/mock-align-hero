@@ -140,7 +140,11 @@ export async function gatePrepare(input: PrepareInput, session: GateSession, d: 
   if (!bound.ok) return err(bound.code === "FEE_RECIPIENTS_NOT_CONFIGURED" ? 503 : 403, bound.code);
   let r;
   try { r = await d.builder("prepare", bound.request); } catch { return err(503, "BUILDER_UNREACHABLE"); }
-  if (r.status !== 200 || r.body?.status !== "UNSIGNED_CANDIDATE") return err(502, String(r.body?.code ?? r.body?.blockers?.[0] ?? "BUILDER_REFUSED"));
+  if (r.status !== 200 || r.body?.status !== "UNSIGNED_CANDIDATE") {
+    const logs: unknown = r.body?.evidence?.logsTail;
+    if (Array.isArray(logs) && logs.some((l) => typeof l === "string" && l.includes("insufficient lamports"))) return err(409, "CREATOR_INSUFFICIENT_SOL");
+    return err(502, String(r.body?.code ?? r.body?.blockers?.[0] ?? r.body?.reasons?.[0] ?? "BUILDER_REFUSED"));
+  }
   const bad = bindingMatches(r.body.binding, ctx, input.mint, q, sol);
   if (bad) return err(502, `BUILDER_${bad}`);
   if (!sameBuy(r.body.binding?.initialBuy, input.initialBuy)) return err(502, "BUILDER_BUY_MISMATCH");
