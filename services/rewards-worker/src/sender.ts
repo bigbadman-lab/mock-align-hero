@@ -1,6 +1,6 @@
 // Broadcast for native $MCP rewards only. Sends ONLY bytes the executor already persisted (never builds or signs).
 // Enabled by MCPX_REWARDS_BROADCAST=1; otherwise null (signed bytes stay HELD). Money still cannot move unless
-// executionReadiness is EXECUTION_READY. The child-fee keeper never receives this sender.
+// executionReadiness is EXECUTION_READY. The child-fee keeper also uses it, only for its checked Pump sweep/distribute bytes.
 import type { Sender } from "./executor";
 
 type Fetch = (url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }) => Promise<Response>;

@@ -1,10 +1,10 @@
 // CHILD-FEES-01B — child-fee keeper pass inside the Rewards Worker schedule. Isolated from native
 // rewards: reads/writes only public.mcpx_cf_* (+ read-only mcp_creations) and never touches mcpx_rw_*.
-// This gate is plan-only: signingEnabled=false, send=null, no keypair is passed in. No new wallet:
+// Signing is on only when an exec bundle is passed (deployer signer validated + broadcast on); else plan-only. No new wallet:
 // the fee payer of record is the existing deployer public address.
 import type { Db } from "../../../src/lib/rewards/store.pg";
 import type { RpcCall } from "./pipeline";
-import { runChildFeePass, verifyChild, verifyRecipients, TOKEN_2022, type ChildRecord, type ChildOutcome } from "./child-fees";
+import { runChildFeePass, verifyChild, verifyRecipients, TOKEN_2022, type ChildRecord, type ChildOutcome, type Shareholder } from "./child-fees";
 import { childStorePg, loadChildren, pendingRegistry, insertChild } from "./child-store.pg";
 import { runLaunchVerifier, readLaunchTx, launchStorePg, runRehearsalVerifier, rehearsalStorePg, NATIVE_SOL, type RehearsalPermission } from "./launch-verify";
 import { readChild, balances, fetchFinal, finalizedBlockHeight, curveVaultOwner, mintOwner, sharingConfigOf } from "./child-chain";
@@ -18,7 +18,7 @@ export function readChildEnv(env: (k: string) => string | null): ChildEnv {
     solRehearsal: env("MCPX_SOL_REHEARSAL") === "1", // needs migration 0027
     ops: env("MCPX_FEE_OPS_RECIPIENT"), platform: env("MCPX_FEE_PLATFORM_RECIPIENT"),
     nativeDeployer: env("MCPX_DEPLOYER_PUBLIC_KEY") ?? env("MCPX_NATIVE_DEPLOYER_PUBLIC_KEY"),
-    dailyGasLamports: big("MCPX_CHILD_FEES_DAILY_GAS_LAMPORTS"),
+    dailyGasLamports: big("MCPX_CHILD_FEES_DAILY_GAS_LAMPORTS") ?? 20_000_000n, // 0.02 SOL/day default keeper gas cap
     minDistributable: big("MCPX_CHILD_FEES_MIN_DISTRIBUTABLE") ?? 1n,
     estCostLamports: big("MCPX_CHILD_FEES_EST_COST_LAMPORTS") ?? 15_000n,
   };
@@ -40,7 +40,19 @@ export async function onboardChildren(db: Db, call: RpcCall, quote: string, e: C
   return out;
 }
 
-export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuote: string | null; feePayer: string | null; env: ChildEnv; now?: () => number }): Promise<ChildOutcome[]> {
+export type ChildExec = {
+  signerAddress: string;
+  signChild: (c: ChildRecord, sh: Shareholder[], graduated: boolean, blockhash: string, lastValidBlockHeight: number) => Promise<{ signature: string; signedBase64: string; lastValidBlockHeight: number }>;
+  send: (signedBase64: string) => Promise<void>;
+};
+
+async function latestBlockhash(call: RpcCall): Promise<{ blockhash: string; lastValidBlockHeight: number }> {
+  const r = (await call("getLatestBlockhash", [{ commitment: "finalized" }])) as { value?: { blockhash?: string; lastValidBlockHeight?: number } };
+  if (!r?.value?.blockhash || typeof r.value.lastValidBlockHeight !== "number") throw new Error("BLOCKHASH_UNAVAILABLE");
+  return { blockhash: r.value.blockhash, lastValidBlockHeight: r.value.lastValidBlockHeight };
+}
+
+export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuote: string | null; feePayer: string | null; env: ChildEnv; now?: () => number; exec?: ChildExec | null }): Promise<ChildOutcome[]> {
   const e = opts.env;
   const auth = { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer };
   // SOL rehearsal confirmation runs before (and independently of) the $MCP mint. Registration only — the
@@ -72,6 +84,7 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
   }, opts.canonicalQuote, { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer }).then((xs) => xs.map((x) => ({ mint: `claim:${x.claim}`, result: x.result })))
     : [];
   const onboard = await onboardChildren(db, call, opts.canonicalQuote, e).catch(() => [{ mint: "*", result: "ONBOARD_HELD:DISCOVERY_UNAVAILABLE" }]);
+  const exec = opts.exec && opts.exec.signerAddress === opts.feePayer ? opts.exec : null; // keeper must be the deployer signer
   const list = await loadChildren(db);
   const byMint = new Map(list.map((c) => [c.mint, c]));
   const pass = await runChildFeePass({
@@ -82,8 +95,17 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
     readChild: (c) => readChild(call, c),
     balances: (c) => balances(call, c),
     estimateCost: async () => e.estCostLamports,
-    buildAndSign: async () => { throw new Error("SIGNING_NOT_APPROVED"); }, // unreachable: signingEnabled=false
-    send: null,
+    buildAndSign: async (c) => {
+      if (!exec) throw new Error("SIGNING_NOT_ENABLED");
+      const o = await readChild(call, c); // re-read: shareholders + graduation straight from chain at build time
+      const v = verifyChild(c, o, opts.canonicalQuote);
+      if (!v.ok) throw new Error(`CHILD_TX_REFUSED:${v.code}`);
+      const r = verifyRecipients(c, o, byMint.get(c.mint)?.registeredCreator ?? null, auth);
+      if (!r.ok) throw new Error(`CHILD_TX_REFUSED:${r.code}`);
+      const bh = await latestBlockhash(call);
+      return exec.signChild(c, o.sharingConfig!.shareholders, o.graduated as boolean, bh.blockhash, bh.lastValidBlockHeight);
+    },
+    send: exec ? exec.send : null,
     fetchFinal: (s) => fetchFinal(call, s),
     finalizedBlockHeight: () => finalizedBlockHeight(call),
     vaultOwner: curveVaultOwner,
@@ -91,7 +113,7 @@ export async function childFeeCycle(db: Db, call: RpcCall, opts: { canonicalQuot
     store: childStorePg(db),
     authorized: { ops: e.ops, platform: e.platform, nativeDeployer: e.nativeDeployer },
     registeredCreator: async (m) => byMint.get(m)?.registeredCreator ?? null,
-    signingEnabled: false,
+    signingEnabled: !!exec,
   });
   return [...rehearsalOut, ...launches, ...onboard, ...pass];
 }

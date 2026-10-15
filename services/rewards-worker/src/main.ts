@@ -123,10 +123,12 @@ async function main() {
   // window and deployer wallet are derived from the mint's creation transaction unless explicitly configured.
   let genesis = NaN;
   // CHILD-FEES-01B: child-fee keeper runs on the same schedule, plan-only, isolated from native rewards.
+  const childSigning = env("MCPX_CHILD_FEES_SIGNING") !== "0"; // kill switch; otherwise on with signer + broadcast
   const childPass = async (quote: string | null, feePayer: string | null) => {
     try {
-      const r = await childFeeCycle(db, rpcCall(env("MCPX_REWARDS_RPC_URL")!), { canonicalQuote: quote, feePayer, env: readChildEnv(env) });
-      log({ event: "child_fees", signing: "DISABLED", broadcast: "DISABLED", results: r.slice(0, 50) });
+      const exec = childSigning && signer.signChild && sender && signer.address ? { signerAddress: signer.address, signChild: signer.signChild, send: (b: string) => sender.send(b) } : null;
+      const r = await childFeeCycle(db, rpcCall(env("MCPX_REWARDS_RPC_URL")!), { canonicalQuote: quote, feePayer, env: readChildEnv(env), exec });
+      log({ event: "child_fees", signing: exec ? "ENABLED" : "DISABLED", broadcast: exec ? "ENABLED" : "DISABLED", results: r.slice(0, 50) });
     } catch (e) { log({ level: "error", event: "child_fees_failed", error: e instanceof Error ? e.message : "unknown" }); }
   };
   for (;;) {
