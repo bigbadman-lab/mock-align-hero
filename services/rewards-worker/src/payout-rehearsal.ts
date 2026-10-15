@@ -23,7 +23,7 @@ export function isRehearsalTx(t: { keys: string[]; pre: number[]; post: number[]
 
 type Tx = { keys: string[]; pre: number[]; post: number[]; err: unknown; slot: number };
 async function readTx(conn: Connection, sig: string): Promise<Tx | null> {
-  const t = await conn.getTransaction(sig, { commitment: "finalized", maxSupportedTransactionVersion: 0 });
+  const t = await conn.getTransaction(sig, { commitment: "finalized", maxSupportedTransactionVersion: 1 });
   if (!t?.meta) return null;
   return { keys: t.transaction.message.staticAccountKeys.map((k) => k.toBase58()), pre: t.meta.preBalances, post: t.meta.postBalances, err: t.meta.err, slot: t.slot };
 }

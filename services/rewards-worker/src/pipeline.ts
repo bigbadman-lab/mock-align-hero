@@ -82,7 +82,7 @@ export async function deployerProvenance(rpc: RpcCall, deployer: string, maxSign
     const minted = new Set<string>();
     for (const s of sigs) {
       if (s.err) continue;
-      const t = (await rpc("getTransaction", [s.signature, { commitment: "finalized", encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }])) as
+      const t = (await rpc("getTransaction", [s.signature, { commitment: "finalized", encoding: "jsonParsed", maxSupportedTransactionVersion: 1 }])) as
         { transaction: { message: { accountKeys: { pubkey: string; signer: boolean }[]; instructions: P[] } }; meta: { innerInstructions?: { instructions: P[] }[] } | null } | null;
       if (!t) return { createdMints: null };
       if (!t.transaction.message.accountKeys.some((k) => k.pubkey === deployer && k.signer)) continue;
@@ -121,7 +121,7 @@ export async function ingestFees(db: Q, store: Store, scan: ScanRpc, x: { mint: 
 
 // ---------------- D04: settlement + fills ----------------
 const getTx = async (rpc: RpcCall, sig: string) =>
-  (await rpc("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }])) as FinalTx;
+  (await rpc("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }])) as FinalTx;
 
 /** Persisted plan for settlement (0020 columns). Missing plan → null → never LANDED. */
 export async function persistedPlan(db: Q, key: string) {

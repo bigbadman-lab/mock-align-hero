@@ -22,7 +22,7 @@ export async function syncHolders(db: Db, rpc: Rpc, meter: Meter, mint: string, 
   if (!err) for (const k of diff()) {
     const extra = (await signatures(rpc, meter, k, v.slot)).filter((x) => x.slot > from && !s!.applied.has(x.signature));
     const got = [];
-    for (const x of extra) { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]); if (t) got.push(toIndexed({ ...t, transactionIndex: x.txIndex }, mint)); }
+    for (const x of extra) { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]); if (t) got.push(toIndexed({ ...t, transactionIndex: x.txIndex }, mint)); }
     // targeted txs must be merged in chain order with the window; simplest safe path: rebuild window from scratch next pass
     if (got.length) { err = "NON_MINT_TRANSITIONS_FOUND_REBUILD_WINDOW"; break; }
   }

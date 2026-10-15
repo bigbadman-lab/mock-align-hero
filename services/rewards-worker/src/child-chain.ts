@@ -47,7 +47,7 @@ export async function balances(call: RpcCall, c: ChildRecord) {
 }
 
 export async function fetchFinal(call: RpcCall, signature: string): Promise<FinalTx | null> {
-  const t = (await call("getTransaction", [signature, { ...F, encoding: "json", maxSupportedTransactionVersion: 0 }])) as any;
+  const t = (await call("getTransaction", [signature, { ...F, encoding: "json", maxSupportedTransactionVersion: 1 }])) as any;
   if (!t) return null;
   const tb = (xs: any[] | undefined): TokenBal[] => (xs ?? []).filter((b) => b.owner).map((b) => ({ owner: b.owner, mint: b.mint, amount: BigInt(b.uiTokenAmount.amount) }));
   return { finalized: true, err: t.meta?.err ?? null, slot: t.slot, pre: tb(t.meta?.preTokenBalances), post: tb(t.meta?.postTokenBalances), feePayer: t.transaction.message.accountKeys[0] };
