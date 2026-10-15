@@ -15,6 +15,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as PairedRouteImport } from './routes/paired'
 import { Route as TreasuryRouteImport } from './routes/treasury'
+import { Route as WhitepaperRouteImport } from './routes/whitepaper'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpSlugRouteImport } from './routes/mcp.$slug'
 import { Route as OperatorAltRouteImport } from './routes/operator.alt'
@@ -98,6 +99,11 @@ const PairedRoute = PairedRouteImport.update({
 const TreasuryRoute = TreasuryRouteImport.update({
   id: '/treasury',
   path: '/treasury',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhitepaperRoute = WhitepaperRouteImport.update({
+  id: '/whitepaper',
+  path: '/whitepaper',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpIndexRoute = McpIndexRouteImport.update({
@@ -395,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -457,6 +464,7 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -520,6 +528,7 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/paired': typeof PairedRoute
   '/treasury': typeof TreasuryRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/mcp/$slug': typeof McpSlugRoute
   '/operator/alt': typeof OperatorAltRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -584,6 +593,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/treasury'
+    | '/whitepaper'
     | '/mcp/$slug'
     | '/operator/alt'
     | '/templates/$templateId'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/treasury'
+    | '/whitepaper'
     | '/mcp/$slug'
     | '/operator/alt'
     | '/templates/$templateId'
@@ -708,6 +719,7 @@ export interface FileRouteTypes {
     | '/launch'
     | '/paired'
     | '/treasury'
+    | '/whitepaper'
     | '/mcp/$slug'
     | '/operator/alt'
     | '/templates/$templateId'
@@ -771,6 +783,7 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   PairedRoute: typeof PairedRoute
   TreasuryRoute: typeof TreasuryRoute
+  WhitepaperRoute: typeof WhitepaperRoute
   McpSlugRoute: typeof McpSlugRoute
   OperatorAltRoute: typeof OperatorAltRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
@@ -867,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/treasury'
       fullPath: '/treasury'
       preLoaderRoute: typeof TreasuryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whitepaper': {
+      id: '/whitepaper'
+      path: '/whitepaper'
+      fullPath: '/whitepaper'
+      preLoaderRoute: typeof WhitepaperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp/': {
@@ -1270,6 +1290,7 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   PairedRoute: PairedRoute,
   TreasuryRoute: TreasuryRoute,
+  WhitepaperRoute: WhitepaperRoute,
   McpSlugRoute: McpSlugRoute,
   OperatorAltRoute: OperatorAltRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
