@@ -30,6 +30,7 @@ const env = (k: string) => process.env[k]?.trim() || null;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "mcpx-rewards-worker", at: new Date().toISOString(), ...o }));
 import { fetchSiteState } from "./site-state";
 import { freshFetch } from "./fresh-fetch";
+import { readSender } from "./sender";
 
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
@@ -92,7 +93,9 @@ async function main() {
   const readiness = executionReadiness({ signer: signer.state, mintVerified: false, eligibilityApproved: false, snapshotComplete: false,
     feeOwnershipConfirmed: false, intentStoreReady: false, simulationsPassed: false, reservesSufficient: false, operatorAuthorized: false,
     limitsSet: limits.ok, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" });
-  log({ event: "signer_status", ...signer.describe(), execution: readiness.state, executionBlockers: readiness.blockers });
+  // Native-rewards broadcast switch (MCPX_REWARDS_BROADCAST=1). Still gated by readiness; child fees never get it.
+  const sender = readSender(env, freshFetch as never);
+  log({ event: "signer_status", ...signer.describe(), broadcast: sender ? "ENABLED" : "DISABLED", execution: readiness.state, executionBlockers: readiness.blockers });
   const workerId = `rw-${env("RENDER_INSTANCE_ID") ?? process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   const pollMs = Math.min(Math.max(Number(env("MCPX_REWARDS_POLL_SECONDS") ?? 300), 60), 900) * 1000; // 05-I: 5-minute default, no hot loop
   const maxWindows = Math.min(Math.max(Number(env("MCPX_REWARDS_MAX_WINDOWS_PER_PASS") ?? 12), 1), 288);
@@ -202,7 +205,7 @@ async function main() {
       const call = rpcCall(env("MCPX_REWARDS_RPC_URL")!);
       const conn = new Connection(env("MCPX_REWARDS_RPC_URL")!, "finalized");
       const deployer = cfg.deployerWallet!;
-      const rec = await reconcileOpen(intentStore(db, workerId), settlementChain(call, db, deployer), null);
+      const rec = await reconcileOpen(intentStore(db, workerId), settlementChain(call, db, deployer), sender);
       const prov = await deployerProvenance(call, deployer);
       const fees = await ingestFees(db, store, {
         signatures: async (a, o) => (await call("getSignaturesForAddress", [a, { commitment: "finalized", limit: o.limit, ...(o.until ? { until: o.until } : {}), ...(o.before ? { before: o.before } : {}) }])) as never,
@@ -229,7 +232,7 @@ async function main() {
           // 01E: build → validate → sign → persist bytes. Sender is null: signed bytes are HELD, never broadcast. Only
           // reachable when readiness is READY (it is not in this bundle) and the signer validated against the public key.
           submit: (kind, key, cycle, w, rows, lamports) => submitStage({ conn, deployer: new PublicKey(deployer), mint: new PublicKey(cfg.mint!), decimals: decimals ?? -1,
-            cuPrice: 1000, sign: decimals === null ? null : signer.sign, store: intentStore(db, workerId), sender: null,
+            cuPrice: 1000, sign: decimals === null ? null : signer.sign, store: intentStore(db, workerId), sender,
             ctx: async () => ({ limits: limits.ok ? limits.limits : null, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1",
               currentBlockHeight: await conn.getBlockHeight("finalized").catch(() => null), store: intentStore(db, workerId), ataRentLamports: await conn.getMinimumBalanceForRentExemption(170, "finalized").then(BigInt).catch(() => null) }) }, kind, key, cycle, w, rows, lamports),
         }, [lastPlanned], 1);
