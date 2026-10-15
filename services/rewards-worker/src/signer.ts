@@ -2,11 +2,13 @@
 // The private key is read once from the Render env, decoded, checked against the configured public address and
 // kept only inside a closure. It is never returned, logged, hashed for display or sent anywhere.
 // This module SIGNS validated plans; it has NO broadcast code. Sending needs its own approved phase.
-import { Keypair, PublicKey, SystemProgram, ComputeBudgetProgram, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
+import { Keypair, PublicKey, SystemProgram, ComputeBudgetProgram, VersionedMessage, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import bs58 from "bs58";
 import { createHash } from "node:crypto";
 import { checkVenueTx, type VenueOk } from "./venue-check";
+import { buildChildDistribution, checkChildTx } from "./child-fees-build";
+import type { ChildRecord, Shareholder } from "./child-fees";
 
 export const PRIVATE_KEY_ENV = "MCPX_DEPLOYER_PRIVATE_KEY";
 export const PUBLIC_KEY_ENV = "MCPX_DEPLOYER_PUBLIC_KEY";
@@ -66,6 +68,8 @@ export function loadSigner(env: Record<string, string | undefined>) {
   const out = (state: SignerState, reason: string | null, address: string | null, kp: Keypair | null) => ({
     state, reason, address,
     sign: kp ? (plan: Plan, ctx: SignCtx) => signPlan(kp, plan, ctx) : null,
+    /** Child-fee keeper: signs ONLY the permissionless Pump sweep/distribute built here and re-checked by checkChildTx. */
+    signChild: kp ? (c: ChildRecord, sh: Shareholder[], graduated: boolean, blockhash: string, lastValidBlockHeight: number) => signChildTx(kp, c, sh, graduated, blockhash, lastValidBlockHeight) : null,
     /** Safe for logs: never contains key material. */
     describe: () => ({ signerState: state, signerReason: reason, deployerAddress: address }),
   });
@@ -237,4 +241,17 @@ export function executionReadiness(x: ReadinessInput) {
   if (!x.operatorAuthorized) b.push("OPERATOR_NOT_AUTHORIZED");
   if (x.emergencyStop) return { state: "EXECUTION_BLOCKED" as const, blockers: b };
   return b.length ? { state: "SIGNER_VALIDATED" as const, blockers: b } : { state: "EXECUTION_READY" as const, blockers: [] };
+}
+
+export type ChildSigned = { signature: string; signedBase64: string; lastValidBlockHeight: number };
+async function signChildTx(kp: Keypair, c: ChildRecord, sh: Shareholder[], graduated: boolean, blockhash: string, lastValidBlockHeight: number): Promise<ChildSigned> {
+  const me = kp.publicKey.toBase58();
+  const ixs = await buildChildDistribution(c, me, sh, graduated);
+  const chk = checkChildTx(ixs, me, c, graduated);
+  if (!chk.ok) throw new Error(`CHILD_TX_REFUSED:${chk.code}`);
+  const msg = new TransactionMessage({ payerKey: kp.publicKey, recentBlockhash: blockhash, instructions: ixs }).compileToV0Message();
+  if (msg.header.numRequiredSignatures !== 1 || msg.staticAccountKeys[0]!.toBase58() !== me) throw new Error("CHILD_TX_REFUSED:UNEXPECTED_SIGNER");
+  const tx = new VersionedTransaction(msg); tx.sign([kp]);
+  const raw = tx.serialize(); if (raw.length > MAX_TX_BYTES) throw new Error("CHILD_TX_REFUSED:TX_TOO_LARGE");
+  return { signature: bs58.encode(tx.signatures[0]!), signedBase64: Buffer.from(raw).toString("base64"), lastValidBlockHeight };
 }
