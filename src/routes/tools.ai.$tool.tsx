@@ -35,7 +35,7 @@ function AiToolPage() {
   const t = LIBRARY.find((x) => x.id === id)!;
   return (
     <>
-      <PageHeader className="py-6 sm:py-8" label="Template tool · Entertainment & Experimental AI" title={t.name} intro={`${t.tagline} ${t.benefit}`} />
+      <PageHeader className="py-6 sm:py-8" label={`Template tool · ${t.category}`} title={t.name} intro={`${t.tagline} ${t.benefit}`} />
       <PageContainer className="space-y-4 py-6">
         <div className="max-w-2xl"><AiLibraryApp templateId={t.id} /></div>
         <div className="flex flex-wrap gap-4 text-sm">

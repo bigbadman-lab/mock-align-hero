@@ -129,7 +129,7 @@ describe("L6 integration", () => {
     expect(ADAPTERS["onchain-report-builder"]!.inputSchema.safeParse({ targetType: "token", target: W1 }).success).toBe(true);
     expect(ADAPTERS["onchain-report-builder"]!.inputSchema.safeParse({ targetType: "x", target: W1 }).success).toBe(false);
   });
-  it("one report = one free test bucket (its own tool id), 3 per day", () => {
-    expect(freeTestBucket("onchain_report_builder", "v")).toEqual({ bucket: "tools:free:onchain_report_builder:v", window: 86_400, limit: 3 });
+  it("one report = one free test bucket (its own tool id), 500 per day", () => {
+    expect(freeTestBucket("onchain_report_builder", "v")).toEqual({ bucket: "tools:free:onchain_report_builder:v", window: 86_400, limit: 500 });
   });
 });

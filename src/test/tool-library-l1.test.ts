@@ -4,8 +4,8 @@ import { ADAPTERS } from "@/lib/mcp-gateway/registry";
 
 describe("tool library registry", () => {
   it("lists exactly ten templates with unique ids", () => {
-    expect(LIBRARY).toHaveLength(16);
-    expect(new Set(LIBRARY.map((t) => t.id)).size).toBe(16);
+    expect(LIBRARY).toHaveLength(20);
+    expect(new Set(LIBRARY.map((t) => t.id)).size).toBe(20);
   });
   it("keeps deployed ids and maps them explicitly to relay ids and routes", () => {
     const m = Object.fromEntries(LIBRARY.filter((t) => !t.planned).map((t) => [t.id, [t.toolId, t.route]]));
@@ -26,6 +26,10 @@ describe("tool library registry", () => {
       "excuse-machine": ["excuse_machine", "/tools/ai/excuse-machine"],
       "conspiracy-potato": ["conspiracy_potato", "/tools/ai/conspiracy-potato"],
       "argument-machine": ["argument_machine", "/tools/ai/argument-machine"],
+      "future-you": ["future_you", "/tools/ai/future-you"],
+      "web3-startup-roulette": ["web3_startup_roulette", "/tools/ai/web3-startup-roulette"],
+      "monster-factory": ["monster_factory", "/tools/ai/monster-factory"],
+      "pigeon-ceo": ["pigeon_ceo", "/tools/ai/pigeon-ceo"],
     });
   });
   it("planned templates have no tool, route, MCP or launch", () => {

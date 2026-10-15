@@ -11,6 +11,8 @@ import {
 import { aiToolStatusQuery } from "@/lib/tools/status";
 import { RunError, RunErrorView, postRun } from "@/components/mcpx/product-run/shared";
 import { cn } from "@/lib/utils";
+import { PlaygroundApp } from "./PlaygroundApps";
+import { AI_PLAYGROUND_IDS } from "@/lib/ai-tools/defs";
 
 type Out = Record<string, unknown>;
 type Post = (input: Record<string, unknown>, signal: AbortSignal) => Promise<Out>;
@@ -67,7 +69,9 @@ export function AiToolApp({ templateId, post }: { templateId: string; post: Post
     <div className="space-y-3">
       {status.isPending ? <p className="font-mono text-xs text-subtle">Checking AI service…</p>
         : !available && <StatusMessage tone="warning" title="Not connected">This AI tool isn't switched on right now, so it can't run.</StatusMessage>}
-      {templateId === "gibberish-ai" || templateId === "argument-machine"
+      {(AI_PLAYGROUND_IDS as readonly string[]).includes(templateId)
+        ? <PlaygroundApp templateId={templateId} post={post} available={available} />
+        : templateId === "gibberish-ai" || templateId === "argument-machine"
         ? <ChatApp templateId={templateId} post={post} available={available} />
         : <SingleApp templateId={templateId} post={post} available={available} />}
       <p className="text-xs text-subtle">Entertainment only. AI-generated, clearly fictional and not advice.</p>
