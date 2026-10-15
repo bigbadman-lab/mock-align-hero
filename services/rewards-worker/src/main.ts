@@ -190,7 +190,9 @@ async function main() {
         const holds = (await db.query("select count(*)::int n from public.mcpx_rw_hix_holds where mint=$1 and resolved_at is null", [cfg.mint])).rows[0]?.n ?? 0;
         const lastCut = (await db.query("select max(cutoff_slot)::text c from public.mcpx_rw_hix_window_cutoffs where mint=$1 and status='SELECTED'", [cfg.mint])).rows[0]?.c ?? null;
         const pol = policyFor(opts.nowSec, await loadPolicies(db));
-        indexSynced = h.kind === "SYNCED"; openGaps = g; livePol = pol;
+        // AWAITING_CUTOFF_SELECTION = index is current up to the newest unselected window end (finality lag right after a
+        // boundary); not incomplete. Payouts still require a COMPLETE frozen snapshot per window.
+        indexSynced = h.kind === "SYNCED" || (h.kind === "RETRY" && h.reason === "AWAITING_CUTOFF_SELECTION"); openGaps = g; livePol = pol;
         diag = { latestCutoffSlot: lastCut, indexSlot: "toSlot" in h ? h.toSlot : null, holderAccounts: "accounts" in h ? h.accounts : null, openGaps: g, openHolds: holds, cutoffs: cut, pass: h.kind,
           frozen: "frozen" in h ? h.frozen : [], passCredits, totalCredits, policy: pol ? { version: pol.version, status: pol.status, live: policyLiveAllowed(pol) } : null,
           status: pipelineStatus({ mint: cfg.mint, openGaps: g, indexBehind: h.kind !== "SYNCED", lastWindowHeld: holds > 0, policy: pol }) };
