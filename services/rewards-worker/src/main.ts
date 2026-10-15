@@ -31,6 +31,7 @@ const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ svc: "m
 import { fetchSiteState } from "./site-state";
 import { freshFetch } from "./fresh-fetch";
 import { readSender } from "./sender";
+import { runPayoutRehearsal } from "./payout-rehearsal";
 
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
@@ -146,6 +147,8 @@ async function main() {
         if (!wait.length) { log({ event: "launch_config", mint: cfg.mint, deployerWallet: cfg.deployerWallet, anchorSlot: process.env["MCPX_NATIVE_ANCHOR_SLOT"], genesisWindow: genesis, derived: !c!.anchorSlot || !c!.genesisWindow || !c!.deployerWallet }); break; }
       }
       log({ event: "ready_state", ready: false, health: true, mode, blockers: wait });
+      await runPayoutRehearsal({ conn: new Connection(env("MCPX_REWARDS_RPC_URL")!, "finalized"), deployer: signer.address, mintSet: !!c?.mint,
+        enabled: env("MCPX_PAYOUT_REHEARSAL") === "1", sign: signer.sign, sender, log });
       await childPass(c?.mint ?? null, c?.deployerWallet ?? env("MCPX_DEPLOYER_PUBLIC_KEY"));
     } catch (e) { log({ level: "error", event: "state_failed", op, elapsedMs: Date.now() - t0, errorName: e instanceof Error ? e.name : "unknown", error: e instanceof Error ? e.message : "unknown" }); }
     // Fast wake: a fresh launch claim ends the wait within ~5 s instead of the full launch poll interval.
