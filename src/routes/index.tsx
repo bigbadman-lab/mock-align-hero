@@ -3,6 +3,7 @@ import { PageContainer, SectionHeading, SectionLabel, StatusMessage, RouteError,
 import { ToolRail } from "@/components/mcpx/ToolRail";
 import { FlowToggle } from "@/components/mcpx/LiveFlow";
 import { HeroOrbit } from "@/components/mcpx/HeroOrbit";
+import { TrustBadges } from "@/components/mcpx/TrustBadges";
 import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,7 @@ function Home() {
           </div>
           <HeroOrbit />
           </div>
+          <TrustBadges />
         </PageContainer>
       </section>
 
