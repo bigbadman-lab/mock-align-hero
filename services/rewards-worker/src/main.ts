@@ -22,6 +22,7 @@ import { windowPayableForPlanning } from "../../../src/lib/rewards/recovery.pg";
 import { pipelineStatus } from "../../../src/lib/rewards/cutoff-snapshot";
 import { policyFor, policyLiveAllowed } from "../../../src/lib/rewards/eligibility-policy";
 import { childFeeCycle, readChildEnv } from "./child-wire";
+import { nextBoundaryDelayMs } from "./schedule";
 import { address, isOffCurveAddress } from "@solana/addresses"; // address-only; keeps web3.js (send/sign code) out of the bundle
 
 const ownerKind = (o: string) => { try { return isOffCurveAddress(address(o)) ? ("PROGRAM" as const) : ("WALLET" as const); } catch { return "UNKNOWN" as const; } };
@@ -261,7 +262,9 @@ async function main() {
       log({ event: "fees", correlationId, provenance: prov.createdMints === null ? "UNKNOWN" : prov.createdMints.length, result: fees.kind, events: "events" in fees ? fees.events.length : 0, fills: fills.map((f) => f.result) });
       log({ event: "execution", correlationId, readiness: readiness.state, blockers: readiness.blockers, reconciled: rec.length, actions: rec.map((x) => x.action) });
       await childPass(cfg.mint, cfg.deployerWallet);
-      backoff = pollMs;
+      // GO-LIVE-02: align with the wall-clock 5-minute windows the site's countdown shows — each pass
+      // starts ~30 s after a boundary so payouts land a minute or two after the countdown hits zero.
+      backoff = nextBoundaryDelayMs(Date.now());
     } catch (e) {
       backoff = Math.min(backoff * 2, 10 * 60_000);
       log({ level: "error", event: "pass_failed", correlationId, error: e instanceof Error ? e.message : "unknown", retryInMs: backoff });
