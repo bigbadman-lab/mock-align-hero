@@ -161,11 +161,11 @@ TEMPLATES.push(
   { id: "roast-bot", name: "Roast Bot", engine: "AI", purpose: "An AI with absolutely no chill: a short comedic roast of anything you choose, gentle to savage.", details: AI_DETAILS },
   { id: "excuse-machine", name: "Excuse Machine", engine: "AI", purpose: "Terrible excuses, beautifully delivered: one ridiculous excuse for an everyday situation, absurdity 1–5.", details: AI_DETAILS },
   { id: "conspiracy-potato", name: "Conspiracy Potato", engine: "AI", purpose: "Everything is connected. Especially potatoes: a satirical fake conspiracy about a mundane topic.", details: AI_DETAILS },
+  { id: "argument-machine", name: "Argument Machine", engine: "AI", purpose: "You're wrong. Even when you're right: a chat that playfully disagrees with whatever you say.", details: AI_DETAILS },
   { id: "future-you", name: "Future You", engine: "AI", purpose: "Your future self has something to tell you: a fictional letter from you, 1–20 years ahead.", details: AI_DETAILS },
   { id: "web3-startup-roulette", name: "Web3 Startup Roulette", engine: "AI", purpose: "The next billion-dollar idea. Probably terrible: a parody Web3 startup pitch with satirical tokenomics.", details: AI_DETAILS },
   { id: "monster-factory", name: "Monster Factory", engine: "AI", purpose: "Create creatures that shouldn't exist: fuse two ingredients into a collectible monster profile.", details: AI_DETAILS },
   { id: "pigeon-ceo", name: "Pigeon CEO", engine: "AI", purpose: "Disrupt. Innovate. Steal bread: a satirical executive memo from an incompetent pigeon CEO.", details: AI_DETAILS },
-  { id: "argument-machine", name: "Argument Machine", engine: "AI", purpose: "You're wrong. Even when you're right: a chat that playfully disagrees with whatever you say.", details: AI_DETAILS },
 );
 
 export const AVAILABILITY_NOTE = "Live status is checked with the execution service";
