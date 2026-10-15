@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { PageContainer } from "./primitives";
 import { WalletButton } from "./wallet/WalletControls";
+import { countdown } from "@/lib/treasury/core";
 import logo from "@/assets/mcpx-logo.png";
 
 export const NAV = [
