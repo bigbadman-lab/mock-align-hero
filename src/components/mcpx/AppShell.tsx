@@ -127,6 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {NAV.map((n) => (
                 <li key={n.to}><Link to={n.to} className="inline-flex items-center px-1 py-1 text-sm text-muted-foreground hover:text-foreground">{n.label}</Link></li>
               ))}
+              <li><Link to="/whitepaper" className="inline-flex items-center px-1 py-1 text-sm text-muted-foreground hover:text-foreground">Whitepaper</Link></li>
               <li><a href="https://x.com/mcpdotfun" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-1 py-1 text-sm text-muted-foreground hover:text-foreground">X / @mcpdotfun</a></li>
             </ul>
           </nav>

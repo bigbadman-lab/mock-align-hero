@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Whitepaper is a static reading route with supplied draft content and a local clipboard summary; it never calls AI or claims to verify the proposed vision.
 - Shared site frame (nav/footer) lives in src/components/mcpx/AppShell.tsx, mounted once in __root around <Outlet /> — one shell for all routes.
 - Template catalogue lives in src/lib/templates.ts: LIBRARY is the canonical ten-template registry with explicit id→toolId→route mappings; TEMPLATES (launchable subset) is unchanged. Live execution only from status endpoints; MCP/launch flags test-checked against ADAPTERS/TEMPLATES, so labels never claim unbuilt capability.
 - Every route sets errorComponent: RouteError so one failing section never crashes the app.
