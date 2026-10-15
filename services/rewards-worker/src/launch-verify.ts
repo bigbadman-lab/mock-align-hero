@@ -42,7 +42,7 @@ export function verifyLaunch(c: Claim, tx: LaunchTx, onchain: OnchainChild | nul
 
 /** Finalized transaction read; account keys include v0 lookup-table addresses. */
 export async function readLaunchTx(call: RpcCall, signature: string): Promise<LaunchTx> {
-  const t = (await call("getTransaction", [signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }])) as any;
+  const t = (await call("getTransaction", [signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }])) as any;
   if (!t) return { found: false };
   const m = t.transaction?.message;
   const keys: string[] = [...(m?.accountKeys ?? []), ...(t.meta?.loadedAddresses?.writable ?? []), ...(t.meta?.loadedAddresses?.readonly ?? [])];

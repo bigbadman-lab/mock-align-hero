@@ -14,7 +14,7 @@ export async function deriveLaunch(rpc: Rpc, mint: string, maxPages = 50): Promi
       if (p === maxPages - 1) return null; // could not reach the beginning → never guess
     }
     if (!oldest) return null;
-    const tx = await rpc("getTransaction", [oldest.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]);
+    const tx = await rpc("getTransaction", [oldest.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]);
     const payer = tx?.transaction?.message?.accountKeys?.[0];
     if (!tx || typeof tx.blockTime !== "number" || typeof payer !== "string") return null;
     return { anchorSlot: tx.slot - 1, genesisWindow: Math.floor(tx.blockTime / 300) * 300, deployer: payer, signature: oldest.signature };

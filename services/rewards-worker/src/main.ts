@@ -227,7 +227,7 @@ async function main() {
       const prov = await deployerProvenance(call, deployer);
       const fees = await ingestFees(db, store, {
         signatures: async (a, o) => (await call("getSignaturesForAddress", [a, { commitment: "finalized", limit: o.limit, ...(o.until ? { until: o.until } : {}), ...(o.before ? { before: o.before } : {}) }])) as never,
-        transaction: async (sig) => call("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]),
+        transaction: async (sig) => call("getTransaction", [sig, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]),
       }, { mint: cfg.mint!, deployer, provenance: prov,
         wsolOwner: async (ata) => { try { const i = (await call("getAccountInfo", [ata, { commitment: "finalized", encoding: "jsonParsed" }])) as { value: { data: { parsed: { info: { owner: string; mint: string } } } } | null };
           return i.value ? { owner: i.value.data.parsed.info.owner, mint: i.value.data.parsed.info.mint } : null; } catch { return null; } } });

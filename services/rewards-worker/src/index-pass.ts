@@ -61,7 +61,7 @@ export async function indexPass(db: Db, rpc: Rpc, meter: Meter, o: PassOpts & { 
     const todo = accts.filter((a) => !swept.has(a)); todo.forEach((a) => swept.add(a));
     const lists = await pool(todo, 8, (a) => signatures(rpc, meter, a, V));
     const missing = [...new Map(lists.flat().filter((x) => x.slot > from && !byKey.has(x.signature) && !s0!.applied.has(x.signature)).map((x) => [x.signature, x])).values()];
-    const got = await pool(missing, 8, async (x) => { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 0 }]); return t ? toIndexed({ ...t, transactionIndex: x.txIndex }, o.mint) : null; });
+    const got = await pool(missing, 8, async (x) => { const t = await rpc("getTransaction", [x.signature, { commitment: "finalized", encoding: "json", maxSupportedTransactionVersion: 1 }]); return t ? toIndexed({ ...t, transactionIndex: x.txIndex }, o.mint) : null; });
     let n = 0; for (const t of got) if (t) { add(t); n++; } return n;
   };
   const accountsIn = (txs: Iterable<Tx>) => { const x = new Set<string>(); for (const t of txs) for (const b of [...t.pre, ...t.post]) x.add(b.account); return x; };
