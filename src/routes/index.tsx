@@ -44,8 +44,8 @@ function Home() {
           <div className="max-w-5xl animate-rise">
             <SectionLabel>MCPX · THE TOKEN-POWERED APP LAUNCHPAD</SectionLabel>
             <h1 className="mt-4 font-mono text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              <span className="block">Tokens become</span>
-              <span className="block text-primary">apps.</span>
+              <span className="block">Where tokens</span>
+              <span className="block text-primary">become apps.</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               Discover and launch token-powered AI applications and MCP tools. Every token comes with a working product you can use on the web or connect to your AI agents.
