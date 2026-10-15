@@ -47,11 +47,11 @@ describe("catalogue", () => {
     }
     expect(AI_TOOLS.map((d) => d.toolId)).toEqual(["gibberish_ai", "roast_bot", "excuse_machine", "conspiracy_potato", "argument_machine", "future_you", "web3_startup_roulette", "monster_factory", "pigeon_ceo"]);
   });
-  it("four AI Playground templates have MCP adapters but are not launchable until the DB allowlist is migrated", () => {
+  it("four AI Playground templates have MCP adapters and are launchable", () => {
     for (const id of ["future-you", "web3-startup-roulette", "monster-factory", "pigeon-ceo"]) {
       const t = LIBRARY.find((x) => x.id === id)!;
-      expect([t.category, t.mcpAdapter, t.tokenLaunch]).toEqual(["AI Playground", true, false]);
-      expect(TEMPLATES.some((x) => x.id === id)).toBe(false);
+      expect([t.category, t.mcpAdapter, t.tokenLaunch]).toEqual(["AI Playground", true, true]);
+      expect(TEMPLATES.some((x) => x.id === id)).toBe(true);
       expect(ADAPTERS[id]?.engine).toBe("ai");
     }
   });

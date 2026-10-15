@@ -114,7 +114,7 @@ describe("template definitions", () => {
     expect(TEMPLATES.map((t) => t.id)).toEqual([
       "wallet-inspector", "whale-watch", "token-scanner", "supply-monitor", "tx-verifier", "account-checker",
       "holder-intelligence", "token-risk-analyst", "smart-money-tracker", "onchain-report-builder", "canvas",
-      "gibberish-ai", "roast-bot", "excuse-machine", "conspiracy-potato", "argument-machine",
+      "gibberish-ai", "roast-bot", "excuse-machine", "conspiracy-potato", "argument-machine", "future-you", "web3-startup-roulette", "monster-factory", "pigeon-ceo",
     ]);
   });
 });

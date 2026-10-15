@@ -1,5 +1,3 @@
--- 0034 (NOT APPLIED — awaiting review): lets the four AI Playground templates register as products.
--- Move into docs/pending-migrations/ and set tokenLaunch: true + add to TEMPLATES in the same change.
 
 -- 0030: the registrable-template list inside mcpx_cf_register_launch was frozen at the original seven.
 -- Templates added to the launch form later (four Intelligence + five AI) were refused at registration with

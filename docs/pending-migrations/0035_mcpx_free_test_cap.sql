@@ -1,4 +1,4 @@
--- 0035 (NOT APPLIED — awaiting review): raise the free-test counter's cap so 500 website runs/day per tool are accepted.
+-- 0035: raise the free-test counter's cap so 500 website runs/day per tool are accepted.
 CREATE OR REPLACE FUNCTION public.mcpx_free_test_take(_bucket text, _limit integer)
  RETURNS boolean
  LANGUAGE plpgsql
