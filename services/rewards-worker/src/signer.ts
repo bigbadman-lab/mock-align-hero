@@ -78,7 +78,7 @@ export function loadSigner(env: Record<string, string | undefined>) {
   try { bytes = bs58.decode(raw); } catch { return out("SIGNER_INVALID", "PRIVATE_KEY_FORMAT", null, null); }
   if (bytes.length !== 64) { bytes.fill(0); return out("SIGNER_INVALID", "PRIVATE_KEY_LENGTH", null, null); }
   let kp: Keypair;
-  try { kp = Keypair.fromSecretKey(bytes); } catch { bytes.fill(0); return out("SIGNER_INVALID", "PRIVATE_KEY_INCONSISTENT", null, null); }
+  try { kp = Keypair.fromSecretKey(Uint8Array.from(bytes)); } // copy: web3.js keeps a reference, and bytes is zeroed below catch { bytes.fill(0); return out("SIGNER_INVALID", "PRIVATE_KEY_INCONSISTENT", null, null); }
   bytes.fill(0);
   if (!kp.publicKey.equals(expected)) return out("SIGNER_INVALID", "ADDRESS_MISMATCH", null, null);
   return out("SIGNER_VALIDATED", null, kp.publicKey.toBase58(), kp);
