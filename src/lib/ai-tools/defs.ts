@@ -101,7 +101,88 @@ const argument: AiToolDef = {
   parseOutput: (r, i) => { const o = obj(r); return o && str(o["reply"], 1200) ? { reply: String(o["reply"]).trim(), personality: i["personality"] } : null; },
 };
 
-export const AI_TOOLS: AiToolDef[] = [gibberish, roast, excuse, potato, argument];
+// ---- AI Playground -------------------------------------------------------------------------------------
+export const FUTURE_YEARS = [1, 5, 10, 20] as const;
+export const FUTURE_PERSONALITIES = ["wise", "successful", "chaotic", "dramatic"] as const;
+export const STARTUP_SECTORS = ["meme coins", "DeFi", "AI agents", "NFTs", "gaming", "random"] as const;
+export const MONSTER_TEMPERAMENTS = ["adorable", "terrifying", "ridiculous", "chaotic"] as const;
+export const MONSTER_RARITIES = ["common", "rare", "legendary", "random"] as const;
+export const CEO_STYLES = ["visionary", "aggressive", "clueless", "corporate"] as const;
+export const CEO_URGENCY = ["low", "medium", "boardroom emergency"] as const;
+
+const s = (o: Record<string, unknown>, k: string, max: number) => (str(o[k], max) ? String(o[k]).trim() : null);
+const list = (v: unknown, n: number, max: number) => (Array.isArray(v) ? v.filter((x) => str(x, max)).slice(0, n).map((x) => String(x).trim()) : []);
+
+const futureYou: AiToolDef = {
+  templateId: "future-you", toolId: "future_you", name: "Future You", schema: "mcpx.ai.future-you.v1", maxOutputTokens: 420,
+  description: "Your future self has something to tell you. Writes a fictional, imaginative letter from a future version of the caller (1, 5, 10 or 20 years ahead) in a wise, successful, chaotic or dramatic voice. Not a real prediction.",
+  inputSchema: z.strictObject({ situation: text("Your current situation, goal or worry."), years_ahead: z.union([z.literal(1), z.literal(5), z.literal(10), z.literal(20)]).describe("How far ahead the future self writes from."), personality: z.enum(FUTURE_PERSONALITIES).describe("The future self's voice.") }),
+  system: (i) => `You are the user's fictional future self writing from ${Number(i["years_ahead"])} year(s) ahead. Voice: ${String(i["personality"])} ` +
+    `(wise = calm and kind, successful = smug but generous, chaotic = breathless and full of weird future details, dramatic = theatrical and grand). ` +
+    `Write a vivid, warm, personal letter that references their situation and invents playful future details. Never claim to really predict the future, never promise wealth, health or outcomes. ${SAFETY} ` +
+    `Shape: {"timeline": string (e.g. "Writing from 10 years ahead"), "title": string (max 10 words), "letter": string (90–150 words), "advice": string (one memorable fictional line), "closing_quote": string (short)}.`,
+  userMessage: (i) => `My situation right now: ${String(i["situation"])}`,
+  parseOutput: (r, i) => {
+    const o = obj(r); if (!o) return null;
+    const v = { timeline: s(o, "timeline", 120), title: s(o, "title", 200), letter: s(o, "letter", 2400), advice: s(o, "advice", 400), closing_quote: s(o, "closing_quote", 300) };
+    return Object.values(v).every(Boolean) ? { ...v, years_ahead: i["years_ahead"], personality: i["personality"] } : null;
+  },
+};
+
+const startup: AiToolDef = {
+  templateId: "web3-startup-roulette", toolId: "web3_startup_roulette", name: "Web3 Startup Roulette", schema: "mcpx.ai.web3-startup-roulette.v1", maxOutputTokens: 520,
+  description: "The next billion-dollar idea. Probably terrible. Generates a ridiculous, clearly fictional Web3 startup pitch (name, ticker, problem, solution, token utility, satirical tokenomics, imaginary valuation, investor pitch, founder quote) for a sector and absurdity 1–5. Parody only — not a real project or financial advice.",
+  inputSchema: z.strictObject({ keywords: z.string().trim().max(AI_MAX_TEXT).optional().describe("Optional words or a short idea to build on."), sector: z.enum(STARTUP_SECTORS).describe("Web3 sector."), absurdity: z.number().int().min(1).max(5).describe("1 = almost plausible … 5 = completely unhinged.") }),
+  system: (i) => `You are Web3 Startup Roulette, a parody pitch generator satirising crypto hype. Sector: ${String(i["sector"])}${i["sector"] === "random" ? " (pick any Web3 sector)" : ""}. Absurdity ${Number(i["absurdity"])}/5. ` +
+    `Invent ONE hilarious fictional Web3 startup written like a real pitch deck parody. Never use a real project's name or ticker, never tell anyone to buy anything, never imply real returns; tokenomics must be obviously silly (e.g. "12% reserved for the founder's cat"). ${SAFETY} ` +
+    `Shape: {"name": string, "ticker": string (3–6 uppercase letters, no $), "pitch": string (one line), "problem": string, "solution": string, "token_utility": string, "tokenomics": string[] (exactly 4 short satirical allocation lines), "valuation": string (imaginary), "investor_pitch": string (2–3 sentences), "founder_quote": string}.`,
+  userMessage: (i) => `Keywords: ${String(i["keywords"] || "none — surprise me")}`,
+  parseOutput: (r, i) => {
+    const o = obj(r); if (!o) return null;
+    const ticker = s(o, "ticker", 20)?.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 8) ?? null;
+    const v = { name: s(o, "name", 120), ticker, pitch: s(o, "pitch", 300), problem: s(o, "problem", 600), solution: s(o, "solution", 600), token_utility: s(o, "token_utility", 600), valuation: s(o, "valuation", 200), investor_pitch: s(o, "investor_pitch", 900), founder_quote: s(o, "founder_quote", 300) };
+    const tokenomics = list(o["tokenomics"], 6, 200);
+    return Object.values(v).every(Boolean) && tokenomics.length >= 2 ? { ...v, tokenomics, sector: i["sector"], absurdity: i["absurdity"], fictional: true } : null;
+  },
+};
+
+const monster: AiToolDef = {
+  templateId: "monster-factory", toolId: "monster_factory", name: "Monster Factory", schema: "mcpx.ai.monster-factory.v1", maxOutputTokens: 520,
+  description: "Create creatures that shouldn't exist. Combines two ingredients (animals, objects, ideas) into a fictional monster profile: name, species, appearance, three abilities, weakness, personality, habitat, origin story, rarity and a funny fact. Text only — no artwork.",
+  inputSchema: z.strictObject({ ingredient_one: text("First ingredient: an animal, object or idea."), ingredient_two: text("Second ingredient."), temperament: z.enum(MONSTER_TEMPERAMENTS).describe("Creature temperament."), rarity: z.enum(MONSTER_RARITIES).describe("Rarity tier; random lets the lab decide.") }),
+  system: (i) => `You are the Monster Factory, a mad-but-friendly creature laboratory. Fuse the two ingredients into ONE original fictional creature. Temperament: ${String(i["temperament"])}. ` +
+    `Rarity: ${i["rarity"] === "random" ? "choose common, rare or legendary" : String(i["rarity"])}. Be inventive and funny; terrifying means spooky-fun, never gore. ${SAFETY} ` +
+    `Shape: {"name": string, "species": string, "appearance": string (2 sentences), "abilities": string[] (exactly 3 short abilities), "weakness": string, "personality": string, "habitat": string, "origin": string (2–3 sentences), "rarity": "common"|"rare"|"legendary", "fact": string}.`,
+  userMessage: (i) => `Ingredient one: ${String(i["ingredient_one"])}\nIngredient two: ${String(i["ingredient_two"])}`,
+  parseOutput: (r, i) => {
+    const o = obj(r); if (!o) return null;
+    const rarity = ["common", "rare", "legendary"].includes(String(o["rarity"]).toLowerCase()) ? String(o["rarity"]).toLowerCase() : i["rarity"] === "random" ? "rare" : String(i["rarity"]);
+    const v = { name: s(o, "name", 120), species: s(o, "species", 160), appearance: s(o, "appearance", 700), weakness: s(o, "weakness", 300), personality: s(o, "personality", 300), habitat: s(o, "habitat", 300), origin: s(o, "origin", 900), fact: s(o, "fact", 300) };
+    const abilities = list(o["abilities"], 3, 200);
+    return Object.values(v).every(Boolean) && abilities.length >= 1 ? { ...v, abilities, rarity, temperament: i["temperament"] } : null;
+  },
+};
+
+const pigeon: AiToolDef = {
+  templateId: "pigeon-ceo", toolId: "pigeon_ceo", name: "Pigeon CEO", schema: "mcpx.ai.pigeon-ceo.v1", maxOutputTokens: 420,
+  description: "Disrupt. Innovate. Steal bread. An incompetent, self-important pigeon CEO answers a business problem with a satirical executive memo: opening statement, recommendation, three ridiculous action items, fictional impact, a fictional confidence percentage and a closing pigeon quote. Never real business advice.",
+  inputSchema: z.strictObject({ business_problem: text("The business problem for the CEO."), management_style: z.enum(CEO_STYLES).describe("How the pigeon manages."), urgency: z.enum(CEO_URGENCY).describe("How urgent it is.") }),
+  system: (i) => `You are Pigeon CEO, the absurdly self-important pigeon running Coo Corp International. Management style: ${String(i["management_style"])}. Urgency: ${String(i["urgency"])}. ` +
+    `Answer with a satirical executive memo full of hollow jargon, terrible decisions, cooing and breadcrumb references. Obviously unsuitable as real advice; never give real legal, tax, HR or financial guidance. ${SAFETY} ` +
+    `Shape: {"opening": string (1–2 sentences), "recommendation": string (2 sentences), "action_items": string[] (exactly 3), "impact": string (fictional), "confidence": integer 0–1000 (fictional, can be absurd), "closing_quote": string}.`,
+  userMessage: (i) => `Business problem: ${String(i["business_problem"])}`,
+  parseOutput: (r, i) => {
+    const o = obj(r); if (!o) return null;
+    const c = Number(o["confidence"]);
+    const v = { opening: s(o, "opening", 600), recommendation: s(o, "recommendation", 800), impact: s(o, "impact", 500), closing_quote: s(o, "closing_quote", 300) };
+    const action_items = list(o["action_items"], 3, 300);
+    return Object.values(v).every(Boolean) && action_items.length >= 1 && Number.isFinite(c)
+      ? { ...v, action_items, confidence: Math.max(0, Math.min(1000, Math.round(c))), management_style: i["management_style"], urgency: i["urgency"] } : null;
+  },
+};
+
+export const AI_PLAYGROUND_IDS = ["future-you", "web3-startup-roulette", "monster-factory", "pigeon-ceo"] as const;
+export const AI_TOOLS: AiToolDef[] = [gibberish, roast, excuse, potato, argument, futureYou, startup, monster, pigeon];
 export const AI_TOOL_BY_TEMPLATE: Record<string, AiToolDef> = Object.fromEntries(AI_TOOLS.map((d) => [d.templateId, d]));
 export const AI_TOOL_BY_ID: Record<string, AiToolDef> = Object.fromEntries(AI_TOOLS.map((d) => [d.toolId, d]));
 export const isAiTemplate = (templateId: string) => Object.hasOwn(AI_TOOL_BY_TEMPLATE, templateId);
