@@ -1,12 +1,72 @@
 // Trust strip: the stack MCPX is built on and the clients it connects to.
-// Names only — no logos, no claims beyond what actually runs today.
-const BADGES = [
-  { name: "Solana", note: "Tokens and tools run on Solana mainnet" },
-  { name: "OpenAI", note: "AI tools run on OpenAI models" },
-  { name: "Claude", note: "Connects from Claude and any MCP-compatible client" },
-  { name: "MCP", note: "Every tool exposes its own MCP endpoint" },
-  { name: "IPFS", note: "Launch artwork is published to IPFS" },
-  { name: "Birdeye", note: "Market data from Birdeye, with DexScreener as backup" },
+// Official brand marks, inlined as SVG so nothing loads from a third party.
+// No claims beyond what actually runs today.
+
+type Badge = {
+  name: string;
+  note: string;
+  logo: React.ReactNode;
+};
+
+function Logo({ title, path, fill = "currentColor" }: { title: string; path: string; fill?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" role="img" aria-label={title} className="h-3.5 w-3.5 shrink-0" fill={fill}>
+      <path d={path} />
+    </svg>
+  );
+}
+
+const SOLANA_PATH =
+  "m23.8764 18.0313-3.962 4.1393a.9201.9201 0 0 1-.306.2106.9407.9407 0 0 1-.367.0742H.4599a.4689.4689 0 0 1-.2522-.0733.4513.4513 0 0 1-.1696-.1962.4375.4375 0 0 1-.0314-.2545.4438.4438 0 0 1 .117-.2298l3.9649-4.1393a.92.92 0 0 1 .3052-.2102.9407.9407 0 0 1 .3658-.0746H23.54a.4692.4692 0 0 1 .2523.0734.4531.4531 0 0 1 .1697.196.438.438 0 0 1 .0313.2547.4442.4442 0 0 1-.1169.2297zm-3.962-8.3355a.9202.9202 0 0 0-.306-.2106.941.941 0 0 0-.367-.0742H.4599a.4687.4687 0 0 0-.2522.0734.4513.4513 0 0 0-.1696.1961.4376.4376 0 0 0-.0314.2546.444.444 0 0 0 .117.2297l3.9649 4.1394a.9204.9204 0 0 0 .3052.2102c.1154.049.24.0744.3658.0746H23.54a.469.469 0 0 0 .2523-.0734.453.453 0 0 0 .1697-.1961.4382.4382 0 0 0 .0313-.2546.4444.4444 0 0 0-.1169-.2297zM.46 6.7225h18.7815a.9411.9411 0 0 0 .367-.0742.9202.9202 0 0 0 .306-.2106l3.962-4.1394a.4442.4442 0 0 0 .117-.2297.4378.4378 0 0 0-.0314-.2546.453.453 0 0 0-.1697-.196.469.469 0 0 0-.2523-.0734H4.7596a.941.941 0 0 0-.3658.0745.9203.9203 0 0 0-.3052.2102L.1246 5.9687a.4438.4438 0 0 0-.1169.2295.4375.4375 0 0 0 .0312.2544.4512.4512 0 0 0 .1692.196.4689.4689 0 0 0 .2518.0739z";
+
+const OPENAI_PATH =
+  "M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z";
+
+const ANTHROPIC_PATH =
+  "M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z";
+
+const MCP_PATH =
+  "M13.85 0a4.16 4.16 0 0 0-2.95 1.217L1.456 10.66a.835.835 0 0 0 0 1.18.835.835 0 0 0 1.18 0l9.442-9.442a2.49 2.49 0 0 1 3.541 0 2.49 2.49 0 0 1 0 3.541L8.59 12.97l-.1.1a.835.835 0 0 0 0 1.18.835.835 0 0 0 1.18 0l.1-.098 7.03-7.034a2.49 2.49 0 0 1 3.542 0l.049.05a2.49 2.49 0 0 1 0 3.54l-8.54 8.54a1.96 1.96 0 0 0 0 2.755l1.753 1.753a.835.835 0 0 0 1.18 0 .835.835 0 0 0 0-1.18l-1.753-1.753a.266.266 0 0 1 0-.394l8.54-8.54a4.185 4.185 0 0 0 0-5.9l-.05-.05a4.16 4.16 0 0 0-2.95-1.218c-.2 0-.401.02-.6.048a4.17 4.17 0 0 0-1.17-3.552A4.16 4.16 0 0 0 13.85 0m0 3.333a.84.84 0 0 0-.59.245L6.275 10.56a4.186 4.186 0 0 0 0 5.902 4.186 4.186 0 0 0 5.902 0L19.16 9.48a.835.835 0 0 0 0-1.18.835.835 0 0 0-1.18 0l-6.985 6.984a2.49 2.49 0 0 1-3.54 0 2.49 2.49 0 0 1 0-3.54l6.983-6.985a.835.835 0 0 0 0-1.18.84.84 0 0 0-.59-.245";
+
+const IPFS_PATH =
+  "M12 0L1.608 6v12L12 24l10.392-6V6zm-1.073 1.445h.001a1.8 1.8 0 002.138 0l7.534 4.35a1.794 1.794 0 000 .403l-7.535 4.35a1.8 1.8 0 00-2.137 0l-7.536-4.35a1.795 1.795 0 000-.402zM21.324 7.4c.109.08.226.147.349.201v8.7a1.8 1.8 0 00-1.069 1.852l-7.535 4.35a1.8 1.8 0 00-.349-.2l-.009-8.653a1.8 1.8 0 001.07-1.851zm-18.648.048l7.535 4.35a1.8 1.8 0 001.069 1.852v8.7c-.124.054-.24.122-.349.202l-7.535-4.35a1.8 1.8 0 00-1.069-1.852v-8.7c.124-.054.24-.122.35-.202z";
+
+const BADGES: Badge[] = [
+  {
+    name: "Solana",
+    note: "Tokens and tools run on Solana mainnet",
+    logo: (
+      <svg viewBox="0 0 24 24" role="img" aria-label="Solana" className="h-3.5 w-3.5 shrink-0">
+        <defs>
+          <linearGradient id="solana-grad" x1="0" y1="24" x2="24" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#9945FF" />
+            <stop offset="1" stopColor="#14F195" />
+          </linearGradient>
+        </defs>
+        <path d={SOLANA_PATH} fill="url(#solana-grad)" />
+      </svg>
+    ),
+  },
+  {
+    name: "OpenAI",
+    note: "AI tools run on OpenAI models",
+    logo: <Logo title="OpenAI" path={OPENAI_PATH} />,
+  },
+  {
+    name: "Claude",
+    note: "Connects from Claude and any MCP-compatible client",
+    logo: <Logo title="Claude (Anthropic)" path={ANTHROPIC_PATH} />,
+  },
+  {
+    name: "MCP",
+    note: "Every tool exposes its own MCP endpoint",
+    logo: <Logo title="Model Context Protocol" path={MCP_PATH} />,
+  },
+  {
+    name: "IPFS",
+    note: "Launch artwork is published to IPFS",
+    logo: <Logo title="IPFS" path={IPFS_PATH} fill="#65C2CB" />,
+  },
 ];
 
 export function TrustBadges() {
@@ -17,7 +77,7 @@ export function TrustBadges() {
         {BADGES.map((b) => (
           <li key={b.name} title={b.note}>
             <span className="label-mono inline-flex items-center gap-2 rounded border border-border bg-card/60 px-2.5 py-1 text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground">
-              <span aria-hidden className="h-1 w-1 rounded-full bg-primary" />
+              {b.logo}
               {b.name}
             </span>
           </li>
