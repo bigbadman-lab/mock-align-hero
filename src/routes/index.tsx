@@ -72,7 +72,7 @@ function Home() {
 
       <section aria-labelledby="rewards" className="border-b border-border bg-card">
         <PageContainer className="py-12 sm:py-14">
-          <SectionHeading label="$MCP rewards" title={<span id="rewards">Hold $MCP. Participate in what MCPX builds.</span>} intro="Every eligible native $MCP trade can generate creator fees. Of the fees actually collected, 30% is allocated to SOL holder rewards and 30% to $MCP buybacks and distributions, with rewards processed in five-minute cycles." />
+          <SectionHeading label="$MCP rewards" title={<span id="rewards">Hold $MCP. Participate in what MCPX builds.</span>} intro="Every eligible native $MCP trade can generate creator fees. Of the fees actually collected, 30% is allocated to SOL holder rewards and 30% to $MCP buybacks and distributions, with rewards processed in five-minute cycles. Rewards are automatically sent to eligible holder wallets." />
           <ul className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
               { p: "30%", t: "SOL holder rewards" },
