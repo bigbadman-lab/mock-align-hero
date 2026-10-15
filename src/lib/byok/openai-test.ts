@@ -41,7 +41,7 @@ export async function testOpenAiKey(p: ProviderSpec, apiKey: string, model: stri
   try {
     const r = await fetchImpl(p.endpoint, {
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       signal: ctl.signal,
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }], max_tokens: 1, temperature: 0 }),

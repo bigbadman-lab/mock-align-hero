@@ -51,7 +51,7 @@ describe("L7-B OpenAI status mapping (mocked HTTP)", () => {
     let seen: { url: string; init: RequestInit } | null = null;
     await testOpenAiKey(P, API_KEY, "gpt-4.1-mini", (async (url: string, init: RequestInit) => { seen = { url, init }; return json(200, {}); }) as never);
     expect(seen!.url).toBe("https://api.openai.com/v1/chat/completions");
-    expect(seen!.init.redirect).toBe("error");
+    expect(seen!.init.redirect).toBe("manual");
     const body = JSON.parse(String(seen!.init.body));
     expect(body).toEqual({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "ping" }], max_tokens: 1, temperature: 0 });
   });

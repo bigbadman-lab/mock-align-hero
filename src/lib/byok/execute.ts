@@ -81,7 +81,7 @@ export async function summarise(d: AiDeps, creationId: string, result: unknown):
   let r: Response;
   try {
     r = await (d.fetchImpl ?? fetch)(p.endpoint, {
-      method: "POST", redirect: "error", signal: ctl.signal,
+      method: "POST", redirect: "manual", signal: ctl.signal,
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify({ model: s.model, max_tokens: outTok, temperature: 0.2,
         messages: [{ role: "system", content: SYSTEM }, { role: "user", content: json }] }),

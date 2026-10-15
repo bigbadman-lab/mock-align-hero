@@ -83,11 +83,12 @@ export async function runAiTool(d: AiToolDef, input: Record<string, unknown>, de
     let r: Response;
     try {
       r = await (deps.fetchImpl ?? fetch)(OPENAI_URL, {
-        method: "POST", redirect: "error", signal: AbortSignal.timeout(AI_TOOL_TIMEOUT_MS),
+        method: "POST", redirect: "manual", signal: AbortSignal.timeout(AI_TOOL_TIMEOUT_MS),
         headers: { authorization: `Bearer ${e.apiKey}`, "content-type": "application/json" },
         body: JSON.stringify({ model: e.model, max_tokens: d.maxOutputTokens, temperature: 1, response_format: { type: "json_object" }, messages }),
       });
     } catch (x) {
+      console.warn(JSON.stringify({ ai_tool: d.toolId, fetch_error: (x as Error)?.name ?? "unknown" }));
       return { ok: false, status: 504, error: (x as Error)?.name === "TimeoutError" || (x as Error)?.name === "AbortError" ? "timeout" : "provider_error" };
     }
     let body = "";
