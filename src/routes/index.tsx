@@ -38,22 +38,22 @@ function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-border bg-grid">
-        <PageContainer className="py-14 sm:py-20 lg:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <PageContainer className="py-8 sm:py-12 lg:py-14">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-5xl animate-rise">
             <SectionLabel>MCPX · THE TOKEN-POWERED APP LAUNCHPAD</SectionLabel>
-            <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 font-mono text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               <span className="block">Launch a token.</span>
               <span className="block text-primary">Make it useful.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               Launch on Solana with a working AI application or onchain tool built in. Every token gets its own interactive product and MCP endpoint.
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/launch" className={buttonPrimary}>Launch a Token</Link>
               <Link to="/mcp" className={buttonOutline}>Explore MCP Tools</Link>
             </div>
-            <ul className="mt-10 grid max-w-xl gap-4 border-t border-border pt-6 sm:grid-cols-3">
+            <ul className="mt-6 grid max-w-xl gap-3 border-t border-border pt-4 sm:grid-cols-3">
               {[
                 { t: "Working Apps", d: "Real interactive web interfaces." },
                 { t: "MCP-Powered", d: "Connect tools to compatible AI clients." },
