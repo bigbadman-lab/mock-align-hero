@@ -94,7 +94,7 @@ describe("C03 five-minute orchestration", () => {
   const mk = (o: Partial<OrchestratorDeps> & { seen?: Set<string> } = {}) => {
     const seen = o.seen ?? new Set<string>(); const calls: string[] = [];
     const d: OrchestratorDeps = {
-      readiness: () => ({ state: "READY", blockers: [] }),
+      readiness: () => ({ state: "EXECUTION_READY", blockers: [] }),
       sealed: async () => ({ snapshotComplete: true, solRows: Array.from({ length: 45 }, (_, i) => ({ owner: `h${String(i).padStart(2, "0")}`, amount: 10n })), tokenRowsFor: (inv) => (inv > 0n ? [{ owner: "h00", amount: inv }] : []) }),
       openForCycle: async () => 0, vaultLamports: async () => 0n,
       budget: async () => ({ sol: 450n, buyback: 0n, tokens: 0n, ops: 1_000_000n, evidence: true }),

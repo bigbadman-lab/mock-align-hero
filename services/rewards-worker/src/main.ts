@@ -32,6 +32,8 @@ import { fetchSiteState } from "./site-state";
 import { freshFetch } from "./fresh-fetch";
 import { readSender } from "./sender";
 import { runPayoutRehearsal } from "./payout-rehearsal";
+import { ensureLivePolicy, liveFlags } from "./go-live";
+import { savePolicy } from "../../../src/lib/rewards/cutoff-snapshot.pg";
 
 export function readConfig() {
   const mode = env("MCPX_REWARDS_MODE") ?? "DRY_RUN";
@@ -91,9 +93,12 @@ async function main() {
   // reported. There is no broadcast path in this bundle; readiness stays blocked until every real check passes.
   const signer = loadSigner(process.env);
   const limits = readLimits(process.env);
-  const readiness = executionReadiness({ signer: signer.state, mintVerified: false, eligibilityApproved: false, snapshotComplete: false,
-    feeOwnershipConfirmed: false, intentStoreReady: false, simulationsPassed: false, reservesSufficient: false, operatorAuthorized: false,
-    limitsSet: limits.ok, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" });
+  // GO-LIVE-01: startup readiness has no chain facts yet; it is recomputed from real checks every pass (go-live.ts).
+  const baseReadiness = { signer: signer.state, limitsSet: limits.ok, emergencyStop: env("MCPX_REWARDS_EMERGENCY_STOP") === "1" };
+  let readiness = executionReadiness({ ...baseReadiness, mintVerified: false, eligibilityApproved: false, snapshotComplete: false,
+    feeOwnershipConfirmed: false, intentStoreReady: false, simulationsPassed: false, reservesSufficient: false, operatorAuthorized: false });
+  let launchDerived = false;
+  const minReserve = BigInt(env("MCPX_REWARDS_MIN_RESERVE_LAMPORTS") ?? "10000000"); // 0.01 SOL for fees/rent
   // Native-rewards broadcast switch (MCPX_REWARDS_BROADCAST=1). Still gated by readiness; child fees never get it.
   const sender = readSender(env, freshFetch as never);
   log({ event: "signer_status", ...signer.describe(), broadcast: sender ? "ENABLED" : "DISABLED", execution: readiness.state, executionBlockers: readiness.blockers });
@@ -141,6 +146,7 @@ async function main() {
         cfg.mint = c!.mint; cfg.deployerWallet = c!.deployerWallet ?? d?.deployer ?? null;
         process.env["MCPX_NATIVE_ANCHOR_SLOT"] = c!.anchorSlot ?? (d ? String(d.anchorSlot) : "");
         genesis = c!.genesisWindow !== null ? Number(c!.genesisWindow) : d ? d.genesisWindow : NaN;
+        launchDerived = !!d || (c!.anchorSlot !== null && c!.genesisWindow !== null);
         if (!d && (c!.anchorSlot === null || c!.genesisWindow === null)) wait.push("LAUNCH_DERIVE_FAILED");
         else if (!Number.isInteger(genesis) || genesis % EPOCH_SECONDS !== 0) wait.push("GENESIS_WINDOW_INVALID");
         const cb = configBlockers(cfg); if (cb.length) wait.push(...cb);
@@ -157,6 +163,10 @@ async function main() {
       check: async () => (await sealedPost({ ...bridge, timeoutMs: 5_000 }, "/api/public/rewards/launch-pending", {})) as Pending });
     if (woke === "woken") log({ event: "launch_wake" });
   }
+  // GO-LIVE-01: mint verified on chain → publish the standing v1 eligibility policy if none covers genesis.
+  try { const p = await ensureLivePolicy({ load: () => loadPolicies(db), save: (x) => savePolicy(db, x) }, { mint: cfg.mint!, deployer: cfg.deployerWallet!, genesisWindow: genesis });
+    log({ event: "eligibility_policy", version: p?.version ?? null, live: p ? policyLiveAllowed(p) : false });
+  } catch (e) { log({ level: "error", event: "eligibility_policy_failed", error: e instanceof Error ? e.message : "unknown" }); }
   const store = pgStore(db, workerId, 60);
   log({ event: "started", workerId, mode, blockers });
   let lastPlanned: number | null = null, totalCredits = 0;
@@ -165,6 +175,7 @@ async function main() {
     try {
       // 05-I: cutoff selection + holder-index pass + snapshot freezing (writes only mcpx_rw_hix_* / policy tables).
       let diag: Record<string, unknown> = {};
+      let indexSynced = false, openGaps = 1, livePol: ReturnType<typeof policyFor> = null;
       if (cfg.mint) {
         const meter: Meter = {}; const rpc = heliusRpc(env("MCPX_REWARDS_RPC_URL")!, meter);
         const anchor = env("MCPX_NATIVE_ANCHOR_SLOT");
@@ -176,6 +187,7 @@ async function main() {
         const holds = (await db.query("select count(*)::int n from public.mcpx_rw_hix_holds where mint=$1 and resolved_at is null", [cfg.mint])).rows[0]?.n ?? 0;
         const lastCut = (await db.query("select max(cutoff_slot)::text c from public.mcpx_rw_hix_window_cutoffs where mint=$1 and status='SELECTED'", [cfg.mint])).rows[0]?.c ?? null;
         const pol = policyFor(opts.nowSec, await loadPolicies(db));
+        indexSynced = h.kind === "SYNCED"; openGaps = g; livePol = pol;
         diag = { latestCutoffSlot: lastCut, indexSlot: "toSlot" in h ? h.toSlot : null, holderAccounts: "accounts" in h ? h.accounts : null, openGaps: g, openHolds: holds, cutoffs: cut, pass: h.kind,
           frozen: "frozen" in h ? h.frozen : [], passCredits, totalCredits, policy: pol ? { version: pol.version, status: pol.status, live: policyLiveAllowed(pol) } : null,
           status: pipelineStatus({ mint: cfg.mint, openGaps: g, indexBehind: h.kind !== "SYNCED", lastWindowHeld: holds > 0, policy: pol }) };
@@ -220,6 +232,11 @@ async function main() {
       try { decimals = ((await call("getTokenSupply", [cfg.mint, { commitment: "finalized" }])) as { value: { decimals: number } }).value.decimals; } catch { /* unknown */ }
       const fills = decimals === null ? [] : await captureFills(db, call, { deployer, mint: cfg.mint!, decimals });
       const vaults = await creatorVaults(deployer);
+      let intentStoreOk = false; try { await db.query("select 1 from public.mcpx_rw_intents limit 1", []); intentStoreOk = true; } catch { /* not ready */ }
+      let deployerLamports: bigint | null = null; try { deployerLamports = BigInt(((await call("getBalance", [deployer, { commitment: "finalized" }])) as { value: number }).value); } catch { /* unknown */ }
+      readiness = executionReadiness({ ...baseReadiness, ...liveFlags({ mint: cfg.mint, launchDerived, decimals, policy: livePol, indexSynced, openGaps,
+        createdMints: prov.createdMints, intentStoreOk, senderOn: !!sender, deployerLamports, minReserveLamports: minReserve, signerAddress: signer.address, deployer }) });
+      log({ event: "execution_readiness", correlationId, state: readiness.state, blockers: readiness.blockers });
       if (lastPlanned !== null) {
         const budgetOf = async (w: number) => { const b = (await db.query("select sol::text, buyback::text, tokens::text, ops::text, evidence from public.mcpx_rw_budget_remaining(to_timestamp($1))", [w])).rows[0];
           return b ? { sol: BigInt(String(b["sol"])), buyback: BigInt(String(b["buyback"])), tokens: BigInt(String(b["tokens"])), ops: BigInt(String(b["ops"])), evidence: !!b["evidence"] } : null; };

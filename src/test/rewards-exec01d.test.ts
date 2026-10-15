@@ -72,7 +72,7 @@ describe("D04 settlement from PERSISTED plan on real finalized mainnet tx", () =
 
 describe("D06 five-minute cycle end-to-end (memory deps)", () => {
   const deps = (o: Partial<OrchestratorDeps> = {}, submits: string[] = []): OrchestratorDeps => ({
-    readiness: () => ({ state: "READY", blockers: [] }), maxRecipientsPerTx: 2,
+    readiness: () => ({ state: "EXECUTION_READY", blockers: [] }), maxRecipientsPerTx: 2,
     sealed: async () => sealedFromFrozen(frozen([W("A", 1n), W("B", 1n), W("C", 2n)]), { deployer: "D", excluded: [], solTotal: 300n, minPayable: 0n }),
     openForCycle: async () => 0, vaultLamports: async () => 0n, pendingFills: async () => 0,
     budget: async () => ({ sol: 300n, buyback: 0n, tokens: 40n, ops: 10_000n, evidence: true }),
