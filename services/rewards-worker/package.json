@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "NODE_PATH=\"./node_modules${NODE_PATH:+:$NODE_PATH}\" esbuild src/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/worker.mjs --external:postgres --alias:@=../../src --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
+    "build": "NODE_PATH=\"./node_modules${NODE_PATH:+:$NODE_PATH}\" esbuild src/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/worker.mjs --external:postgres --alias:@=../../src --banner:js=\"import{createRequire}from'module';import{fileURLToPath}from'url';import{dirname}from'path';const require=createRequire(import.meta.url);const __filename=fileURLToPath(import.meta.url);const __dirname=dirname(__filename);\"",
     "start": "node dist/worker.mjs"
   },
   "dependencies": {
