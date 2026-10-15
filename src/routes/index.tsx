@@ -44,11 +44,11 @@ function Home() {
           <div className="max-w-5xl animate-rise">
             <SectionLabel>MCPX · THE TOKEN-POWERED APP LAUNCHPAD</SectionLabel>
             <h1 className="mt-4 font-mono text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              <span className="block">Launch a token.</span>
-              <span className="block text-primary">Make it useful.</span>
+              <span className="block">The future of tokens</span>
+              <span className="block text-primary">is functional.</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Launch on Solana with a working AI application or onchain tool built in. Every token gets its own interactive product and MCP endpoint.
+              Discover and launch token-powered AI applications and MCP tools. Every token comes with a working product you can use on the web or connect to your AI agents.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/launch" className={buttonPrimary}>Launch a Token</Link>
