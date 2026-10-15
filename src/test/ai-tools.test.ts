@@ -22,6 +22,10 @@ const OUT: Record<string, unknown> = {
   "gibberish-ai": { reply: "Zorp flibble!" }, "roast-bot": { roast: "Your tabs have tabs." }, "excuse-machine": { excuse: "A goose filed my taxes." },
   "conspiracy-potato": { headline: "Socks Are Spies", theory: "They report to the dryer.", clues: ["lint", "static", "one left"], conclusion: "The dryer knows." },
   "argument-machine": { reply: "Wrong, obviously." },
+  "future-you": { timeline: "Writing from 10 years ahead", title: "Keep the guitar", letter: "Dear me, the hoverboards are fine.", advice: "Tune before you tour.", closing_quote: "Rock on." },
+  "web3-startup-roulette": { name: "YieldFrog", ticker: "$ribbit", pitch: "Frogs, but on-chain.", problem: "Ponds lack liquidity.", solution: "Tokenised lily pads.", token_utility: "Croaking rights.", tokenomics: ["40% frogs", "60% the founder's cat"], valuation: "$9 quintillion (imaginary)", investor_pitch: "Leap with us.", founder_quote: "Ribbit." },
+  "monster-factory": { name: "Kettlowl", species: "Steam owl", appearance: "Feathery spout.", abilities: ["Whistles", "Brews tea", "Hoots"], weakness: "Descaler", personality: "Cosy", habitat: "Kitchens", origin: "Born at 100°C.", rarity: "LEGENDARY", fact: "Prefers oolong." },
+  "pigeon-ceo": { opening: "Coo.", recommendation: "Acquire bread.", action_items: ["Peck", "Strut", "Nap"], impact: "Crumbs up 400%", confidence: 9001, closing_quote: "Bread is strategy." },
 };
 const IN: Record<string, Record<string, unknown>> = {
   "gibberish-ai": { message: "hi", style: "alien" }, "roast-bot": { subject: "my code", intensity: "savage" }, "excuse-machine": { situation: "late", absurdity: 5 },
@@ -77,7 +81,7 @@ describe("execution", () => {
       expect(r.ok).toBe(true);
       if (r.ok) { expect(r.out["schema"]).toBe(d.schema); expect(r.out["toolId"]).toBe(d.toolId); expect(ADAPTERS[d.templateId]!.validOutput(r.out, {}, {})).toBe(true); }
       expect(calls.bodies[0]!["max_tokens"]).toBe(d.maxOutputTokens);
-      expect(calls.bodies[0]!["max_tokens"] as number).toBeLessThanOrEqual(400);
+      expect(calls.bodies[0]!["max_tokens"] as number).toBeLessThanOrEqual(600);
     }
   });
   it("chat history is passed through, bounded", async () => {
@@ -165,5 +169,20 @@ describe("limiter windows", () => {
     const d: AiExecDeps = { env: () => env(), take: async (b, w, l) => { seen.push([b, w, l]); return true; }, fetchImpl: (async () => reply({ roast: "x" })) as never };
     await runAiTool(AI_TOOL_BY_TEMPLATE["roast-bot"]!, IN["roast-bot"]!, d);
     expect(seen).toEqual([["ai:global:m", 60, 30], ["ai:global:h", 3600, 83]]);
+  });
+});
+
+describe("AI Playground output parsing", () => {
+  it("normalises ticker, rarity and clamps confidence", async () => {
+    const run = async (id: string) => { const { d } = deps({ fetch: (async () => reply(OUT[id])) as never }); return runAiTool(AI_TOOL_BY_TEMPLATE[id]!, IN[id]!, d); };
+    const s = await run("web3-startup-roulette"); expect(s.ok && s.out["ticker"]).toBe("RIBBIT");
+    const m = await run("monster-factory"); expect(m.ok && m.out["rarity"]).toBe("legendary");
+    const p = await run("pigeon-ceo"); expect(p.ok && p.out["confidence"]).toBe(1000);
+  });
+  it("rejects bad playground inputs", () => {
+    expect(AI_TOOL_BY_TEMPLATE["future-you"]!.inputSchema.safeParse({ situation: "x", years_ahead: 3, personality: "wise" }).success).toBe(false);
+    expect(AI_TOOL_BY_TEMPLATE["web3-startup-roulette"]!.inputSchema.safeParse({ sector: "banks", absurdity: 3 }).success).toBe(false);
+    expect(AI_TOOL_BY_TEMPLATE["monster-factory"]!.inputSchema.safeParse({ ingredient_one: "owl", temperament: "adorable", rarity: "rare" }).success).toBe(false);
+    expect(AI_TOOL_BY_TEMPLATE["pigeon-ceo"]!.inputSchema.safeParse({ business_problem: "x", management_style: "visionary", urgency: "panic" }).success).toBe(false);
   });
 });
