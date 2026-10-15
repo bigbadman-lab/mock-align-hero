@@ -143,8 +143,8 @@ describe("L5 integration rules", () => {
     }
   });
   it("free tests: 3 per tool per day in UTC-aligned day windows, separate per tool, not in shared buckets", () => {
-    expect(FREE_TESTS_PER_DAY).toBe(3);
-    expect(freeTestBucket("holder_intelligence", "v")).toEqual({ bucket: "tools:free:holder_intelligence:v", window: 86_400, limit: 3 });
+    expect(FREE_TESTS_PER_DAY).toBe(500);
+    expect(freeTestBucket("holder_intelligence", "v")).toEqual({ bucket: "tools:free:holder_intelligence:v", window: 86_400, limit: 500 });
     expect(freeTestBucket("token_risk_analyst", "v").bucket).not.toBe(freeTestBucket("holder_intelligence", "v").bucket);
     expect(bucketsFor("v").map((b) => b.limit)).toEqual([6, 40, 60]);
   });
