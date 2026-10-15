@@ -16,7 +16,7 @@ const S = (v: unknown) => (v == null ? "" : String(v));
 const arr = (v: unknown) => (Array.isArray(v) ? v.map(String) : []);
 const field = "w-full rounded-md border border-border-strong bg-surface-2 px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary";
 
-function Chips<T extends string | number>({ label, options, value, onChange, fmt }: { label: string; options: readonly T[]; value: T; onChange(v: T): void; fmt?(v: T): string }) {
+function Chips<T extends string | number>({ label, options, value, onChange, fmt }: { label: string; options: readonly T[]; value: NoInfer<T>; onChange(v: NoInfer<T>): void; fmt?(v: NoInfer<T>): string }) {
   return (
     <fieldset className="space-y-1">
       <legend className="label-mono text-xs text-subtle">{label}</legend>
