@@ -140,6 +140,17 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
               ))}
             </ul>
             <p>Rewards are processed in five-minute cycles, and only payouts confirmed onchain appear on the <Link to="/treasury" className="text-foreground hover:underline">Treasury</Link> page. Bought-back $MCP goes to eligible holders; it is not burned or held. There is no APY and no guaranteed return.</p>
+            <h3 className="pt-2 text-sm font-semibold text-foreground">Who is eligible</h3>
+            <p>Any wallet holding $MCP at the moment a cycle is calculated is eligible for that cycle. There is no staking, no locking and no sign-up: eligibility comes straight from the onchain holder list. Your share is proportional to your balance relative to all eligible holders in that cycle. If you buy or sell between cycles, the next cycle simply uses the new holder list.</p>
+            <h3 className="pt-2 text-sm font-semibold text-foreground">How it works technically</h3>
+            <ol className="list-decimal space-y-1.5 pl-5">
+              <li>An automated service reads finalized onchain fee events for $MCP. Unconfirmed transactions are never counted.</li>
+              <li>Every five minutes it takes the current holder list from the token's onchain history and calculates each wallet's proportional share of the fees collected in that window.</li>
+              <li>The 30/30/40 split is applied: SOL payouts to holders, a buyback of $MCP that is routed to holders, and the operations share.</li>
+              <li>Each window is recorded in a single sealed database transaction, so a cycle can never be paid twice or skipped silently, and a crash mid-cycle safely resumes.</li>
+              <li>Payout transactions are built, validated and signed by the service, then sent onchain. Only payouts confirmed onchain are shown on the Treasury page.</li>
+            </ol>
+            <p>Rewards are sent automatically to eligible holder wallets; there is nothing to claim. The service holds no user funds between cycles and cannot change the split, which is fixed by the protocol.</p>
           </Doc>
 
           <Doc id="status" title="Current availability">
