@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { PageContainer, PageHeader, FeatureAvailability, RouteError } from "@/components/mcpx/primitives";
+import { CopyButton } from "@/components/mcpx/McpConnection";
 import { LIBRARY } from "@/lib/templates";
 
 export const Route = createFileRoute("/docs")({
@@ -26,6 +27,7 @@ const TOC = [
   ["endpoints", "MCP endpoints"],
   ["launch-flow", "Launch flow"],
   ["fees", "Child token fees"],
+  ["addresses", "Protocol addresses"],
   ["rewards", "$MCP holder rewards"],
   ["status", "Current availability"],
 ] as const;
@@ -109,6 +111,25 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
               ))}
             </ul>
             <p>These are shares of fees actually collected, not a fee rate or a share of trading volume. The split is locked onchain at launch.</p>
+          </Doc>
+
+          <Doc id="addresses" title="Protocol addresses">
+            <p>These are the only official MCPX wallets. They receive the operations and platform shares of the fee split above. Treat any other address claiming to be MCPX as fake.</p>
+            <ul className="space-y-2">
+              {([
+                ["Deployer", "2ZrpSo3SmuKnFG69XMEYv2Ew54oKGB2DXPVBAJHBGYx2", "Launches and manages MCPX tokens"],
+                ["MCPX operations", "5MzN9A2h4w4RdYvwDXUv8ssvJiPPJa9bnamh6yMWFqh5", "Receives the 25% tool operations share"],
+                ["MCPX platform", "CqaJhS4BKK791cv2fSsbbc75difqCrTiwkzeeR8WqJVB", "Receives the 15% platform share"],
+              ] as [string, string, string][]).map(([label, addr, role]) => (
+                <li key={addr} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border bg-card p-3">
+                  <span className="w-32 shrink-0 text-sm font-medium text-foreground">{label}</span>
+                  <code className="min-w-0 flex-1 break-all font-mono text-xs text-muted-foreground">{addr}</code>
+                  <CopyButton text={addr} label="Copy" />
+                  <span className="w-full text-xs text-subtle">{role}</span>
+                </li>
+              ))}
+            </ul>
+            <p>The $MCP mint address will be listed here once $MCP is minted. $MCP has not been minted yet and has no contract address.</p>
           </Doc>
 
           <Doc id="rewards" title="$MCP holder rewards" planned>
