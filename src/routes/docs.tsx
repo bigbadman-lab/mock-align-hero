@@ -32,18 +32,18 @@ const TOC = [
 
 function Doc({ id, title, planned, children }: { id: string; title: string; planned?: boolean; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-b border-border pb-12">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 id={`${id}-h`} className="text-2xl font-semibold tracking-tight">{title}</h2>
+    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-b border-border pb-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 id={`${id}-h`} className="text-xl font-semibold tracking-tight">{title}</h2>
         {planned && <FeatureAvailability>Not live yet</FeatureAvailability>}
       </div>
-      <div className="mt-4 space-y-4 text-base leading-relaxed text-muted-foreground">{children}</div>
+      <div className="mt-2 space-y-3 text-base leading-relaxed text-muted-foreground">{children}</div>
     </section>
   );
 }
 
 const Code = ({ children }: { children: string }) => (
-  <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-4 font-mono text-sm text-foreground">{children}</pre>
+  <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-3 font-mono text-sm text-foreground">{children}</pre>
 );
 
 function Docs() {
@@ -51,16 +51,16 @@ function Docs() {
   return (
     <>
       <PageHeader label="Documentation" title="MCPX docs" intro="What you can use today, and how the parts marked “Not live yet” are designed to work." />
-      <PageContainer className="grid gap-12 py-16 lg:grid-cols-[200px_1fr]">
+      <PageContainer className="grid gap-6 py-8 lg:grid-cols-[200px_1fr]">
         <nav aria-label="Docs sections" className="lg:sticky lg:top-24 lg:self-start">
-          <p className="label-mono mb-3 text-subtle">On this page</p>
+          <p className="label-mono mb-2 text-subtle">On this page</p>
           <ul className="grid grid-cols-2 gap-x-4 sm:grid-cols-4 lg:grid-cols-1">
             {TOC.map(([id, t]) => (
-              <li key={id}><a href={`#${id}`} className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground">{t}</a></li>
+              <li key={id}><a href={`#${id}`} className="inline-flex min-h-8 items-center text-sm text-muted-foreground hover:text-foreground">{t}</a></li>
             ))}
           </ul>
         </nav>
-        <div className="min-w-0 max-w-3xl space-y-12">
+        <div className="min-w-0 max-w-3xl space-y-6">
           <Doc id="what" title="What is MCPX?">
             <p>MCPX is a platform for MCP tools on Solana. Anyone can run the tools on this site today. Creators will be able to launch a child token paired to $MCP, the native MCPX token, and each child token comes with its own working MCP tool that AI assistants can connect to.</p>
           </Doc>
@@ -69,7 +69,7 @@ function Docs() {
             <p>Ten read-only tools run on real Solana data. Each runs only when you ask: there is no background monitoring or alerting, and no tool can sign or send anything. Each visitor gets 3 free tests per tool per day.</p>
             <ul className="divide-y divide-border rounded-lg border border-border">
               {tools.map((t) => (
-                <li key={t.id} className="p-4">
+                <li key={t.id} className="p-3">
                   <p className="text-foreground"><span className="label-mono mr-2 text-primary">{t.category}</span>{t.route ? <a href={t.route} className="hover:underline">{t.name}</a> : t.name}</p>
                   <p className="mt-1 text-sm">{t.benefit}</p>
                 </li>
@@ -105,7 +105,7 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
             <p>Creator fees actually collected on each child token are split:</p>
             <ul className="grid gap-2 sm:grid-cols-3">
               {[["60%", "Creator"], ["25%", "Tool operations"], ["15%", "MCPX platform"]].map(([p, l]) => (
-                <li key={l} className="rounded-md border border-border bg-card p-4"><span className="font-mono text-xl text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
+                <li key={l} className="rounded-md border border-border bg-card p-3"><span className="font-mono text-lg text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
               ))}
             </ul>
             <p>These are shares of fees actually collected, not a fee rate or a share of trading volume. The split is locked onchain at launch.</p>
@@ -115,7 +115,7 @@ Authorization: Bearer <key issued by MCPX>`}</Code>
             <p>Creator fees actually collected on $MCP itself are split:</p>
             <ul className="grid gap-2 sm:grid-cols-3">
               {[["30%", "Holders, paid in SOL"], ["30%", "$MCP buybacks, distributed to holders"], ["40%", "Operations"]].map(([p, l]) => (
-                <li key={l} className="rounded-md border border-border bg-card p-4"><span className="font-mono text-xl text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
+                <li key={l} className="rounded-md border border-border bg-card p-3"><span className="font-mono text-lg text-foreground">{p}</span><span className="block text-sm">{l}</span></li>
               ))}
             </ul>
             <p>Rewards are processed in five-minute cycles, and only payouts confirmed onchain appear on the <Link to="/treasury" className="text-foreground hover:underline">Treasury</Link> page. Bought-back $MCP goes to eligible holders; it is not burned or held. There is no APY and no guaranteed return.</p>
