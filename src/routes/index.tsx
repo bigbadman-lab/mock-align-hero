@@ -8,10 +8,12 @@ import { TreasuryModule } from "@/components/mcpx/treasury/TreasuryModule";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MCPX — Every token powers a tool" },
-      { name: "description", content: "MCPX is being built as a platform for real Solana-connected MCP tools paired to native $MCP." },
-      { property: "og:title", content: "MCPX — Every token powers a tool" },
-      { property: "og:description", content: "A platform in development for Solana-connected MCP tools paired to native $MCP." },
+      { title: "MCPX — Launch a token. Make it useful." },
+      { name: "description", content: "Launch on Solana with a working AI application or onchain tool built in. Every token gets its own interactive product and MCP endpoint." },
+      { property: "og:title", content: "MCPX — Launch a token. Make it useful." },
+      { property: "og:description", content: "The token-powered app launchpad on Solana: every token gets its own interactive product and MCP endpoint." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -38,23 +40,58 @@ function Home() {
         <PageContainer className="py-14 sm:py-20 lg:py-24">
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-5xl animate-rise">
-            <SectionLabel>CREATOR FEES PAY HOLDERS</SectionLabel>
+            <SectionLabel>MCPX · THE TOKEN-POWERED APP LAUNCHPAD</SectionLabel>
             <h1 className="mt-6 font-mono text-5xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-              <span className="block">Hold <span className="text-primary">$MCP</span>.</span>
-              <span className="block">Share in the ecosystem.</span>
+              <span className="block">Launch a token.</span>
+              <span className="block text-primary">Make it useful.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Every native $MCP trade can generate creator fees. 60% of fees actually collected are allocated to eligible holders: 30% in SOL and 30% through $MCP buybacks and distributions. Processed in five-minute cycles.
+              Launch on Solana with a working AI application or onchain tool built in. Every token gets its own interactive product and MCP endpoint.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <Link to="/dashboard" className={buttonPrimary}>My Rewards</Link>
-              <Link to="/mcp" className={buttonOutline}>MCP Library</Link>
+              <Link to="/launch" className={buttonPrimary}>Launch a Token</Link>
+              <Link to="/mcp" className={buttonOutline}>Explore MCP Tools</Link>
             </div>
+            <ul className="mt-10 grid max-w-xl gap-4 border-t border-border pt-6 sm:grid-cols-3">
+              {[
+                { t: "Working Apps", d: "Real interactive web interfaces." },
+                { t: "MCP-Powered", d: "Connect tools to compatible AI clients." },
+                { t: "$MCP Rewards", d: "Five-minute reward cycles." },
+              ].map((h) => (
+                <li key={h.t}>
+                  <p className="label-mono text-primary">{h.t}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{h.d}</p>
+                </li>
+              ))}
+            </ul>
           </div>
           <HeroOrbit />
           </div>
         </PageContainer>
       </section>
+
+      <section aria-labelledby="rewards" className="border-b border-border bg-card">
+        <PageContainer className="py-12 sm:py-14">
+          <SectionHeading label="$MCP rewards" title={<span id="rewards">Hold $MCP. Participate in what MCPX builds.</span>} intro="Every eligible native $MCP trade can generate creator fees. Of the fees actually collected, 30% is allocated to SOL holder rewards and 30% to $MCP buybacks and distributions, with rewards processed in five-minute cycles." />
+          <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+            {[
+              { p: "30%", t: "SOL holder rewards" },
+              { p: "30%", t: "$MCP buybacks & distributions" },
+              { p: "40%", t: "Operations" },
+            ].map((a) => (
+              <li key={a.t} className="rounded-md border border-border bg-background p-4">
+                <p className="font-mono text-2xl font-semibold text-primary">{a.p}</p>
+                <p className="mt-1 text-sm text-foreground">{a.t}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/treasury" className={buttonOutline}>Treasury & reward history</Link>
+            <Link to="/dashboard" className={buttonOutline}>My Rewards</Link>
+          </div>
+        </PageContainer>
+      </section>
+
 
       <section aria-labelledby="status" className="border-b border-border">
         <PageContainer className="py-12 sm:py-14">
