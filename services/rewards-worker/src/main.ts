@@ -81,7 +81,11 @@ function rpcCall(rpc: string): RpcCall {
       return j.result;
     } catch (e) {
       // Never log the RPC URL (it carries the provider key).
-      log({ level: "warn", event: "rpc_failed", method, error: e instanceof Error ? `${e.name}:${e.message}`.slice(0, 160) : "unknown" });
+      // getTokenAccountBalance "could not find account" is expected before graduation: the PumpSwap wSOL
+      // vault simply doesn't exist yet, and vaultLamports treats that as zero. Don't warn on it.
+      const msg = e instanceof Error ? `${e.name}:${e.message}`.slice(0, 160) : "unknown";
+      const expectedMissing = method === "getTokenAccountBalance" && /could not find account|Invalid param/i.test(msg);
+      if (!expectedMissing) log({ level: "warn", event: "rpc_failed", method, error: msg });
       throw e;
     }
   };
