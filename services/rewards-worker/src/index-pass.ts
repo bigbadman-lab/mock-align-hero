@@ -72,33 +72,49 @@ export async function indexPass(db: Db, rpc: Rpc, meter: Meter, o: PassOpts & { 
   };
   if (from === s0.anchorSlot) await sweep([...accountsIn(byKey.values())]); // from-scratch rebuild: sweep every discovered account
   let s = s0, rep: ReturnType<typeof replayCapturing> | null = null, v: Awaited<ReturnType<typeof verifyKnownAccounts>> = null, mintNow: { amount: bigint } | null | undefined;
+  // FIX-HIX-02: the chain is read ONCE per pass (slot v.slot). If it moved past V, the mint history is extended to
+  // v.slot and the replay is compared against that SAME read — re-reading would move the chain again on a busy token
+  // and never converge. Non-convergence or an unexplained mismatch writes nothing (RETRY next pass); it never records
+  // a permanent gap/hold, because nothing was committed and the next pass replays the same range from the checkpoint.
+  let verified: Set<string> | null = null;
   for (let round = 0; ; round++) {
-    if (round >= (o.maxRounds ?? 4)) return gap("UNRESOLVED_AFTER_MAX_ROUNDS", V);
+    if (round >= (o.maxRounds ?? 8)) return { kind: "RETRY" as const, reason: "NOT_CONVERGED" };
     s = cloneIndex(s0);
     const txs = [...byKey.values()].filter((t) => t.slot <= V);
     rep = replayCapturing(s, txs, cutoffsAll.filter((c) => c.cutoffSlot <= V).map((c) => c.cutoffSlot));
     if ("error" in rep) {
       const m = /PRE_BALANCE_MISMATCH:(.+)$/.exec(String(rep.error));
       if (m && !swept.has(m[1]!)) { await sweep([m[1]!]); continue; }
+      if (m) return { kind: "RETRY" as const, reason: "PRE_BALANCE_MISMATCH" };
       return gap(String(rep.error), V);
     }
-    // (5) verify every known/touched account + the mint at ONE finalized slot ≥ V
-    const check = [...new Set([...known, ...accountsIn(txs)])];
-    v = await verifyKnownAccounts(rpc, [...check, o.mint]);
-    if (!v) return { kind: "RETRY" as const, reason: "NO_CONSISTENT_SLOT" };
-    mintNow = v.accounts.get(o.mint); v.accounts.delete(o.mint);
-    if (v.slot > V) { // chain moved: pull (V, v.slot] for the mint and replay again at the new V
-      const more = await fullHistory(rpc, meter, o.mint, o.mint, v.slot, V); V = v.slot;
-      if (more.length) { for (const t of more) add(t); continue; }
+    // (5) verify every known/touched account + the mint at ONE finalized slot ≥ V (once per pass)
+    if (!v) {
+      const check = [...new Set([...known, ...accountsIn(txs)])];
+      v = await verifyKnownAccounts(rpc, [...check, o.mint]);
+      if (!v) return { kind: "RETRY" as const, reason: "NO_CONSISTENT_SLOT" };
+      mintNow = v.accounts.get(o.mint); v.accounts.delete(o.mint); verified = new Set(check);
+      if (v.slot > V) { // chain moved: pull (V, v.slot] for the mint and replay up to v.slot against this same read
+        const more = await fullHistory(rpc, meter, o.mint, o.mint, v.slot, V); V = v.slot;
+        swept.clear(); // per-account sweeps must be redone up to the new V
+        if (more.length) { for (const t of more) add(t); continue; }
+      }
     }
-    const bad = check.filter((k) => { const a = v!.accounts.get(k), b = s.balances.get(k); return a === null || a === undefined ? !!b && b.amount !== 0n : !b || a.amount !== b.amount || a.owner !== b.owner; });
+    // Accounts first seen in (old V, v.slot] were not part of the read; their replay is still pre-balance checked.
+    const bad = [...verified!].filter((k) => { const a = v!.accounts.get(k), b = s.balances.get(k); return a === null || a === undefined ? !!b && b.amount !== 0n : !b || a.amount !== b.amount || a.owner !== b.owner; });
     if (!bad.length) break;
-    if (!(await sweep(bad))) return gap("ACCOUNT_VERIFY_MISMATCH", V);
+    if (!(await sweep(bad))) return { kind: "RETRY" as const, reason: "ACCOUNT_VERIFY_MISMATCH" };
   }
   if (!v || !rep || "error" in rep) return gap("INTERNAL", V);
   const txs = [...byKey.values()].filter((t) => t.slot <= V);
   const cutoffs = cutoffsAll.filter((c) => c.cutoffSlot <= V);
   s.coveredTo = v.slot;
+  // FIX-HIX-02 self-heal: this pass replayed complete, verified history for (from, v.slot]. Any open gap lying wholly
+  // inside that range is now covered; it is marked repaired (and its HOLDER_HISTORY_GAP holds resolved) in the SAME
+  // transaction that freezes snapshots. Gaps reaching back before `from` stay open (fail closed).
+  const repairedGaps = s.gaps.filter((g) => g.fromSlot > from && g.toSlot <= v!.slot);
+  s.gaps = s.gaps.filter((g) => !repairedGaps.includes(g));
+  const healAll = repairedGaps.length > 0 && s.gaps.length === 0;
   const policies = await loadPolicies(db), held = await openHoldWindows(db, o.mint);
   const anchor = mintNow ? { slot: v.slot, supply: mintNow.amount } : null;
   const frozen: PassWrite["frozen"] = [], holds: PassWrite["holds"] = [];
