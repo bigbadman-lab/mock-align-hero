@@ -15,3 +15,22 @@ describe("payout rehearsal", () => {
     expect(isRehearsalTx({ keys: [keys[1]!, D, ...keys.slice(2)], pre, post, err: null }, D)).toBe(false);
   });
 });
+
+import { Keypair, VersionedTransaction } from "@solana/web3.js";
+import bs58 from "bs58"; import { createPublicKey, verify } from "node:crypto";
+import { loadSigner, TECHNICAL_LIMITS } from "../src/signer";
+import { assemble, solPayoutIxs } from "../src/assembly";
+it("signer produces a signature that verifies against the deployer key", async () => {
+  const k = Keypair.generate();
+  const s = loadSigner({ MCPX_DEPLOYER_PRIVATE_KEY: bs58.encode(k.secretKey), MCPX_DEPLOYER_PUBLIC_KEY: k.publicKey.toBase58() });
+  const rows = [{ owner: Keypair.generate().publicKey.toBase58(), amount: 1000n }];
+  const u = assemble(solPayoutIxs(k.publicKey, [{ owner: rows[0]!.owner, lamports: 1000n }]), k.publicKey, { blockhash: "11111111111111111111111111111111", lastValidBlockHeight: 1000 }, { cuLimit: 50000, cuPriceMicroLamports: 1000, allowedSigners: [k.publicKey.toBase58()] }) as { messageBase64: string };
+  let b64 = "";
+  const r = await s.sign!({ kind: "SOL_PAYOUT", idempotencyKey: "k", cycleId: "c", epoch: 300, messageBase64: u.messageBase64, lastValidBlockHeight: 1000, rows },
+    { limits: { maxLamportsPerTx: null, maxLamportsPerCycle: null, maxTokensPerTx: null, ...TECHNICAL_LIMITS }, emergencyStop: false, currentBlockHeight: 1,
+      store: { reserve: async () => "NEW", cycleSpent: async () => 0n, recordSigned: async (_k, _s, b) => { b64 = b; } } });
+  expect(r.ok).toBe(true);
+  const tx = VersionedTransaction.deserialize(Buffer.from(b64, "base64"));
+  const der = Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), k.publicKey.toBuffer()]);
+  expect(verify(null, Buffer.from(tx.message.serialize()), createPublicKey({ key: der, format: "der", type: "spki" }), Buffer.from(tx.signatures[0]!))).toBe(true);
+});
